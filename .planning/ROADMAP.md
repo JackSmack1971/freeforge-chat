@@ -31,7 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A `<meta http-equiv="Content-Security-Policy">` tag is present in `freeforge/index.html` restricting scripts, connections, and objects
   4. The `markdown.js` CDN-fail branch escapes text instead of returning raw HTML
   5. All `ff_key` localStorage reads and writes go through `getStoredKey()` / `setStoredKey()` in `state.js`; no direct `localStorage.setItem('ff_key')` calls remain in `onboarding.js`, `settings.js`, or `app.js`
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Delete freeforge.html + upgrade CDN libs (marked@18.0.4, DOMPurify@3.4.8) + add CSP meta tag
+- [ ] 01-02-PLAN.md — Fix markdown.js: module-level marked.use() and escape XSS fallback
+- [ ] 01-03-PLAN.md — Add getStoredKey/setStoredKey to state.js; update 3 caller files
 
 ### Phase 2: Mobile UX
 **Goal**: The app is fully usable on iOS and Android — the virtual keyboard does not hide the input, safe-area insets protect content from the home indicator, and all interactive controls meet minimum touch-target size
@@ -90,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 0/TBD | Not started | - |
+| 1. Security Hardening | 0/3 | Not started | - |
 | 2. Mobile UX | 0/TBD | Not started | - |
 | 3. Accessibility | 0/TBD | Not started | - |
 | 4. Code Quality | 0/TBD | Not started | - |
