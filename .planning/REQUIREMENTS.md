@@ -82,10 +82,40 @@
 
 ## Traceability
 
-| REQ-ID | Phase |
-|--------|-------|
-| SEC-01 – SEC-07 | Phase 1: Security Hardening |
-| MOB-01 – MOB-04 | Phase 2: Mobile UX |
-| A11Y-01 – A11Y-12 | Phase 3: Accessibility |
-| CODE-01 – CODE-09 | Phase 4: Code Quality |
-| DOC-01 – DOC-03 | Phase 5: Portfolio Polish |
+| REQ-ID | Phase | Plan | Status |
+|--------|-------|------|--------|
+| SEC-01 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-02 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-03 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-04 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-05 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-06 | Phase 1: Security Hardening | TBD | Pending |
+| SEC-07 | Phase 1: Security Hardening | TBD | Pending |
+| MOB-01 | Phase 2: Mobile UX | TBD | Pending |
+| MOB-02 | Phase 2: Mobile UX | TBD | Pending |
+| MOB-03 | Phase 2: Mobile UX | TBD | Pending |
+| MOB-04 | Phase 2: Mobile UX | TBD | Pending |
+| A11Y-01 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-02 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-03 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-04 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-05 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-06 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-07 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-08 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-09 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-10 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-11 | Phase 3: Accessibility | TBD | Pending |
+| A11Y-12 | Phase 3: Accessibility | TBD | Pending |
+| CODE-01 | Phase 4: Code Quality | TBD | Pending |
+| CODE-02 | Phase 4: Code Quality | TBD | Pending |
+| CODE-03 | Phase 4: Code Quality | TBD | Pending |
+| CODE-04 | Phase 4: Code Quality | TBD | Pending |
+| CODE-05 | Phase 4: Code Quality | TBD | Pending |
+| CODE-06 | Phase 4: Code Quality | TBD | Pending |
+| CODE-07 | Phase 4: Code Quality | TBD | Pending |
+| CODE-08 | Phase 4: Code Quality | TBD | Pending |
+| CODE-09 | Phase 4: Code Quality | TBD | Pending |
+| DOC-01 | Phase 5: Portfolio Polish | TBD | Pending |
+| DOC-02 | Phase 5: Portfolio Polish | TBD | Pending |
+| DOC-03 | Phase 5: Portfolio Polish | TBD | Pending |
