@@ -1,0 +1,83 @@
+import { S } from './state.js';
+import { showInvalidBanner } from './ui/screen.js';
+
+export async function fetchFreeModels(key) {
+  const res = await fetch('https://openrouter.ai/api/v1/models', {
+    headers: { 'Authorization': `Bearer ${key}` },
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Invalid API key');
+    if (res.status === 429) throw new Error('Rate limited — try again shortly');
+    throw new Error(`Failed to fetch models (${res.status})`);
+  }
+  const data = await res.json();
+  return (data.data || []).filter(m => {
+    if (m.id && m.id.endsWith(':free')) return true;
+    const p = m.pricing;
+    return p && parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
+  }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+}
+
+export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError }) {
+  const ctrl = new AbortController();
+  S.abort = ctrl;
+
+  let res;
+  try {
+    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.href,
+        'X-Title': 'FreeForge',
+      },
+      body: JSON.stringify({ model: modelId, messages: msgs, stream: true }),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') { onDone(''); return; }
+    onError('Network error — check your connection.');
+    return;
+  }
+
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try { const j = await res.json(); msg = j.error?.message || msg; } catch {}
+    if (res.status === 401) { showInvalidBanner(); onError('Invalid API key — update it in Settings.'); }
+    else if (res.status === 429) onError('Rate limited — try again in a moment.');
+    else if (res.status === 400) onError('Bad request: ' + msg);
+    else if (res.status === 413) onError('Context too long — start a new chat.');
+    else onError(msg);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', full = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data: ')) continue;
+        const raw = t.slice(6);
+        if (raw === '[DONE]') continue;
+        try {
+          const j = JSON.parse(raw);
+          const delta = j.choices?.[0]?.delta?.content;
+          if (delta) { full += delta; onToken(delta, full); }
+        } catch {}
+      }
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') onError('Stream interrupted.');
+    return;
+  }
+  onDone(full);
+}

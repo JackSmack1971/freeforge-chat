@@ -1,0 +1,11 @@
+# Claude Code development framework — not app code
+.claude/
+README-SWARM.md
+managed-settings.example.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (in case a build step is added later)
+node_modules/
