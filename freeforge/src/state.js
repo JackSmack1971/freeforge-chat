@@ -47,6 +47,10 @@ export function setStoredKey(key) {
   // Ensure no plaintext copy lingers in persistent storage.
   try { localStorage.removeItem('ff_key'); } catch {}
 }
+export function clearStoredKey() {
+  try { sessionStorage.removeItem('ff_key'); } catch {}
+  try { localStorage.removeItem('ff_key'); } catch {}
+}
 
 export function maskKey(k) {
   if (!k || k.length < 8) return '••••••••';

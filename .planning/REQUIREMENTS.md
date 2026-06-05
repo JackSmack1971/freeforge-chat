@@ -15,7 +15,7 @@
 - [ ] **SEC-03**: Upgrade marked.js from 9.1.6 to 18.0.4 with updated SRI hash in `freeforge/index.html`
 - [ ] **SEC-04**: Fix `markdown.js` CDN-fail fallback — replace `return raw` branch with `return esc(text).replace(/\n/g, '<br>')` so a CDN failure never injects raw HTML
 - [ ] **SEC-05**: Add Content Security Policy `<meta>` tag to `freeforge/index.html` (`default-src 'none'; script-src cdn.tailwindcss.com cdn.jsdelivr.net; connect-src https://openrouter.ai; style-src 'unsafe-inline'; object-src 'none'`)
-- [ ] **SEC-06**: Centralise `ff_key` localStorage access — add `getStoredKey()` / `setStoredKey()` to `state.js`; remove 3 direct `localStorage.setItem('ff_key')` calls in `onboarding.js`, `settings.js`, `app.js`
+- [ ] **SEC-06**: Centralise `ff_key` storage access — keep the key in `sessionStorage` via `getStoredKey()` / `setStoredKey()` / `clearStoredKey()` in `state.js`; remove direct `ff_key` storage access from `onboarding.js`, `settings.js`, and `app.js`, and migrate any legacy `localStorage` key into session storage on first read
 - [ ] **SEC-07**: Move `marked.use({ breaks: true, gfm: true })` from per-call `marked.setOptions()` to module initialisation in `markdown.js`
 
 ### Mobile UX
@@ -56,7 +56,7 @@
 
 - [ ] **DOC-01**: Write `README.md` — one-sentence description, screenshot (desktop + mobile), three-step usage (`git clone` / open file / paste key), "how it works" technical bullets, "why vanilla JS?" rationale paragraph, link to OpenRouter free models
 - [ ] **DOC-02**: Add `content-visibility: auto` hint to `.msg-bubble` in `styles/app.css` for long conversation performance
-- [ ] **DOC-03**: Add "Powered by OpenRouter free models • Local storage only" footer to `index.html` (already in spec; verify it's present)
+- [ ] **DOC-03**: Add footer copy to `index.html` that accurately states the client-only storage model: API key stays in the current tab, chat history stays local in the browser
 
 ---
 

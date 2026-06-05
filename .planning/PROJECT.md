@@ -72,7 +72,7 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 |----------|-----------|---------|
 | No build step | Zero-friction open-and-use; portfolio viewers can read the source directly | Preserved — ES modules + CDN only |
 | Vanilla JS over React/Vue | Demonstrates fundamentals; no framework overhead for a small app | Preserved |
-| localStorage only | Privacy-first; no server to maintain | Preserved |
+| client-side only storage | Privacy-first; no server to maintain | Preserved |
 | marked.js via CDN | Full Markdown spec; lightweight enough for CDN delivery | Keep; ensure DOMPurify is paired with it in all entry points |
 | Two HTML entry points | `freeforge.html` (root) vs `freeforge/index.html` — root file lacks DOMPurify | Consolidate in QUAL-03/QUAL-04 |
 

@@ -98,7 +98,7 @@ The v1 implementation is feature-complete: onboarding with key validation, strea
 ## Configuration
 
 - No `.env` files detected; no server-side environment variables required
-- The only runtime secret is the OpenRouter API key, stored exclusively in `localStorage` under key `ff_key` (browser-only, never server-side)
+- The only runtime secret is the OpenRouter API key, stored in `sessionStorage` under key `ff_key` and migrated out of any legacy `localStorage` copy on first read (browser-only, never server-side)
 - No build config files (no `vite.config.*`, `webpack.config.*`, `tsconfig.json`, etc.)
 - `managed-settings.example.json` — Template for centrally managed Claude Code policy; not a build config
 - `.claude/settings.json` — Permission allow/deny/ask lists, hook registrations, plugin enablement
@@ -143,7 +143,7 @@ The v1 implementation is feature-complete: onboarding with key validation, strea
 - Module-level shared state is a plain object named `S` exported from `freeforge/src/state.js`.
 - localStorage helpers exported as `LS` from the same file.
 - DOM helper `$` is a shorthand for `document.getElementById`, exported from `state.js`.
-- `localStorage` keys use `ff_` prefix: `ff_key`, `ff_msgs`, `ff_model`.
+- Browser storage keys use `ff_` prefix: `ff_key` in `sessionStorage`; `ff_msgs` and `ff_model` in `localStorage`.
 - Named exports for shared modules (per `.claude/rules/typescript.md`).
 - Explicit public function and component prop types.
 - Avoid `any`; prefer `unknown`, generics, or discriminated unions.

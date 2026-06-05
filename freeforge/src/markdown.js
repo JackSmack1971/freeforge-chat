@@ -5,17 +5,18 @@ import { esc } from './state.js';
 marked.use({ breaks: true, gfm: true });
 
 // Explicit allowlist prevents CSS injection (style=) and blocks tags outside
-// the markdown rendering surface area. FORBID_ATTR covers attributes that
-// DOMPurify strips by default but are listed here for defense-in-depth clarity.
+// the markdown rendering surface area. Keep attributes narrow so untrusted
+// model output cannot inject duplicate app IDs/classes, and do not allow
+// images because assistant output should not trigger passive third-party
+// fetches from the user's browser.
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: [
     'p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'del', 'ins',
     'code', 'pre', 'blockquote', 'ul', 'ol', 'li',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
-    'div', 'span',
+    'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
   ],
-  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'width', 'height', 'id'],
+  ALLOWED_ATTR: ['href', 'title'],
   FORBID_ATTR: ['style', 'onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
   FORCE_BODY: true,
 };

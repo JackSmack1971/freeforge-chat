@@ -1,4 +1,4 @@
-import { S, $, LS, maskKey, setStoredKey } from '../state.js';
+import { S, $, LS, maskKey, setStoredKey, clearStoredKey } from '../state.js';
 import { fetchFreeModels } from '../api.js';
 import { showScreen, hideInvalidBanner } from '../ui/screen.js';
 import { toast } from '../ui/toast.js';
@@ -50,7 +50,8 @@ export async function updateKey() {
 
 export function clearKey() {
   if (!confirm('Clear your API key? You will be taken back to setup.')) return;
-  ['ff_key', 'ff_msgs', 'ff_model'].forEach(k => LS.del(k));
+  clearStoredKey();
+  ['ff_msgs', 'ff_model'].forEach(k => LS.del(k));
   S.apiKey = null;
   S.messages = [];
   S.models = [];

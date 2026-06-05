@@ -20,7 +20,7 @@ FreeForge is a functional, feature-complete vanilla JS chat UI. Phase 1 (Securit
   2. DOMPurify loads at version 3.4.8 and marked.js loads at version 18.0.4, each with a matching SRI hash in the script tag
   3. A Content Security Policy is present restricting scripts, connections, and objects (delivered via HTTP header in `netlify.toml`)
   4. The `markdown.js` CDN-fail branch escapes text instead of returning raw HTML
-  5. All `ff_key` localStorage reads and writes go through `getStoredKey()` / `setStoredKey()` in `state.js`; no direct `localStorage.setItem('ff_key')` calls remain in `onboarding.js`, `settings.js`, or `app.js`
+  5. All `ff_key` storage access goes through `getStoredKey()` / `setStoredKey()` / `clearStoredKey()` in `state.js`; the API key no longer persists in `localStorage`, and no direct `ff_key` storage calls remain in `onboarding.js`, `settings.js`, or `app.js`
 **Plans:** 3 plans
 Plans:
 - [x] 01-01-PLAN.md — Delete freeforge.html + upgrade CDN libs (marked@18.0.4, DOMPurify@3.4.8) + add CSP meta tag

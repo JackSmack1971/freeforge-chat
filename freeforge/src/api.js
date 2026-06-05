@@ -29,8 +29,6 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
       headers: {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': location.href,
-        'X-Title': 'FreeForge',
       },
       body: JSON.stringify({ model: modelId, messages: msgs, stream: true }),
       signal: ctrl.signal,

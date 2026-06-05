@@ -10,33 +10,33 @@ requirements_addressed:
 
 ## Summary
 
-Added `getStoredKey()` and `setStoredKey()` as named exports to `state.js`, then updated three caller files (`onboarding.js`, `settings.js`, `app.js`) to use these helpers instead of calling `localStorage` directly.
+Added `getStoredKey()`, `setStoredKey()`, and `clearStoredKey()` as named exports to `state.js`, then updated the caller files to use these helpers instead of touching `ff_key` storage directly. The API key now lives in `sessionStorage`; any legacy `localStorage` copy is migrated and removed on first read.
 
 ## Tasks Completed
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Add getStoredKey/setStoredKey exports to state.js | ✓ |
-| 2 | Update three caller files to use helpers | ✓ |
+| 1 | Add centralized key storage helpers to state.js | ✓ |
+| 2 | Update caller files to use helpers for read/write/clear | ✓ |
 
 ## Key Files
 
 ### Modified
-- `freeforge/src/state.js` — `getStoredKey()` (line 30) and `setStoredKey(key)` (line 33) added as peer-level named exports; direct `localStorage` calls, no JSON encoding
+- `freeforge/src/state.js` — `getStoredKey()`, `setStoredKey(key)`, and `clearStoredKey()` added as peer-level named exports; session-scoped key storage with legacy localStorage cleanup
 - `freeforge/src/features/onboarding.js` — imports `setStoredKey`, calls it at line 22
-- `freeforge/src/features/settings.js` — imports `setStoredKey`, calls it at line 33; `LS.del` at line 53 unchanged
+- `freeforge/src/features/settings.js` — imports `setStoredKey` and `clearStoredKey`; updates write path and clears both session/local copies of the key
 - `freeforge/src/app.js` — imports `getStoredKey`, calls it at line 11
 
 ## Verification
 
 ```
-state.js exports: getStoredKey (line 30), setStoredKey (line 33) ✓
-state.js uses direct localStorage.getItem/setItem in the new functions ✓
+state.js exports: getStoredKey, setStoredKey, clearStoredKey ✓
+state.js stores ff_key in sessionStorage and removes any persistent localStorage copy ✓
 onboarding.js: no direct localStorage.setItem('ff_key') — good ✓
 onboarding.js: setStoredKey imported (line 1) and used (line 22) ✓
 settings.js: no direct localStorage.setItem('ff_key') — good ✓
 settings.js: setStoredKey imported (line 1) and used (line 33) ✓
-settings.js: LS.del preserved in forEach at line 53 ✓
+settings.js: clearStoredKey clears ff_key before clearing ff_msgs/ff_model ✓
 app.js: no direct localStorage.getItem('ff_key') — good ✓
 app.js: getStoredKey imported (line 1) and used (line 11) ✓
 ```
@@ -44,9 +44,10 @@ app.js: getStoredKey imported (line 1) and used (line 11) ✓
 ## Self-Check: PASSED
 
 All must_have truths verified:
-- `state.js` exports `getStoredKey()` and `setStoredKey()` as named functions ✓
-- `getStoredKey()` calls `localStorage.getItem('ff_key')` directly, not through `LS.get` ✓
-- `setStoredKey(key)` calls `localStorage.setItem('ff_key', key)` directly, not through `LS.set` ✓
+- `state.js` exports `getStoredKey()`, `setStoredKey()`, and `clearStoredKey()` as named functions ✓
+- `getStoredKey()` prefers `sessionStorage`, migrates a legacy `localStorage` key once, and removes the persistent copy ✓
+- `setStoredKey(key)` stores only in `sessionStorage` and removes any persistent `localStorage` copy ✓
+- `clearStoredKey()` removes `ff_key` from both `sessionStorage` and `localStorage` ✓
 - `onboarding.js` has no direct `localStorage.setItem('ff_key')` call ✓
-- `settings.js` has no direct `localStorage.setItem('ff_key')` call (line 53 `LS.del` is unchanged) ✓
+- `settings.js` has no direct `ff_key` storage call; clear uses `clearStoredKey()` ✓
 - `app.js` has no direct `localStorage.getItem('ff_key')` call ✓
