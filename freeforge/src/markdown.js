@@ -16,10 +16,18 @@ const PURIFY_CONFIG = {
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
   ],
-  ALLOWED_ATTR: ['href', 'title'],
+  ALLOWED_ATTR: ['href', 'title', 'class'],
   FORBID_ATTR: ['style', 'onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
   FORCE_BODY: true,
 };
+
+if (typeof DOMPurify !== 'undefined') {
+  DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+    if (data.attrName !== 'class') return;
+    const isLanguageClass = /^language-[a-z0-9_-]+$/i.test(data.attrValue);
+    if (node.nodeName !== 'CODE' || !isLanguageClass) data.keepAttr = false;
+  });
+}
 
 export function renderMd(text) {
   if (!text) return '';

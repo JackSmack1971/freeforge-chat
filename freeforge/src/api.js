@@ -1,4 +1,3 @@
-import { S } from './state.js';
 import { showInvalidBanner } from './ui/screen.js';
 
 export async function fetchFreeModels(key) {
@@ -18,10 +17,7 @@ export async function fetchFreeModels(key) {
   }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
 }
 
-export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError }) {
-  const ctrl = new AbortController();
-  S.abort = ctrl;
-
+export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError, signal }) {
   let res;
   try {
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -31,10 +27,10 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model: modelId, messages: msgs, stream: true }),
-      signal: ctrl.signal,
+      signal,
     });
   } catch (e) {
-    if (e.name === 'AbortError') { onDone(''); return; }
+    if (e.name === 'AbortError') return onDone('{}', '');
     onError('Network error — check your connection.');
     return;
   }
@@ -52,7 +48,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
 
   const reader = res.body.getReader();
   const dec = new TextDecoder();
-  let buf = '', full = '';
+  let buf = '', full = '', donePayload = '{}';
 
   try {
     while (true) {
@@ -68,14 +64,17 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
         if (raw === '[DONE]') continue;
         try {
           const j = JSON.parse(raw);
+          if (j?.usage?.total_tokens !== undefined) donePayload = raw;
           const delta = j.choices?.[0]?.delta?.content;
           if (delta) { full += delta; onToken(delta, full); }
         } catch {}
       }
     }
   } catch (e) {
-    if (e.name !== 'AbortError') onError('Stream interrupted.');
+    if (e.name === 'AbortError') return onDone(donePayload, full);
+    onError('Stream interrupted.');
     return;
   }
-  onDone(full);
+  return onDone(donePayload, full);
 }
+

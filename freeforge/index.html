@@ -123,9 +123,26 @@
           </svg>
         </div>
       </div>
+      <!-- Context health pill — updated by ui/ctx-pill.js after each turn -->
+      <span
+        id="ctx-pill"
+        title="Context usage — click for details"
+        class="ctx-pill ctx-ok"
+        aria-live="polite"
+        aria-label="Context window usage">
+        0%
+      </span>
     </div>
 
     <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- Command palette trigger — click or Ctrl+K -->
+      <button
+        id="palette-trigger-btn"
+        title="Command palette (Ctrl+K)"
+        aria-label="Open command palette"
+        class="nav-icon-btn palette-trigger">
+        ⌘
+      </button>
       <button id="settings-btn" title="Settings" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -158,6 +175,10 @@
         <button class="suggestion text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors">Help me brainstorm ideas</button>
         <button class="suggestion text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors">Debug my code</button>
       </div>
+      <!-- Ghost-text discoverability hint — intentionally muted -->
+      <p class="empty-hint" aria-hidden="true">
+        Press <kbd>Ctrl+K</kbd> for commands
+      </p>
     </div>
 
     <!-- Messages container -->
@@ -232,6 +253,23 @@
       </button>
     </div>
   </div>
+</div>
+
+
+<!-- Command Palette — visibility controlled by features/palette.js via .hidden class -->
+<div id="cmd-palette" class="hidden" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div id="cmd-palette-inner">
+    <input
+      id="cmd-search"
+      type="text"
+      placeholder="Type a command…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search commands"
+    />
+    <ul id="cmd-list" role="listbox" aria-label="Available commands"></ul>
+  </div>
+  <div id="cmd-backdrop"></div>
 </div>
 
 <script type="module" src="src/app.js"></script>
