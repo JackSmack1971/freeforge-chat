@@ -1,7 +1,7 @@
 ---
 phase: 01-security-hardening
-verified: 2026-06-04T00:00:00Z
-status: complete
+verified: 2026-06-05T02:02:00Z
+status: incomplete_runtime_verification
 score: 5/5 must-haves verified
 overrides_applied: 0
 human_verification:
@@ -22,9 +22,9 @@ human_verification:
 # Phase 1: Security Hardening Verification Report
 
 **Phase Goal:** The app has no XSS vectors, no CVE-affected dependencies, and a Content Security Policy — a portfolio reviewer who audits the source finds nothing disqualifying
-**Verified:** 2026-06-04T00:00:00Z
-**Status:** incomplete_in_production
-**Re-verification:** No — initial verification
+**Verified:** 2026-06-05T02:02:00Z
+**Status:** production_current_runtime_partial
+**Re-verification:** Yes — production redeploy verified after shipping `8f94d48`
 
 ## Goal Achievement
 
@@ -46,9 +46,9 @@ human_verification:
 |------------------------------------------------|----------------------------------------------------|------------|------------------------------------------------------------------------------------------|
 | `freeforge.html` (root)                        | DELETED — must not exist                           | VERIFIED   | File absent from repository root. Glob confirms no match.                                |
 | `freeforge/index.html`                         | Single entry point; marked@18.0.4, DOMPurify@3.4.8 | VERIFIED | Both CDN library versions and hashes are correct. Old version strings absent.                    |
-| `netlify.toml`                                 | Tightened browser security headers                | VERIFIED   | CSP header narrows `connect-src` to OpenRouter, denies framing with `frame-ancestors 'none'`, and sets `Referrer-Policy = "no-referrer"`. |
-| `freeforge/src/markdown.js`                    | Safe renderer; `marked.use()` at module level; escape fallback; no rendered images | VERIFIED | `marked.use()` is at module scope. Both fallback paths use `esc()`. Sanitizer allowlist excludes `img` and `src`, so assistant output cannot trigger passive third-party image fetches. |
-| `freeforge/src/state.js`                       | Exports `getStoredKey()`, `setStoredKey(key)`, and `clearStoredKey()`   | VERIFIED   | Lines 30-50: helpers use `sessionStorage` for the live key, migrate and remove any legacy `localStorage` copy, and clear both stores explicitly. |
+| `netlify.toml`                                 | Tightened browser security headers                | VERIFIED   | Source and live production both show `connect-src https://openrouter.ai`, `frame-ancestors 'none'`, and `Referrer-Policy = "no-referrer"`. |
+| `freeforge/src/markdown.js`                    | Safe renderer; `marked.use()` at module level; escape fallback; no rendered images | VERIFIED | `marked.use()` is at module scope. Both fallback paths use `esc()`. Live-served file excludes `img` and `src`, so assistant output cannot trigger passive third-party image fetches. |
+| `freeforge/src/state.js`                       | Exports `getStoredKey()`, `setStoredKey(key)`, and `clearStoredKey()`   | VERIFIED   | Source and live-served file use `sessionStorage` for the live key, migrate and remove any legacy `localStorage` copy, and clear both stores explicitly. |
 | `freeforge/src/features/onboarding.js`         | Uses `setStoredKey()` for ff_key write             | VERIFIED   | Line 1 imports `setStoredKey`. Line 22 calls `setStoredKey(key)`. No direct `localStorage.setItem('ff_key')`. |
 | `freeforge/src/features/settings.js`           | Uses key-storage helpers for ff_key write and clear | VERIFIED   | Line 1 imports `setStoredKey` and `clearStoredKey`. Line 33 calls `setStoredKey(key)`. Line 53 clears the key via `clearStoredKey()` before deleting `ff_msgs` and `ff_model`. |
 | `freeforge/src/app.js`                         | Uses `getStoredKey()` for ff_key read              | VERIFIED   | Line 1 imports `getStoredKey`. Line 11 calls `const savedKey = getStoredKey()`. No direct `localStorage.getItem('ff_key')`. |
@@ -65,6 +65,18 @@ human_verification:
 | `settings.js` import                      | `state.js setStoredKey/clearStoredKey exports`  | Named import                 | WIRED   | `import { S, $, LS, maskKey, setStoredKey, clearStoredKey } from '../state.js'` on line 1. |
 | `app.js` import                           | `state.js getStoredKey export`                  | Named import                 | WIRED   | `import { S, $, LS, getStoredKey } from './state.js'` on line 1. |
 | `api.js` request headers                   | OpenRouter chat completions                     | Minimal request header set   | WIRED   | Chat requests send only `Authorization` and `Content-Type`; no `HTTP-Referer` or `X-Title` remain. |
+
+### Live Deployment Probe
+
+Direct HTTPS probes against `https://freeforge-chat.netlify.app/` on 2026-06-05 confirm production now matches the hardened local commit `8f94d48` for the externally observable parts of this phase:
+
+- `Content-Security-Policy` header now includes `connect-src https://openrouter.ai` and `frame-ancestors 'none'`
+- `Referrer-Policy` header is now `no-referrer`
+- Onboarding copy now says `Your key stays in this browser tab only. Chat history stays local to your browser.`
+- Footer copy now says `Powered by OpenRouter free models • Key kept to this tab • Chat history stays local`
+- Served `src/api.js` sends only `Authorization` and `Content-Type`
+- Served `src/markdown.js` blocks `img`/`src` and arbitrary `id`/`class`
+- Served `src/state.js` uses session-scoped key storage with full cleanup support
 
 ### Data-Flow Trace (Level 4)
 
@@ -147,20 +159,13 @@ No debt markers (TBD, FIXME, XXX), placeholder strings, stub returns, or hardcod
 
 ### Gaps Summary
 
-Static source inspection verifies the hardened worktree, but a direct external probe on 2026-06-04 shows the live deployment at `https://freeforge-chat.netlify.app/` is still serving older headers and older privacy copy:
+Production deployment is now current and externally consistent with the hardened source, but three runtime behaviors still require a real browser to claim the phase is fully verified end-to-end:
 
-- `Content-Security-Policy` still allows `https://cdn.jsdelivr.net` in `connect-src`
-- `frame-ancestors 'none'` is absent from the live CSP
-- `Referrer-Policy` is still `strict-origin-when-cross-origin`
-- The rendered page still says "Your key stays in your browser only" and "Local storage only"
+- DevTools confirmation that the live app loads with zero CSP violations
+- Same-tab reload versus new-tab/browser-restart confirmation for the final deployed sessionStorage lifecycle
+- True CDN-fail execution of the DOMPurify-unavailable fallback path
 
-Therefore the codebase remediation is ahead of production, and runtime verification cannot currently prove the hardened state is deployed.
-
-The deployment boundary is now clear:
-
-- Live production matches the last committed `origin/main` / `HEAD` state (`297896e`)
-- The stronger hardening described in this report exists only in the current uncommitted worktree
-- A fresh commit/push/redeploy cycle is required before the runtime checks can verify the newer hardening externally
+Static inspection and live HTTP probing are strong enough to prove shipment and configuration alignment, but not enough to claim those browser-executed behaviors were personally witnessed.
 
 ### Post-Phase Hardening Addendum
 
@@ -172,11 +177,11 @@ The current codebase also includes several additional hardening measures beyond 
 - Assistant-rendered markdown no longer allows `<img>` tags, preventing passive third-party image beacons from model output even when the app is opened outside the Netlify header environment.
 - Key clearing now removes `ff_key` from both `sessionStorage` and any legacy `localStorage` copy.
 
-At present these addendum items are verified in the worktree but not yet in the deployed Netlify artifact.
+These addendum items are now verified both in source and in the deployed Netlify artifact where they are externally observable.
 
-The four human verification items above remain the required runtime confirmations after a fresh deployment. Until the deployed site reflects the current worktree, they cannot be treated as satisfied for the real end-to-end audit claim.
+Three human verification items remain open for the real end-to-end audit claim: live browser CSP cleanliness, live session lifecycle behavior, and true CDN-fail fallback execution.
 
 ---
 
-_Verified: 2026-06-04T00:00:00Z_
+_Verified: 2026-06-05T02:02:00Z_
 _Verifier: Claude (gsd-verifier)_
