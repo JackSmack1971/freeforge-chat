@@ -2,6 +2,7 @@ import { S, $, LS, fmtCtx } from '../state.js';
 import { fetchFreeModels } from '../api.js';
 import { toast } from '../ui/toast.js';
 import { showInvalidBanner } from '../ui/screen.js';
+import { renderCtxPill } from '../ui/ctx-pill.js';
 
 function buildOptions(models) {
   const sel = $('model-select');
@@ -48,17 +49,6 @@ export async function loadModels(key) {
   }
 }
 
-export function changeModel(modelId) {
-  const prev = S.selectedModel;
-  S.selectedModel = modelId;
-  $('model-select').value = modelId;
-  LS.set('ff_model', modelId);
-  if (prev !== modelId) {
-    const m = S.models.find(x => x.id === modelId);
-    toast(`Model: ${m?.name || modelId.split('/').pop()}`, 'info');
-  }
-}
-
 export function populateModelsFromState() {
   const sel = $('model-select');
   if (!S.models.length) { sel.innerHTML = '<option value="">No free models</option>'; return; }
@@ -71,10 +61,16 @@ export function populateModelsFromState() {
 
 export function changeModel(modelId) {
   if (!modelId) return;
-  const exists = S.models.find(m => m.id === modelId);
-  if (!exists) { toast('Model unavailable', 'warning'); return; }
+  const model = S.models.find(m => m.id === modelId);
+  if (!model) { toast('Model unavailable', 'warning'); return; }
+
+  const prev = S.selectedModel;
   S.selectedModel = modelId;
   $('model-select').value = modelId;
   LS.set('ff_model', modelId);
-  toast(`Model: ${exists.name || modelId.split('/').pop()}`, 'info');
+  renderCtxPill();
+
+  if (prev !== modelId) {
+    toast(`Model: ${model.name || modelId.split('/').pop()}`, 'info');
+  }
 }
