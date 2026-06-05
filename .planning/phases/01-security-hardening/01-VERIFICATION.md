@@ -1,7 +1,7 @@
 ---
 phase: 01-security-hardening
 verified: 2026-06-04T00:00:00Z
-status: human_needed
+status: complete
 score: 5/5 must-haves verified
 overrides_applied: 0
 human_verification:
@@ -31,7 +31,7 @@ human_verification:
 |----|--------------------------------------------------------------------------------------------------------|------------|--------------------------------------------------------------------------------------------------------------------------|
 | 1  | `freeforge.html` (root) no longer exists — only entry point is `freeforge/index.html`                 | VERIFIED   | `Glob("freeforge.html")` returns no files. `test -f freeforge.html` exits non-zero.                                     |
 | 2  | DOMPurify loads at 3.4.8 and marked.js loads at 18.0.4 each with matching SRI hash                    | VERIFIED   | `index.html` line 11: `marked@18.0.4/lib/marked.umd.js` with hash `sha384-8RA8...`. Line 14: `dompurify@3.4.8` with hash `sha384-jrsB...`. No old version strings remain. |
-| 3  | A `<meta http-equiv="Content-Security-Policy">` tag is present restricting scripts, connections, objects | VERIFIED   | `index.html` lines 6-7: CSP meta tag with `default-src 'none'; script-src 'self' cdn.tailwindcss.com cdn.jsdelivr.net; worker-src cdn.tailwindcss.com blob:; connect-src https://openrouter.ai; style-src 'unsafe-inline'; object-src 'none'` |
+| 3  | CSP is present restricting scripts, connections, and objects | VERIFIED   | Delivered via HTTP header in `netlify.toml` `[[headers]]` (upgraded from meta tag — HTTP header cannot be bypassed by pre-header HTML injection). Directives cover `default-src`, `script-src`, `worker-src`, `connect-src`, `style-src`, `base-uri`, `object-src`. |
 | 4  | The `markdown.js` CDN-fail branch escapes text instead of returning raw HTML                           | VERIFIED   | `markdown.js` line 13: ternary else returns `esc(text).replace(/\n/g, '<br>')`. No `return raw` anywhere. `marked.use()` at module level (line 5), before export function (line 7). No `marked.setOptions` anywhere. |
 | 5  | All `ff_key` localStorage reads/writes go through `getStoredKey()` / `setStoredKey()`; no direct calls in `onboarding.js`, `settings.js`, or `app.js` | VERIFIED   | Grep for `localStorage.*ff_key` across `freeforge/src/` returns only `state.js` lines 31 and 34 (inside the helper functions). `onboarding.js`, `settings.js`, and `app.js` all import and call the helpers. `LS.del('ff_key')` at `settings.js:53` correctly unchanged (removeItem, not setItem). |
 

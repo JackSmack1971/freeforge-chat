@@ -12,7 +12,7 @@ FreeForge is a functional, feature-complete vanilla JS chat UI. This quality pas
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Security Hardening** - Eliminate XSS vectors, upgrade CVE-affected libraries, add CSP, and delete the vulnerable root entry point
+- [x] **Phase 1: Security Hardening** - Eliminate XSS vectors, upgrade CVE-affected libraries, add CSP, and delete the vulnerable root entry point
 - [ ] **Phase 2: Mobile UX** - Fix iOS keyboard occlusion, safe-area insets, and touch target sizing
 - [ ] **Phase 3: Accessibility** - Close all 23 WCAG 2.1 AA gaps including aria-live regions, modal focus trap, and input labeling
 - [ ] **Phase 4: Code Quality** - Split state/utils, fix AbortController leak, add error resilience for edge-case API responses
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. All `ff_key` localStorage reads and writes go through `getStoredKey()` / `setStoredKey()` in `state.js`; no direct `localStorage.setItem('ff_key')` calls remain in `onboarding.js`, `settings.js`, or `app.js`
 **Plans:** 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — Delete freeforge.html + upgrade CDN libs (marked@18.0.4, DOMPurify@3.4.8) + add CSP meta tag
-- [ ] 01-02-PLAN.md — Fix markdown.js: module-level marked.use() and escape XSS fallback
-- [ ] 01-03-PLAN.md — Add getStoredKey/setStoredKey to state.js; update 3 caller files
+- [x] 01-01-PLAN.md — Delete freeforge.html + upgrade CDN libs (marked@18.0.4, DOMPurify@3.4.8) + add CSP meta tag
+- [x] 01-02-PLAN.md — Fix markdown.js: module-level marked.use() and escape XSS fallback
+- [x] 01-03-PLAN.md — Add getStoredKey/setStoredKey to state.js; update 3 caller files
 
 ### Phase 2: Mobile UX
 **Goal**: The app is fully usable on iOS and Android — the virtual keyboard does not hide the input, safe-area insets protect content from the home indicator, and all interactive controls meet minimum touch-target size
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 0/3 | Not started | - |
+| 1. Security Hardening | 3/3 | Complete | 2026-06-04 |
 | 2. Mobile UX | 0/TBD | Not started | - |
 | 3. Accessibility | 0/TBD | Not started | - |
 | 4. Code Quality | 0/TBD | Not started | - |
