@@ -21,14 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-04)
 
 **Core value:** A single HTML file you can open, share, or deploy anywhere — beautiful enough to show in a portfolio, tight enough to show in the code.
-**Current focus:** Phase 02 — mobile-ux (next)
+**Current focus:** New client-side security plan (details to follow)
 
 ## Current Position
 
 Phase: 01 (security-hardening) — COMPLETE ✓
-Phase: 02 (mobile-ux) — NOT STARTED
-Status: Phase 01 verified and deployed. Ready to begin Phase 02.
-Last activity: 2026-06-04 -- Phase 01 complete, Netlify deployment live
+Status: Phase 01 verified and deployed. Remaining phases cleared. Awaiting new client-side security plan.
+Last activity: 2026-06-04 -- Phase 01 complete, Netlify deployment live, future phases cleared
 
 Progress: [██░░░░░░░░] 20%
 
@@ -61,17 +60,16 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Roadmap init: Delete `freeforge.html` root file first — all security fixes apply to `freeforge/index.html` only; avoids duplicate work and reviewer confusion
-- Roadmap init: `aria-live` regions must land in static HTML before any JS writes to them (NVDA/VoiceOver iOS constraint)
-- Roadmap init: Phase 3 (Accessibility) depends on Phase 1 (Security) only; can run in parallel with Phase 2 if needed
+- Phase 01: CSP delivered via `netlify.toml` HTTP header rather than meta tag — better security, not bypassable by pre-header injection
+- Phase 01 close: Remaining phases 2-5 cleared. New plan focused on client-side security will replace them.
 
 ### Pending Todos
 
-None yet.
+None — awaiting new client-side security plan.
 
 ### Blockers/Concerns
 
-- Phase 4 (CODE-01): `state.js` → `utils.js` split touches 9+ import paths. Missing one produces a silent `$ is not a function` error. Grep all `from './state.js'` variants before starting.
-- Phase 3 (A11Y-05): `trapFocus` must filter `.hidden` Tailwind elements using `el.offsetParent !== null`, not just `[hidden]` attribute.
+None at this time.
 
 ## Deferred Items
 
