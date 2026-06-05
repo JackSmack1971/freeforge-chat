@@ -1,7 +1,7 @@
 ---
 phase: 01-security-hardening
-verified: 2026-06-05T02:02:00Z
-status: incomplete_runtime_verification
+verified: 2026-06-05T02:15:00Z
+status: complete
 score: 5/5 must-haves verified
 overrides_applied: 0
 human_verification:
@@ -22,8 +22,8 @@ human_verification:
 # Phase 1: Security Hardening Verification Report
 
 **Phase Goal:** The app has no XSS vectors, no CVE-affected dependencies, and a Content Security Policy — a portfolio reviewer who audits the source finds nothing disqualifying
-**Verified:** 2026-06-05T02:02:00Z
-**Status:** production_current_runtime_partial
+**Verified:** 2026-06-05T02:15:00Z
+**Status:** complete
 **Re-verification:** Yes — production redeploy verified after shipping `8f94d48`
 
 ## Goal Achievement
@@ -78,6 +78,17 @@ Direct HTTPS probes against `https://freeforge-chat.netlify.app/` on 2026-06-05 
 - Served `src/markdown.js` blocks `img`/`src` and arbitrary `id`/`class`
 - Served `src/state.js` uses session-scoped key storage with full cleanup support
 
+### Runtime Browser Evidence
+
+Headless Chrome CDP execution against `https://freeforge-chat.netlify.app/` on 2026-06-05 confirms the remaining runtime-only behaviors:
+
+- Clean-tab load renders onboarding and produces no CSP violation log entries
+- Same-tab reload after setting `sessionStorage.ff_key` opens chat and retains the key in `sessionStorage` only
+- A brand-new top-level tab starts on onboarding with both `sessionStorage.ff_key` and `localStorage.ff_key` absent
+- A live OpenRouter preflight request carries `Origin` and no `Referer`
+- A live OpenRouter `POST` request carries `Authorization`, `Content-Type`, and `Origin`, but not `Referer`, `HTTP-Referer`, `X-Title`, or `X-OpenRouter-Title`
+- With the DOMPurify CDN URL blocked, `renderMd('<script>alert(1)</script><img src=x onerror=alert(1)>')` returns escaped text, and real DOM insertion produces no `<script>` node, no `<img>` node, and no alert execution
+
 ### Data-Flow Trace (Level 4)
 
 Not applicable — this phase modifies entry point configuration, CDN library versions, a markdown utility, and localStorage accessor wiring. No new dynamic data rendering components were introduced.
@@ -131,41 +142,13 @@ All 7 SEC requirements for Phase 1 are satisfied.
 
 No debt markers (TBD, FIXME, XXX), placeholder strings, stub returns, or hardcoded empty data found in any file modified by this phase.
 
-### Human Verification Required
+### Runtime Verification Completed
 
-#### 1. CSP Enforcement — No Runtime Violations
-
-**Test:** Open `freeforge/index.html` in a browser (Chrome or Firefox) with DevTools open, Console tab visible. Load the page and inspect the document response headers in DevTools Network.
-**Expected:** No Content Security Policy violation warnings or errors appear in the console. The app renders the onboarding screen normally. The served headers include `Content-Security-Policy` with `connect-src https://openrouter.ai`, `frame-ancestors 'none'`, and `Referrer-Policy: no-referrer`.
-**Why human:** Header delivery and CSP enforcement are browser/runtime behaviors. Static analysis confirms the configured header strings, but cannot prove that the deployed server returns them and that all loaded resources satisfy them without violations.
-
-#### 2. API Key Persistence Round-Trip
-
-**Test:** Open the app, enter a valid OpenRouter API key, click "Save & Connect". Reload in the same tab, then open a new tab or restart the browser.
-**Expected:** Same-tab reload skips onboarding and goes directly to the chat screen. A new tab or full browser restart returns to onboarding, confirming the API key is session-scoped rather than persisted on disk.
-**Why human:** `getStoredKey()` / `setStoredKey()` now target `sessionStorage` with one-time migration cleanup of old `localStorage` state. Static analysis verified the code path; only a live browser round-trip can confirm the intended session lifecycle.
-
-#### 2b. Minimal OpenRouter Request Metadata
-
-**Test:** With DevTools Network open, send a chat message and inspect the `https://openrouter.ai/api/v1/chat/completions` request headers.
-**Expected:** The request contains `Authorization` and `Content-Type`, but does not contain `HTTP-Referer`, `X-Title`, or `X-OpenRouter-Title`.
-**Why human:** Static analysis confirms the request code no longer sets attribution headers. A live network inspection confirms the browser does not add unexpected metadata on its own and that the deployed bundle matches source.
-
-#### 3. CDN-Fail XSS Fallback Execution
-
-**Test:** In DevTools Network tab, block `cdn.jsdelivr.net` (or disconnect network). Reload the app (it may error during load but the markdown module will initialize without DOMPurify). Trigger a scenario where a message is rendered containing `<script>alert(1)</script>` or `<img src=x onerror=alert(1)>`.
-**Expected:** The dangerous HTML is rendered as visible escaped text characters, not executed. No alert fires. No raw HTML is injected into the DOM.
-**Why human:** The CDN-fail code path (`typeof DOMPurify !== 'undefined'` evaluating to false) can only be truly exercised when DOMPurify fails to load. Static analysis confirms the code path returns `esc(text)` — this runtime test confirms the browser executes that path correctly under CDN failure conditions.
+All four browser-runtime checks above have now been executed against the deployed site via headless Chrome CDP. They are no longer open verification gaps for this phase.
 
 ### Gaps Summary
 
-Production deployment is now current and externally consistent with the hardened source, but three runtime behaviors still require a real browser to claim the phase is fully verified end-to-end:
-
-- DevTools confirmation that the live app loads with zero CSP violations
-- Same-tab reload versus new-tab/browser-restart confirmation for the final deployed sessionStorage lifecycle
-- True CDN-fail execution of the DOMPurify-unavailable fallback path
-
-Static inspection and live HTTP probing are strong enough to prove shipment and configuration alignment, but not enough to claim those browser-executed behaviors were personally witnessed.
+No remaining security-verification gaps remain for the client-side Phase 1 scope. Source inspection, live production probing, and browser runtime execution now agree.
 
 ### Post-Phase Hardening Addendum
 
@@ -179,9 +162,15 @@ The current codebase also includes several additional hardening measures beyond 
 
 These addendum items are now verified both in source and in the deployed Netlify artifact where they are externally observable.
 
-Three human verification items remain open for the real end-to-end audit claim: live browser CSP cleanliness, live session lifecycle behavior, and true CDN-fail fallback execution.
+Residual non-goal observations from the runtime session:
+
+- Tailwind CDN prints a production-usage warning in the browser console
+- Password inputs are not wrapped in a `<form>`
+- The page emits a favicon 404
+
+None of these observations contradict the security-hardening objective or the phase acceptance criteria.
 
 ---
 
-_Verified: 2026-06-05T02:02:00Z_
+_Verified: 2026-06-05T02:15:00Z_
 _Verifier: Claude (gsd-verifier)_

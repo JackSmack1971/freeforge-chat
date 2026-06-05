@@ -1,38 +1,46 @@
 ---
-status: partially_verified
+status: complete
 phase: 01-security-hardening
 source: [01-VERIFICATION.md]
 started: 2026-06-04T00:00:00Z
-updated: 2026-06-05T02:02:00Z
+updated: 2026-06-05T02:15:00Z
 ---
 
 ## Current Test
 
-The deployment gap is closed. A direct HTTPS probe on 2026-06-05 against `https://freeforge-chat.netlify.app/` shows production now serves the hardened headers, updated privacy copy, and the hardened `src/api.js`, `src/markdown.js`, and `src/state.js` bundle content from commit `8f94d48`.
+Runtime verification is complete. Headless Chrome CDP probes on 2026-06-05 against `https://freeforge-chat.netlify.app/` confirmed the deployed site serves the hardened headers, updated privacy copy, session-scoped key behavior, minimal OpenRouter request metadata, and safe markdown fallback behavior from the shipped remediation set.
 
 ## Tests
 
 ### 1. CSP runtime enforcement
 expected: No CSP violation errors appear in DevTools Console. The app loads normally.
-result: partial
+result: passed
 
-Direct production probe confirms the served headers are now aligned with the hardened worktree: `connect-src https://openrouter.ai`, `frame-ancestors 'none'`, and `Referrer-Policy: no-referrer` are live. A real browser console check is still pending, so runtime CSP cleanliness is not fully human-verified yet.
+Observed in a real headless browser session against production: onboarding loads normally on a clean tab, and no console or log entry contains a CSP violation or blocked-resource enforcement message. Non-security console noise remains (`cdn.tailwindcss.com` production warning, password-field-not-in-form warnings, and a favicon 404), but none are CSP failures.
 
 ### 2. API key persistence round-trip
 expected: Within the same browser tab, reload keeps you in chat (getStoredKey/setStoredKey work correctly, no JSON double-encoding). After a full browser restart or a brand-new tab, onboarding returns because the key is session-scoped.
-result: partial
+result: passed
 
-Confirmed by user on deployed Netlify instance. getStoredKey/setStoredKey round-trip works correctly.
+In the browser runtime probe, a clean tab starts on onboarding with both `sessionStorage.ff_key` and `localStorage.ff_key` absent. After injecting a test key into `sessionStorage` and reloading the same tab, the app opens the chat screen and the key remains only in `sessionStorage`. A brand-new top-level tab returns to onboarding with both stores empty, confirming the deployed behavior is tab-scoped rather than persistent.
 
-Production HTML and served `state.js` are now aligned with the session-scoped storage model. Remaining gap: a fresh same-tab/new-tab/browser-restart round-trip has not been re-run after the final deployed hardening set.
+### 3. Minimal OpenRouter request metadata
+expected: OpenRouter requests contain the required auth/content headers but no `Referer`, `HTTP-Referer`, `X-Title`, or `X-OpenRouter-Title`.
+result: passed
 
-### 3. CDN-fail XSS fallback
+Real browser capture of the deployed app context shows:
+
+- The CORS preflight carries `Origin: https://freeforge-chat.netlify.app` and no `Referer`
+- The actual `POST https://openrouter.ai/api/v1/chat/completions` request carries `Authorization`, `Content-Type`, and `Origin`
+- The actual request does not carry `Referer`, `HTTP-Referer`, `X-Title`, or `X-OpenRouter-Title`
+
+### 4. CDN-fail XSS fallback
 expected: The assistant reply renders the literal text `<script>alert(1)</script>` escaped as visible characters — no alert fires, no raw HTML injected.
-result: static_only
+result: passed
 
-Code path confirmed correct via static analysis. esc(text) fallback in place in markdown.js.
+With the DOMPurify CDN URL blocked in a live browser session, `typeof DOMPurify` is `undefined` while `marked` still loads. Calling `renderMd('<script>alert(1)</script><img src=x onerror=alert(1)>')` returns escaped text, and inserting that output into a real DOM produces no `<script>` node, no `<img>` node, and no alert execution.
 
-### 4. External production probe
+### 5. External production probe
 expected: Production serves the tightened security headers and updated privacy copy from the current worktree.
 result: passed
 
@@ -50,13 +58,13 @@ This proves the deployed site has picked up the latest hardening changes that we
 
 ## Summary
 
-total: 4
-passed: 1
+total: 5
+passed: 5
 issues: 0
-pending: 3
+pending: 0
 skipped: 0
 blocked: 0
 
 ## Gaps
 
-- Remaining gaps are browser-executed checks, not deployment drift: DevTools confirmation of zero CSP violations, a fresh same-tab/new-tab key lifecycle round-trip on the deployed app, and the true CDN-fail DOMPurify fallback path.
+- None for Phase 1 security acceptance. Remaining console noise is non-blocking and outside the security-hardening scope.
