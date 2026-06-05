@@ -28,10 +28,24 @@ export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 export const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 export function getStoredKey() {
-  try { return localStorage.getItem('ff_key'); } catch { return null; }
+  try {
+    const sess = sessionStorage.getItem('ff_key');
+    if (sess) return sess;
+    // One-time migration: move plaintext key from localStorage into sessionStorage
+    // so it no longer rests on disk between browser restarts (CWE-922).
+    const local = localStorage.getItem('ff_key');
+    if (local) {
+      sessionStorage.setItem('ff_key', local);
+      localStorage.removeItem('ff_key');
+      return local;
+    }
+    return null;
+  } catch { return null; }
 }
 export function setStoredKey(key) {
-  try { localStorage.setItem('ff_key', key); } catch {}
+  try { sessionStorage.setItem('ff_key', key); } catch {}
+  // Ensure no plaintext copy lingers in persistent storage.
+  try { localStorage.removeItem('ff_key'); } catch {}
 }
 
 export function maskKey(k) {
