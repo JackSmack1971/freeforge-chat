@@ -23,7 +23,10 @@ export function toast(msg, type = 'info', ms = 3000) {
   const el = document.createElement('div');
   el.className = `toast pointer-events-auto flex items-start gap-2.5 px-3.5 py-3 rounded-xl border text-sm shadow-xl ${PALETTE[type]}`;
   el.style.cssText = `background:${BG[type]};max-width:320px;word-break:break-word`;
-  el.innerHTML = `<svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ICONS[type]}"/></svg><span>${esc(msg)}</span>`;
+  if (ms === 0) el.style.animation = 'toastIn .25s ease-out';
+  const safeAction = '<button onclick="newChat()" class="toast-action-btn">New Chat</button>';
+  const body = msg.includes(safeAction) ? esc(msg).replace(esc(safeAction), safeAction) : esc(msg);
+  el.innerHTML = `<svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ICONS[type]}"/></svg><span>${body}</span>`;
   $('toasts').appendChild(el);
-  setTimeout(() => el.remove(), ms + 300);
+  if (ms > 0) setTimeout(() => el.remove(), ms + 300);
 }

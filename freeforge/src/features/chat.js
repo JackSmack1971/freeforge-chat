@@ -1,6 +1,7 @@
 import { S, $, LS, uid } from '../state.js';
 import { streamCompletion } from '../api.js';
 import { toast } from '../ui/toast.js';
+import { renderCtxPill } from '../ui/ctx-pill.js';
 import { renderAllMessages, scrollBottom, setStreamMode } from '../ui/messages.js';
 
 export async function sendMessage(text) {
@@ -9,6 +10,7 @@ export async function sendMessage(text) {
   if (!S.selectedModel) { toast('Select a model first', 'warning'); return; }
 
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
+  S.lastAssistantResponse = '';
 
   S.messages.push({ id: uid(), role: 'user', content: text });
 
@@ -30,9 +32,12 @@ export async function sendMessage(text) {
     .map(m => ({ role: m.role, content: m.content }));
 
   let firstToken = true;
+  const ctrl = new AbortController();
+  S.abort = ctrl;
   S.streamTarget = null;
 
   await streamCompletion(payload, S.selectedModel, S.apiKey, {
+    signal: ctrl.signal,
     onToken(_delta, full) {
       if (firstToken) {
         firstToken = false;
@@ -40,12 +45,27 @@ export async function sendMessage(text) {
         S.streamTarget = document.querySelector(`[data-id="${asstId}"] .msg-content`);
       }
       asstMsg.content = full;
+      S.lastAssistantResponse = full;
       if (S.streamTarget) S.streamTarget.textContent = full;
       scrollBottom(false);
     },
-    onDone(full) {
+    onDone(rawPayload, full) {
+      let parsed;
+      try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
+      const exactTokens = parsed?.usage?.total_tokens ?? null;
+      if (exactTokens !== null) {
+        S.contextTokens += exactTokens;
+        S.usageIsExact = true;
+      } else {
+        const charEstimate = Math.ceil((text.length + S.lastAssistantResponse.length) / 4);
+        S.contextTokens += charEstimate;
+        S.usageIsExact = false;
+      }
+      if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
+
       $('thinking').classList.add('hidden');
       asstMsg.content = full || asstMsg.content;
+      S.lastAssistantResponse = asstMsg.content;
       asstMsg.streaming = false;
       S.streaming = false;
       S.abort = null;
@@ -53,7 +73,9 @@ export async function sendMessage(text) {
       setStreamMode(false);
       LS.set('ff_msgs', S.messages);
       renderAllMessages();
+      renderCtxPill();
       scrollBottom();
+      return exactTokens;
     },
     onError(errMsg) {
       $('thinking').classList.add('hidden');
@@ -84,12 +106,27 @@ export async function regenerate() {
   await sendMessage(text);
 }
 
+export function copyLastResponse() {
+  const msg = [...S.messages].reverse().find(m => m.role === 'assistant' && m.content);
+  if (!msg) { toast('No response to copy yet', 'info'); return; }
+  navigator.clipboard.writeText(msg.content)
+    .then(() => toast('Copied', 'success'))
+    .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
+}
+
 export function newChat() {
   if (S.abort) { S.abort.abort(); S.abort = null; }
   S.messages = [];
   S.streaming = false;
+  S.contextTokens = 0;
+  S.usageIsExact = false;
+  S.ctxToastFired = false;
+  S.lastAssistantResponse = '';
   setStreamMode(false);
   $('thinking').classList.add('hidden');
   LS.set('ff_msgs', []);
   renderAllMessages();
+  renderCtxPill();
 }
+
+if (typeof window !== 'undefined') window.newChat = newChat;

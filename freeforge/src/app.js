@@ -6,6 +6,8 @@ import { loadModels } from './features/models.js';
 import { validateAndConnect, hideObError } from './features/onboarding.js';
 import { openSettings, closeSettings, updateKey, clearKey } from './features/settings.js';
 import { sendMessage, regenerate, newChat } from './features/chat.js';
+import { renderCtxPill } from './ui/ctx-pill.js';
+import { openPalette, closePalette } from './features/palette.js';
 
 async function init() {
   const savedKey = getStoredKey();
@@ -21,6 +23,7 @@ async function init() {
   renderAllMessages();
   scrollBottom(false);
   await loadModels(savedKey);
+  renderCtxPill();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const prev = S.selectedModel;
     S.selectedModel = e.target.value;
     LS.set('ff_model', S.selectedModel);
+    renderCtxPill();
     if (prev && prev !== S.selectedModel) {
       const m = S.models.find(x => x.id === S.selectedModel);
       toast(`Model: ${m?.name || S.selectedModel.split('/').pop()}`, 'info');
@@ -100,6 +104,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // regenerate — delegated to avoid circular dep between messages.js and chat.js
   document.addEventListener('click', e => {
     if (e.target.closest('.regen-btn')) regenerate();
+  });
+
+  // command palette
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      const active = document.activeElement;
+      const isInInput = active instanceof HTMLInputElement
+        || active instanceof HTMLTextAreaElement;
+      const paletteOpen = !document.getElementById('cmd-palette')?.classList.contains('hidden');
+      if (!isInInput || paletteOpen) {
+        e.preventDefault();
+        paletteOpen ? closePalette() : openPalette();
+      }
+    }
+
+    if (e.key === 'Escape' && S.streaming) {
+      S.abort?.abort();
+    }
   });
 
   // escape closes modal

@@ -2,6 +2,32 @@ import { S, $, esc } from '../state.js';
 import { renderMd } from '../markdown.js';
 import { toast } from './toast.js';
 
+
+function injectCodeBlockUI(container) {
+  container.querySelectorAll('pre').forEach(pre => {
+    const codeEl = pre.querySelector('code');
+    if (!codeEl || pre.querySelector('.copy-code-btn')) return;
+    const langClass = [...codeEl.classList].find(c => c.startsWith('language-'));
+    const lang = langClass ? langClass.replace('language-', '') : '';
+
+    if (lang) {
+      const label = document.createElement('span');
+      label.className = 'lang-label';
+      label.textContent = lang;
+      pre.appendChild(label);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'copy-code-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(codeEl.textContent)
+        .then(() => toast('Copied', 'success'))
+        .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
+    });
+    pre.appendChild(btn);
+  });
+}
+
 export function scrollBottom(smooth = true) {
   const a = $('msgs-area');
   a.scrollTo({ top: a.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
@@ -87,6 +113,8 @@ export function buildMsgEl(msg, showRegen = false) {
         </div>
       </div>
     </div>`;
+
+  if (!msg.streaming) injectCodeBlockUI(wrap);
 
   const copyBtn = wrap.querySelector('.copy-btn');
   if (copyBtn) {

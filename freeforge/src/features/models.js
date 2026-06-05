@@ -57,3 +57,13 @@ export function populateModelsFromState() {
   if (validSaved) { sel.value = saved; S.selectedModel = saved; }
   else if (S.models[0]) { sel.value = S.models[0].id; S.selectedModel = S.models[0].id; }
 }
+
+export function changeModel(modelId) {
+  if (!modelId) return;
+  const exists = S.models.find(m => m.id === modelId);
+  if (!exists) { toast('Model unavailable', 'warning'); return; }
+  S.selectedModel = modelId;
+  $('model-select').value = modelId;
+  LS.set('ff_model', modelId);
+  toast(`Model: ${exists.name || modelId.split('/').pop()}`, 'info');
+}

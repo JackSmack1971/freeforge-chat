@@ -49,3 +49,164 @@ body{background:#09090b;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFo
 .modal-bg{background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
 .modal-card{animation:slideUp .2s ease-out}
 select{-webkit-appearance:none;appearance:none}
+
+/* ── Context health pill (BLU-05) ───────────────────────────────────── */
+.ctx-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: default;
+  transition: background 0.4s, color 0.4s;
+  user-select: none;
+}
+.ctx-ok { background: #14532d22; color: #4ade80; }
+.ctx-warn { background: #78350f22; color: #fb923c; }
+.ctx-danger { background: #7f1d1d22; color: #f87171; }
+.ctx-est { opacity: 0.75; }
+
+/* ── Code block affordances (BLU-10) ───────────────────────────────── */
+pre {
+  position: relative;
+}
+pre:has(.copy-code-btn) {
+  padding-top: 2rem;
+}
+.lang-label {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  pointer-events: none;
+  user-select: none;
+}
+.copy-code-btn {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.5rem;
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  border-radius: 4px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.copy-code-btn:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+.toast-action-btn {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Command palette trigger button (BLU-12) ───────────────────────── */
+.palette-trigger {
+  font-size: 1rem;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #52525b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.palette-trigger:hover { color: #a1a1aa; background: #27272a; }
+
+/* ── Empty state Ctrl+K hint (BLU-13) ──────────────────────────────── */
+.empty-hint {
+  font-size: 0.65rem;
+  color: #3f3f46;
+  text-align: center;
+  margin-top: 1.5rem;
+  user-select: none;
+}
+.empty-hint kbd {
+  font-family: inherit;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.6rem;
+}
+
+/* ── Command Palette (BLU-14) ───────────────────────────────────────── */
+#cmd-palette {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+}
+#cmd-palette.hidden { display: none; }
+#cmd-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+#cmd-palette-inner {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 90vw);
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+}
+#cmd-search {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #27272a;
+  color: #e4e4e7;
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+}
+#cmd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.cmd-item {
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #a1a1aa;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.cmd-item:hover, .cmd-active { background: #27272a; color: #e4e4e7; }
+.cmd-item kbd {
+  font-size: 0.65rem;
+  background: #3f3f46;
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #71717a;
+}
