@@ -6,6 +6,10 @@ import { renderAllMessages, scrollBottom, setStreamMode } from '../ui/messages.j
 export async function sendMessage(text) {
   text = text.trim();
   if (!text || S.streaming) return;
+  if (text.length > 32000) {
+    toast('Message too long (max 32,000 characters)', 'error');
+    return;
+  }
   if (!S.selectedModel) { toast('Select a model first', 'warning'); return; }
 
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
