@@ -5,6 +5,7 @@ import { toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
 const CLEAR_CONFIRM_MS = 3000;
+let previousFocus = null;
 
 function resetClearButton(btn) {
   if (btn._confirmTimer) {
@@ -27,17 +28,48 @@ function executeClearKey() {
   showScreen('onboarding');
 }
 
+function getFocusableInModal() {
+  return [...$('settings-modal').querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(el => !el.closest('.hidden'));
+}
+
+function trapFocus(e) {
+  if (e.key !== 'Tab') return;
+  const focusable = getFocusableInModal();
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 export function openSettings() {
+  previousFocus = document.activeElement;
   $('settings-key-display').textContent = maskKey(S.apiKey);
   $('settings-new-key').value = '';
   $('settings-key-error').classList.add('hidden');
   resetClearButton($('settings-clear-btn'));
-  $('settings-modal').classList.add('open');
+  const modal = $('settings-modal');
+  modal.classList.add('open');
+  modal.addEventListener('keydown', trapFocus);
+  const [first] = getFocusableInModal();
+  if (first) first.focus();
 }
 
 export function closeSettings() {
   resetClearButton($('settings-clear-btn'));
-  $('settings-modal').classList.remove('open');
+  const modal = $('settings-modal');
+  modal.classList.remove('open');
+  modal.removeEventListener('keydown', trapFocus);
+  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
+  previousFocus = null;
 }
 
 export async function updateKey() {
