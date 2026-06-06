@@ -1,12 +1,3 @@
-if (!Array.prototype.findLastIndex) {
-  Array.prototype.findLastIndex = function (fn) {
-    for (let i = this.length - 1; i >= 0; i--) {
-      if (fn(this[i], i, this)) return i;
-    }
-    return -1;
-  };
-}
-
 export const S = {
   apiKey: null,
   models: [],
