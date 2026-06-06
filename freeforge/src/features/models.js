@@ -4,6 +4,14 @@ import { toast } from '../ui/toast.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 
+function rankModels(models) {
+  return [...models].sort((a, b) => {
+    const ctxDelta = (b.context_length || 0) - (a.context_length || 0);
+    if (ctxDelta !== 0) return ctxDelta;
+    return (a.name || a.id).localeCompare(b.name || b.id);
+  });
+}
+
 function buildOptions(models) {
   const sel = $('model-select');
   sel.innerHTML = '';
@@ -21,7 +29,7 @@ export async function loadModels(key) {
   const sel = $('model-select');
   sel.innerHTML = '<option value="">Loading models…</option>';
   try {
-    const models = await fetchFreeModels(key);
+    const models = rankModels(await fetchFreeModels(key));
     S.models = models;
     if (!models.length) { sel.innerHTML = '<option value="">No free models found</option>'; return; }
     buildOptions(models);
@@ -31,15 +39,7 @@ export async function loadModels(key) {
       sel.value = saved;
       S.selectedModel = saved;
     } else {
-      const preferred = [
-        'meta-llama/llama-3.1-8b-instruct:free',
-        'meta-llama/llama-3-8b-instruct:free',
-        'mistralai/mistral-7b-instruct:free',
-        'google/gemma-2-9b-it:free',
-        'qwen/qwen-2-7b-instruct:free',
-        'microsoft/phi-3-mini-128k-instruct:free',
-      ];
-      const pick = preferred.find(p => models.find(m => m.id === p)) || models[0]?.id;
+      const pick = models[0]?.id;
       if (pick) { sel.value = pick; S.selectedModel = pick; LS.set('ff_model', pick); }
     }
   } catch (e) {
@@ -52,6 +52,7 @@ export async function loadModels(key) {
 export function populateModelsFromState() {
   const sel = $('model-select');
   if (!S.models.length) { sel.innerHTML = '<option value="">No free models</option>'; return; }
+  S.models = rankModels(S.models);
   buildOptions(S.models);
   const saved = LS.get('ff_model');
   const validSaved = saved && S.models.find(m => m.id === saved);
