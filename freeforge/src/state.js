@@ -26,6 +26,17 @@ export const LS = {
 export const $ = id => document.getElementById(id);
 export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const ERROR_LOG_LIMIT = 50;
+const errorLog = [];
+
+export function recordError(entry) {
+  errorLog.push({ ts: Date.now(), ...entry });
+  if (errorLog.length > ERROR_LOG_LIMIT) errorLog.shift();
+}
+
+export function getErrorLog() {
+  return errorLog.slice();
+}
 
 export function getStoredKey() {
   try {
