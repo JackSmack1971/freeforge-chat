@@ -61,6 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // input textarea
   const inp = $('msg-input');
+  const submitInput = text => {
+    inp.value = '';
+    inp.style.height = 'auto';
+    sendMessage(text);
+  };
   inp.addEventListener('input', () => {
     inp.style.height = 'auto';
     inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
@@ -69,10 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!S.streaming) {
-        const text = inp.value;
-        inp.value = '';
-        inp.style.height = 'auto';
-        sendMessage(text);
+        submitInput(inp.value);
       }
     }
   });
@@ -82,18 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (S.abort) { S.abort.abort(); S.abort = null; }
       return;
     }
-    const text = inp.value;
-    inp.value = '';
-    inp.style.height = 'auto';
-    sendMessage(text);
+    submitInput(inp.value);
   });
 
   // suggestion chips — delegated
   document.addEventListener('click', e => {
     if (e.target.classList.contains('suggestion')) {
-      inp.value = e.target.textContent;
-      inp.dispatchEvent(new Event('input'));
-      inp.focus();
+      if (S.streaming) return;
+      submitInput(e.target.textContent);
     }
   });
 
