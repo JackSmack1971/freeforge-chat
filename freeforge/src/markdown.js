@@ -27,7 +27,15 @@ export function renderMd(text) {
     const raw = marked.parse(text);
     // Sanitize LLM-generated HTML before injecting into the DOM.
     // SEC-04: fallback to escaped text (not raw HTML) when DOMPurify is unavailable.
-    return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(raw, PURIFY_CONFIG) : esc(text).replace(/\n/g, '<br>');
+    if (typeof DOMPurify === 'undefined') return esc(text).replace(/\n/g, '<br>');
+    const clean = DOMPurify.sanitize(raw, PURIFY_CONFIG);
+    const div = document.createElement('div');
+    div.innerHTML = clean;
+    div.querySelectorAll('a[href]').forEach(a => {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    });
+    return div.innerHTML;
   } catch {
     return esc(text).replace(/\n/g, '<br>');
   }
