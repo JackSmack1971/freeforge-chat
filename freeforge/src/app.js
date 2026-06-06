@@ -1,4 +1,4 @@
-import { S, $, LS, getStoredKey } from './state.js';
+import { S, $, LS, getStoredKey, recordError, getErrorLog } from './state.js';
 import { showScreen, hideInvalidBanner } from './ui/screen.js';
 import { renderAllMessages, scrollBottom } from './ui/messages.js';
 import { toast } from './ui/toast.js';
@@ -26,7 +26,31 @@ async function init() {
   renderCtxPill();
 }
 
+function installErrorCapture() {
+  window.addEventListener('error', e => {
+    recordError({
+      type: 'error',
+      msg: e.message || 'Unknown error',
+      src: e.filename || '',
+      line: e.lineno || 0,
+      col: e.colno || 0,
+    });
+  });
+
+  window.addEventListener('unhandledrejection', e => {
+    const reason = e.reason;
+    recordError({
+      type: 'unhandledrejection',
+      msg: reason?.message || String(reason),
+    });
+  });
+
+  // Local-only inspection hook for debugging without external telemetry.
+  window.__freeforgeGetErrorLog = getErrorLog;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  installErrorCapture();
 
   // onboarding
   $('ob-toggle-vis').addEventListener('click', () => {
