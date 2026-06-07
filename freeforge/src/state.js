@@ -1,15 +1,15 @@
 export const S = {
-  apiKey: null,
-  models: [],
-  selectedModel: null,
-  messages: [],
-  streaming: false,
-  abort: null,
-  streamTarget: null,
-  contextTokens: 0,
-  usageIsExact: false,
-  ctxToastFired: false,
-  lastAssistantResponse: '',
+  apiKey: null, // owned by: onboarding.js, settings.js
+  models: [], // owned by: models.js
+  selectedModel: null, // owned by: models.js
+  messages: [], // owned by: chat.js (write), ui modules (read)
+  streaming: false, // owned by: chat.js
+  abort: null, // owned by: chat.js
+  streamTarget: null, // owned by: chat.js, messages.js
+  contextTokens: 0, // owned by: chat.js, ctx-pill.js
+  usageIsExact: false, // owned by: chat.js, ctx-pill.js
+  ctxToastFired: false, // owned by: ctx-pill.js
+  lastAssistantResponse: '', // owned by: chat.js
 };
 
 export const LS = {
