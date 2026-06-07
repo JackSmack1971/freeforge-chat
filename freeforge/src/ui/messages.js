@@ -2,6 +2,7 @@ import { S, $, esc } from '../state.js';
 import { renderMd } from '../markdown.js';
 import { toast } from './toast.js';
 
+let renderedCount = 0;
 
 function injectCodeBlockUI(container) {
   container.querySelectorAll('pre').forEach(pre => {
@@ -40,24 +41,51 @@ export function setStreamMode(active) {
   $('send-btn').setAttribute('aria-label', active ? 'Stop streaming' : 'Send message');
 }
 
-export function renderAllMessages() {
+function syncMessageVisibility() {
   const list = $('msgs-list');
   const empty = $('empty-state');
 
   if (S.messages.length === 0) {
     empty.classList.remove('hidden');
     list.classList.add('hidden');
+    list.innerHTML = '';
+    renderedCount = 0;
     return;
   }
 
   empty.classList.add('hidden');
   list.classList.remove('hidden');
+}
+
+export function appendNewMessages() {
+  const list = $('msgs-list');
+  syncMessageVisibility();
+  if (S.messages.length === 0) return;
 
   const lastAsstIdx = S.messages.findLastIndex(m => m.role === 'assistant');
-  list.innerHTML = '';
-  S.messages.forEach((msg, idx) => {
+  while (renderedCount < S.messages.length) {
+    const idx = renderedCount;
+    const msg = S.messages[idx];
     list.appendChild(buildMsgEl(msg, idx === lastAsstIdx && !S.streaming));
-  });
+    renderedCount += 1;
+  }
+}
+
+export function replaceMessage(msg, showRegen = false) {
+  const current = document.querySelector(`[data-id="${msg.id}"]`);
+  if (!current) return false;
+  current.replaceWith(buildMsgEl(msg, showRegen));
+  return true;
+}
+
+export function renderAllMessages() {
+  const list = $('msgs-list');
+  syncMessageVisibility();
+  if (S.messages.length === 0) return;
+
+  list.innerHTML = '';
+  renderedCount = 0;
+  appendNewMessages();
 }
 
 export function buildMsgEl(msg, showRegen = false) {
