@@ -37,6 +37,7 @@ export function setStreamMode(active) {
   S.streaming = active;
   $('send-icon').classList.toggle('hidden', active);
   $('stop-icon').classList.toggle('hidden', !active);
+  $('send-btn').setAttribute('aria-label', active ? 'Stop streaming' : 'Send message');
 }
 
 export function renderAllMessages() {

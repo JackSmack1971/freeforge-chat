@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inp = $('ob-key-input');
     const show = inp.type === 'password';
     inp.type = show ? 'text' : 'password';
+    $('ob-toggle-vis').setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
     $('ob-eye-show').classList.toggle('hidden', show);
     $('ob-eye-hide').classList.toggle('hidden', !show);
   });
