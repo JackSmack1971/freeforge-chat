@@ -1,8 +1,8 @@
-import { S, $, setStoredKey } from '../state.js';
 import { fetchFreeModels } from '../api.js';
+import { $, S, setStoredKey } from '../state.js';
+import { renderAllMessages } from '../ui/messages.js';
 import { showScreen } from '../ui/screen.js';
 import { toast } from '../ui/toast.js';
-import { renderAllMessages } from '../ui/messages.js';
 import { populateModelsFromState } from './models.js';
 
 export async function validateAndConnect(key) {

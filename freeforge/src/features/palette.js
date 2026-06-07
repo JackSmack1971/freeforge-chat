@@ -1,8 +1,8 @@
 import { S } from '../state.js';
-import { newChat, copyLastResponse } from './chat.js';
+import { copyLastResponse, newChat } from './chat.js';
+import { exportConversation } from './export.js';
 import { changeModel } from './models.js';
 import { openSettings } from './settings.js';
-import { exportConversation } from './export.js';
 
 const BASE_ACTIONS = [
   { label: 'New Chat', shortcut: 'N', action: () => { newChat(); closePalette(); } },

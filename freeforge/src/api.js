@@ -11,7 +11,7 @@ export async function fetchFreeModels(key) {
   }
   const data = await res.json();
   return (data.data || []).filter(m => {
-    if (m.id && m.id.endsWith(':free')) return true;
+    if (m.id?.endsWith(':free')) return true;
     const p = m.pricing;
     return p && parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
   }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
@@ -40,7 +40,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
     try { const j = await res.json(); msg = j.error?.message || msg; } catch {}
     if (res.status === 401) { showInvalidBanner(); onError('Invalid API key — update it in Settings.'); }
     else if (res.status === 429) onError('Rate limited — try again in a moment.');
-    else if (res.status === 400) onError('Bad request: ' + msg);
+    else if (res.status === 400) onError(`Bad request: ${msg}`);
     else if (res.status === 413) onError('Context too long — start a new chat.');
     else onError(msg);
     return;

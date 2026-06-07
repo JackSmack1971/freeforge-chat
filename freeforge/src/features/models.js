@@ -1,8 +1,8 @@
-import { S, $, LS, fmtCtx } from '../state.js';
 import { fetchFreeModels } from '../api.js';
-import { toast } from '../ui/toast.js';
-import { showInvalidBanner } from '../ui/screen.js';
+import { $, fmtCtx, LS, S } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
+import { showInvalidBanner } from '../ui/screen.js';
+import { toast } from '../ui/toast.js';
 
 function rankModels(models) {
   return [...models].sort((a, b) => {
@@ -44,7 +44,7 @@ export async function loadModels(key) {
     }
   } catch (e) {
     sel.innerHTML = '<option value="">Failed to load models</option>';
-    toast('Could not load models: ' + e.message, 'error');
+    toast(`Could not load models: ${e.message}`, 'error');
     if (e.message.includes('Invalid')) showInvalidBanner();
   }
 }
