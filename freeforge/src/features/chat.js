@@ -4,6 +4,17 @@ import { toast } from '../ui/toast.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { renderAllMessages, scrollBottom, setStreamMode } from '../ui/messages.js';
 
+const MAX_PERSISTED_MSGS = 100;
+
+function persistMessages() {
+  const toSave = S.messages.length > MAX_PERSISTED_MSGS
+    ? S.messages.slice(S.messages.length - MAX_PERSISTED_MSGS)
+    : S.messages;
+  if (!LS.set('ff_msgs', toSave)) {
+    toast('Chat history could not be saved locally', 'warning');
+  }
+}
+
 export async function sendMessage(text) {
   text = text.trim();
   if (!text || S.streaming) return;
@@ -75,7 +86,7 @@ export async function sendMessage(text) {
       S.abort = null;
       S.streamTarget = null;
       setStreamMode(false);
-      LS.set('ff_msgs', S.messages);
+      persistMessages();
       renderAllMessages();
       renderCtxPill();
       scrollBottom();
@@ -105,7 +116,7 @@ export async function regenerate() {
   S.messages.splice(lastUserIdx, 1);
   const noticeIdx = S.messages.findIndex(m => m.role === 'notice');
   if (noticeIdx !== -1) S.messages.splice(noticeIdx, 1);
-  LS.set('ff_msgs', S.messages);
+  persistMessages();
   renderAllMessages();
   await sendMessage(text);
 }
@@ -128,7 +139,7 @@ export function newChat() {
   S.lastAssistantResponse = '';
   setStreamMode(false);
   $('thinking').classList.add('hidden');
-  LS.set('ff_msgs', []);
+  persistMessages();
   renderAllMessages();
   renderCtxPill();
 }
