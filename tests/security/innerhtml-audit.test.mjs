@@ -31,7 +31,8 @@ test('messages.js innerHTML sinks only use escaped, sanitized, or static content
 test('toast.js escapes toast messages before inserting markup', async () => {
   const source = await read('freeforge/src/ui/toast.js');
 
-  assert.match(source, /el\.innerHTML = `[\s\S]*<span>\$\{esc\(msg\)\}<\/span>`;/);
+  assert.match(source, /const body = msg\.includes\(safeAction\) \? esc\(msg\)\.replace\(esc\(safeAction\), safeAction\) : esc\(msg\);/);
+  assert.match(source, /el\.innerHTML = `[\s\S]*<span>\$\{body\}<\/span>`;/);
 });
 
 test('models.js limits innerHTML to static placeholders and uses textContent for model labels', async () => {

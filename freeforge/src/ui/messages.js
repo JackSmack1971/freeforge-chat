@@ -69,7 +69,7 @@ export function buildMsgEl(msg, showRegen = false) {
     wrap.innerHTML = `
       <div class="flex justify-end">
         <div class="max-w-[82%] sm:max-w-[72%]">
-          <div class="px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed" style="background:linear-gradient(135deg,#4338ca,#6d28d9)">
+          <div class="msg-user-surface px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed">
             ${esc(msg.content).replace(/\n/g, '<br>')}
           </div>
         </div>
@@ -80,7 +80,7 @@ export function buildMsgEl(msg, showRegen = false) {
   if (msg.role === 'notice') {
     wrap.innerHTML = `
       <div class="flex justify-center">
-        <div class="px-3 py-1 rounded-full text-xs text-zinc-600 border border-zinc-800" style="background:#18181b">${esc(msg.content)}</div>
+        <div class="msg-notice-surface px-3 py-1 rounded-full text-xs text-zinc-600 border border-zinc-800">${esc(msg.content)}</div>
       </div>`;
     return wrap;
   }
@@ -91,13 +91,13 @@ export function buildMsgEl(msg, showRegen = false) {
 
   wrap.innerHTML = `
     <div class="flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style="background:#27272a;border:1px solid #3f3f46">
+      <div class="assistant-avatar-surface w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
         <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <div class="rounded-2xl rounded-tl-sm px-4 py-3" style="background:#27272a;border:1px solid #3f3f46">
+        <div class="assistant-bubble-surface rounded-2xl rounded-tl-sm px-4 py-3">
           ${content}
         </div>
         <div class="flex items-center gap-3 mt-1.5 ml-1">
