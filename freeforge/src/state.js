@@ -1,27 +1,20 @@
 export const S = {
-  apiKey: null, // owned by: onboarding.js, settings.js
-  models: [], // owned by: models.js
-  selectedModel: null, // owned by: models.js
-  messages: [], // owned by: chat.js (write), ui modules (read)
-  streaming: false, // owned by: chat.js
-  abort: null, // owned by: chat.js
-  streamTarget: null, // owned by: chat.js, messages.js
-  contextTokens: 0, // owned by: chat.js, ctx-pill.js
-  usageIsExact: false, // owned by: chat.js, ctx-pill.js
-  ctxToastFired: false, // owned by: ctx-pill.js
-  lastAssistantResponse: '', // owned by: chat.js
+  apiKey: null,
+  models: [],
+  selectedModel: null,
+  messages: [],
+  streaming: false,
+  abort: null,
+  streamTarget: null,
+  contextTokens: 0,
+  usageIsExact: false,
+  ctxToastFired: false,
+  lastAssistantResponse: '',
 };
 
 export const LS = {
   get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
-  set(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-      return true;
-    } catch {
-      return false;
-    }
-  },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 
