@@ -6,10 +6,7 @@
   <!-- Requires Chrome 97+, Firefox 104+, Safari 15.4+ -->
   <title>FreeForge — Free AI Chat</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/tailwind.min.css"
-        integrity="sha384-Br1MdJLeZHETRKXp+xqUrJ1h9M/NMwk2BkpskTNuPjVs+8VhXzMxhCXQRhKuSUkY"
-        crossorigin="anonymous">
+  <link rel="stylesheet" href="styles/tailwind.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js"
           integrity="sha384-8RA8Ah4c9upJmKfg5nH01OgjZoQ3mRX+ngrKYWXQYj2dHYxFqYz8POSlii33f0wB"
           crossorigin="anonymous"></script>
@@ -21,7 +18,7 @@
 <body>
 
 <!-- Toast container -->
-<div id="toasts" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" style="max-width:320px"></div>
+<div id="toasts" class="toast-host fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
 <!-- ========== ONBOARDING SCREEN ========== -->
 <div id="screen-onboarding" class="screen">
@@ -36,7 +33,7 @@
       <p class="mt-2 text-zinc-400 text-sm">Chat with powerful open models — 100% free via OpenRouter.</p>
     </div>
 
-    <div class="rounded-2xl border border-zinc-800 p-6" style="background:#18181b">
+    <div class="surface-card rounded-2xl border border-zinc-800 p-6">
       <div class="space-y-4">
         <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer"
            class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors">
@@ -95,7 +92,7 @@
 <div id="screen-chat" class="screen">
 
   <!-- Invalid key banner -->
-  <div id="invalid-banner" class="hidden flex-shrink-0 border-b border-amber-800/50 px-4 py-2.5 flex items-center justify-between gap-3" style="background:rgba(120,53,15,.2)">
+  <div id="invalid-banner" class="warn-banner hidden flex-shrink-0 border-b border-amber-800/50 px-4 py-2.5 flex items-center justify-between gap-3">
     <div class="flex items-center gap-2 text-sm text-amber-300">
       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -108,7 +105,7 @@
   </div>
 
   <!-- Nav -->
-  <nav class="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 flex-shrink-0" style="background:#18181b">
+  <nav class="surface-strip flex items-center gap-3 px-4 py-3 border-b border-zinc-800 flex-shrink-0">
     <div class="flex items-center gap-2 flex-shrink-0">
       <div class="w-7 h-7 rounded-lg flex items-center justify-center gradient-btn flex-shrink-0">
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +165,7 @@
   <div id="msgs-area" class="flex-1 overflow-y-auto">
     <!-- Empty state -->
     <div id="empty-state" class="flex flex-col items-center justify-center h-full text-center px-4 py-16">
-      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style="background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3)">
+      <div class="empty-state-badge w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
         <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
@@ -193,12 +190,12 @@
     <!-- Thinking indicator -->
     <div id="thinking" class="hidden px-4 pb-4 max-w-3xl mx-auto">
       <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:#27272a;border:1px solid #3f3f46">
+        <div class="assistant-avatar-surface w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
           <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
         </div>
-        <div class="rounded-2xl rounded-tl-sm px-4 py-3" style="background:#27272a;border:1px solid #3f3f46">
+        <div class="assistant-bubble-surface rounded-2xl rounded-tl-sm px-4 py-3">
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-zinc-500 mr-0.5">Thinking</span>
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -209,9 +206,9 @@
   </div>
 
   <!-- Input -->
-  <div class="border-t border-zinc-800 px-4 py-3 flex-shrink-0" style="background:#18181b">
+  <div class="surface-strip border-t border-zinc-800 px-4 py-3 flex-shrink-0">
     <div class="max-w-3xl mx-auto">
-      <div id="input-box" class="flex items-end gap-3 rounded-2xl border border-zinc-700 focus-within:border-indigo-500 transition-colors px-4 py-3" style="background:#27272a">
+      <div id="input-box" class="input-shell-surface flex items-end gap-3 rounded-2xl border border-zinc-700 focus-within:border-indigo-500 transition-colors px-4 py-3">
         <textarea id="msg-input" placeholder="Message FreeForge…" rows="1" maxlength="32000"
                   class="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none leading-relaxed"></textarea>
         <button id="send-btn" aria-label="Send message" class="gradient-btn flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all">
@@ -231,7 +228,7 @@
 <!-- ========== SETTINGS MODAL ========== -->
 <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
   <div id="settings-backdrop" class="absolute inset-0 modal-bg"></div>
-  <div class="relative w-full max-w-md rounded-2xl border border-zinc-800 p-6 z-10 modal-card" style="background:#18181b">
+  <div class="surface-card relative w-full max-w-md rounded-2xl border border-zinc-800 p-6 z-10 modal-card">
     <div class="flex items-center justify-between mb-5">
       <h2 id="settings-title" class="text-lg font-semibold text-zinc-100">Settings</h2>
       <button id="close-settings-btn" aria-label="Close settings" class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
