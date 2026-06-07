@@ -26,6 +26,7 @@ async function loadMarkdownModule({ parseImpl, sanitizeImpl } = {}) {
   if (sanitizeImpl) {
     globalThis.DOMPurify = {
       calls: [],
+      addHook() {},
       sanitize(raw, config) {
         this.calls.push({ raw, config });
         return sanitizeImpl(raw, config);
@@ -34,6 +35,17 @@ async function loadMarkdownModule({ parseImpl, sanitizeImpl } = {}) {
   } else {
     delete globalThis.DOMPurify;
   }
+
+  globalThis.document = {
+    createElement() {
+      return {
+        innerHTML: '',
+        querySelectorAll() {
+          return [];
+        },
+      };
+    },
+  };
 
   const specifier = `data:text/javascript;base64,${Buffer.from(transformed).toString('base64')}#${Math.random()}`;
   return import(specifier);
@@ -62,7 +74,7 @@ test('renderMd passes the hardened purifier config into DOMPurify', async () => 
   renderMd('link');
 
   const [{ config }] = globalThis.DOMPurify.calls;
-  assert.deepEqual(config.ALLOWED_ATTR, ['href', 'title']);
+  assert.deepEqual(config.ALLOWED_ATTR, ['href', 'title', 'class']);
   assert.ok(config.ALLOWED_TAGS.includes('a'));
   assert.ok(config.ALLOWED_TAGS.includes('code'));
   assert.ok(config.FORBID_ATTR.includes('onclick'));
