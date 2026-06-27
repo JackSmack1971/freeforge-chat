@@ -1,5 +1,5 @@
 import { renderMd } from '../markdown.js';
-import { $, esc, S } from '../state.js';
+import { $, S } from '../state.js';
 import { toast } from './toast.js';
 
 let renderedCount = 0;
@@ -123,7 +123,7 @@ export function buildMsgEl(msg, showRegen = false) {
     const row = el('div', 'flex justify-end');
     const shell = el('div', 'max-w-[82%] sm:max-w-[72%]');
     const bubble = el('div', 'msg-user-surface px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed whitespace-pre-wrap break-words');
-    bubble.innerHTML = esc(msg.content).replace(/\n/g, '<br>');
+    bubble.textContent = msg.content;
     shell.appendChild(bubble);
     row.appendChild(shell);
     wrap.appendChild(row);
@@ -133,7 +133,7 @@ export function buildMsgEl(msg, showRegen = false) {
   if (msg.role === 'notice') {
     const row = el('div', 'flex justify-center');
     const badge = el('div', 'msg-notice-surface px-3 py-1 rounded-full text-xs text-zinc-600 border border-zinc-800');
-    badge.innerHTML = esc(msg.content);
+    badge.textContent = msg.content;
     row.appendChild(badge);
     wrap.appendChild(row);
     return wrap;
