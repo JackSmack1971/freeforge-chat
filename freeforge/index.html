@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="styles/app.css">
 </head>
 <body>
+<a href="#msg-input" class="sr-only skip-link">Skip to chat input</a>
 
 <!-- Toast container -->
 <div id="toasts" class="toast-host fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -53,11 +54,11 @@
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1.5">API Key</label>
+          <label for="ob-key-input" class="block text-xs font-medium text-zinc-400 mb-1.5">API Key</label>
           <form autocomplete="off" onsubmit="return false;">
             <div class="relative">
-              <input id="ob-key-input" type="password" placeholder="sk-or-v1-..." autocomplete="new-password" spellcheck="false"
-                     class="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors pr-10">
+              <input id="ob-key-input" type="password" placeholder="sk-or-v1-..." autocomplete="new-password" spellcheck="false" aria-describedby="ob-key-error" aria-invalid="false"
+                     class="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors pr-10">
               <button id="ob-toggle-vis" type="button" aria-label="Show API key" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
                 <svg id="ob-eye-show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -99,9 +100,9 @@
       </svg>
       Your API key is invalid or expired. Update it to continue.
     </div>
-    <button id="banner-update-btn" class="text-xs font-medium text-amber-300 border border-amber-700 px-3 py-1 rounded-lg hover:bg-amber-900/30 transition-colors flex-shrink-0">
-      Update Key
-    </button>
+      <button id="banner-update-btn" aria-label="Update Key" class="text-xs font-medium text-amber-300 border border-amber-700 px-3 py-1 rounded-lg hover:bg-amber-900/30 transition-colors flex-shrink-0">
+        Update Key
+      </button>
   </div>
 
   <!-- Nav -->
@@ -185,7 +186,7 @@
     </div>
 
     <!-- Messages container -->
-    <div id="msgs-list" class="hidden px-4 pt-6 pb-2 space-y-6 max-w-3xl mx-auto w-full"></div>
+    <div id="msgs-list" role="log" aria-label="Chat history" aria-live="polite" class="hidden px-4 pt-6 pb-2 space-y-6 max-w-3xl mx-auto w-full"></div>
 
     <!-- Thinking indicator -->
     <div id="thinking" class="hidden px-4 pb-4 max-w-3xl mx-auto">
@@ -239,17 +240,17 @@
     </div>
     <div class="space-y-4">
       <div>
-        <label class="block text-xs font-medium text-zinc-400 mb-1.5">Current API Key</label>
+        <span class="block text-xs font-medium text-zinc-400 mb-1.5">Current API Key</span>
         <div class="flex items-center gap-2">
           <div id="settings-key-display" class="flex-1 px-3 py-2 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono truncate">••••••••</div>
           <button id="settings-clear-btn" class="px-3 py-2 rounded-xl text-xs text-red-400 border border-red-900/50 hover:bg-red-900/20 transition-colors whitespace-nowrap">Clear Key</button>
         </div>
       </div>
       <div>
-        <label class="block text-xs font-medium text-zinc-400 mb-1.5">Update API Key</label>
+        <label for="settings-new-key" class="block text-xs font-medium text-zinc-400 mb-1.5">Update API Key</label>
         <form autocomplete="off" onsubmit="return false;">
-          <input id="settings-new-key" type="password" placeholder="sk-or-v1-…" autocomplete="new-password"
-                 class="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+          <input id="settings-new-key" type="password" placeholder="sk-or-v1-…" autocomplete="new-password" aria-describedby="settings-key-error" aria-invalid="false"
+                 class="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
         </form>
         <p id="settings-key-error" class="mt-1.5 text-xs text-red-400 hidden"></p>
       </div>
@@ -276,6 +277,9 @@
   </div>
   <div id="cmd-backdrop"></div>
 </div>
+
+<div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<div id="sr-alert" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
 <script type="module" src="src/app.js"></script>
 </body>
