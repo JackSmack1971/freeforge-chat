@@ -122,8 +122,7 @@ export function buildMsgEl(msg, showRegen = false) {
   if (msg.role === 'user') {
     const row = el('div', 'flex justify-end');
     const shell = el('div', 'max-w-[82%] sm:max-w-[72%]');
-    const bubble = el('div', 'px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed whitespace-pre-wrap break-words');
-    bubble.style.background = 'linear-gradient(135deg,#4338ca,#6d28d9)';
+    const bubble = el('div', 'msg-user-surface px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed whitespace-pre-wrap break-words');
     bubble.textContent = msg.content;
     shell.appendChild(bubble);
     row.appendChild(shell);
@@ -133,8 +132,7 @@ export function buildMsgEl(msg, showRegen = false) {
 
   if (msg.role === 'notice') {
     const row = el('div', 'flex justify-center');
-    const badge = el('div', 'px-3 py-1 rounded-full text-xs text-zinc-600 border border-zinc-800');
-    badge.style.background = '#18181b';
+    const badge = el('div', 'msg-notice-surface px-3 py-1 rounded-full text-xs text-zinc-600 border border-zinc-800');
     badge.textContent = msg.content;
     row.appendChild(badge);
     wrap.appendChild(row);
@@ -142,17 +140,13 @@ export function buildMsgEl(msg, showRegen = false) {
   }
 
   const row = el('div', 'flex items-start gap-3');
-  const avatar = el('div', 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5');
-  avatar.style.background = '#27272a';
-  avatar.style.border = '1px solid #3f3f46';
+  const avatar = el('div', 'assistant-avatar-surface w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5');
   const avatarIcon = svgIcon('M13 10V3L4 14h7v7l9-11h-7z');
   avatarIcon.classList.add('text-zinc-400');
   avatar.appendChild(avatarIcon);
 
   const main = el('div', 'flex-1 min-w-0');
-  const bubble = el('div', 'rounded-2xl rounded-tl-sm px-4 py-3');
-  bubble.style.background = '#27272a';
-  bubble.style.border = '1px solid #3f3f46';
+  const bubble = el('div', 'assistant-bubble-surface rounded-2xl rounded-tl-sm px-4 py-3');
   const content = el('div', `msg-content text-zinc-200 leading-relaxed text-sm${msg.streaming ? ' streaming-cursor whitespace-pre-wrap break-words' : ''}`);
   if (msg.streaming) {
     content.textContent = msg.content;

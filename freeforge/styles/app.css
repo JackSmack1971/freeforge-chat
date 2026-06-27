@@ -12,6 +12,18 @@ body{background:#09090b;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFo
 .gradient-btn:hover{background:linear-gradient(135deg,#4338ca,#6d28d9)}
 .gradient-btn:disabled{opacity:0.5;cursor:not-allowed}
 .gradient-text{background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.surface-card,.surface-strip,.msg-notice-surface{background:#18181b}
+.warn-banner{background:rgba(120,53,15,.2)}
+.empty-state-badge{background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3)}
+.assistant-avatar-surface,.assistant-bubble-surface,.input-shell-surface{background:#27272a;border:1px solid #3f3f46}
+.msg-user-surface{background:linear-gradient(135deg,#4338ca,#6d28d9)}
+.toast-host,.toast-card{max-width:320px}
+.toast-card{word-break:break-word}
+.toast-surface-success{background:rgba(6,78,59,.35)}
+.toast-surface-error{background:rgba(127,29,29,.35)}
+.toast-surface-warning{background:rgba(120,53,15,.35)}
+.toast-surface-info{background:#18181b}
+.toast-persistent{animation:toastIn .25s ease-out}
 #msg-input{resize:none;min-height:24px;max-height:160px;overflow-y:auto;line-height:1.5}
 .msg-bubble{animation:slideUp .2s ease-out}
 @keyframes slideUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
