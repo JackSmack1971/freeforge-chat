@@ -1,7 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import test from 'node:test';
 
 async function read(relPath) {
   return readFile(path.resolve(relPath), 'utf8');
@@ -17,15 +17,17 @@ async function collectFiles(dir) {
   return files.flat();
 }
 
-test('messages.js innerHTML sinks only use escaped, sanitized, or static content', async () => {
+test('messages.js renders user-authored content with text nodes and limits HTML sinks to sanitized markdown', async () => {
   const source = await read('freeforge/src/ui/messages.js');
 
   assert.match(source, /list\.innerHTML = '';/);
-  assert.match(source, /\$\{esc\(msg\.content\)\.replace\(\/\\n\/g, '<br>'\)\}/);
-  assert.match(source, /\$\{esc\(msg\.content\)\}/);
-  assert.match(source, /msg\.streaming\s*\?[\s\S]*\$\{esc\(msg\.content\)\}[\s\S]*:\s*`<div class="msg-content text-zinc-200 leading-relaxed text-sm">\$\{renderMd\(msg\.content\)\}<\/div>`/);
-  assert.match(source, /copyBtn\.innerHTML = `<svg class="w-3 h-3"[\s\S]*Copied!`;/);
-  assert.match(source, /copyBtn\.innerHTML = `<svg class="w-3 h-3"[\s\S]*Copy`;/);
+  assert.doesNotMatch(source, /wrap\.innerHTML\s*=/);
+  assert.match(source, /bubble\.textContent = msg\.content;/);
+  assert.match(source, /badge\.textContent = msg\.content;/);
+  assert.match(source, /content\.textContent = msg\.content;/);
+  assert.match(source, /content\.innerHTML = renderMd\(msg\.content\);/);
+  assert.match(source, /setButtonContent\(copyBtn, 'M5 13l4 4L19 7', 'Copied!'\);/);
+  assert.match(source, /setButtonContent\(copyBtn, 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z', 'Copy'\);/);
 });
 
 test('toast.js escapes toast messages before inserting markup', async () => {

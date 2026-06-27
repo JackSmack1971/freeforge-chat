@@ -1,13 +1,13 @@
-import { S, $, LS, getStoredKey, recordError, getErrorLog } from './state.js';
-import { showScreen, hideInvalidBanner } from './ui/screen.js';
-import { renderAllMessages, scrollBottom } from './ui/messages.js';
-import { toast } from './ui/toast.js';
+import { newChat, regenerate, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
-import { validateAndConnect, hideObError } from './features/onboarding.js';
-import { openSettings, closeSettings, updateKey, clearKey } from './features/settings.js';
-import { sendMessage, regenerate, newChat } from './features/chat.js';
+import { hideObError, validateAndConnect } from './features/onboarding.js';
+import { closePalette, openPalette } from './features/palette.js';
+import { clearKey, closeSettings, openSettings, updateKey } from './features/settings.js';
+import { $, getErrorLog, getStoredKey, LS, recordError, S } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
-import { openPalette, closePalette } from './features/palette.js';
+import { renderAllMessages, scrollBottom } from './ui/messages.js';
+import { hideInvalidBanner, showScreen } from './ui/screen.js';
+import { toast } from './ui/toast.js';
 
 async function init() {
   const savedKey = getStoredKey();
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   inp.addEventListener('input', () => {
     inp.style.height = 'auto';
-    inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
+    inp.style.height = `${Math.min(inp.scrollHeight, 160)}px`;
   });
   inp.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {

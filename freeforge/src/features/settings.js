@@ -1,6 +1,6 @@
-import { S, $, LS, maskKey, setStoredKey, clearStoredKey } from '../state.js';
 import { fetchFreeModels } from '../api.js';
-import { showScreen, hideInvalidBanner } from '../ui/screen.js';
+import { $, clearStoredKey, LS, maskKey, S, setStoredKey } from '../state.js';
+import { hideInvalidBanner, showScreen } from '../ui/screen.js';
 import { toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
@@ -19,7 +19,9 @@ function resetClearButton(btn) {
 
 function executeClearKey() {
   clearStoredKey();
-  ['ff_msgs', 'ff_model'].forEach(k => LS.del(k));
+  ['ff_msgs', 'ff_model'].forEach(k => {
+    LS.del(k);
+  });
   S.apiKey = null;
   S.messages = [];
   S.models = [];
