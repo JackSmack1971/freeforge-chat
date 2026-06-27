@@ -10,6 +10,15 @@ The v1 implementation shipped as a quality pass: onboarding with key validation,
 
 A single HTML file you can open, share, or deploy anywhere — beautiful enough to show in a portfolio, tight enough to show in the code.
 
+## Current Milestone: v1.1 Inline Message Editing
+
+**Goal:** Let users edit a sent user message in place, then resend the conversation from that point through the existing `regenerate()` / `sendMessage()` path.
+
+**Target features:**
+- Click a user message bubble to open inline edit mode
+- Confirming an edit truncates later messages and resends the edited prompt
+- A single-slot, session-only undo toast restores truncated messages before persistence
+
 ## Context
 
 - **Type:** Brownfield — code is already written and functional
@@ -17,6 +26,7 @@ A single HTML file you can open, share, or deploy anywhere — beautiful enough 
 - **Entry point:** `freeforge/index.html` (canonical)
 - **Owner:** Solo project / portfolio
 - **Target:** Public GitHub repo + portfolio showcase
+- **Current focus:** Inline message editing built on the existing chat lifecycle, with no new message history model
 
 ## Who It's For
 
@@ -75,6 +85,7 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 | client-side only storage | Privacy-first; no server to maintain | Preserved |
 | marked.js via CDN | Full Markdown spec; lightweight enough for CDN delivery | Keep; DOMPurify is paired with it in the canonical entry point |
 | Two HTML entry points | `freeforge.html` (root) vs `freeforge/index.html` — root file lacked DOMPurify | Resolved — root file removed, canonical entry is `freeforge/index.html` |
+| Inline edit flow reuses resend path | Editing should truncate history once and call the existing send flow instead of introducing a second message pipeline | Pending |
 
 ## Evolution
 
