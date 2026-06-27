@@ -60,7 +60,7 @@ export function clearStoredKey() {
 
 export function maskKey(k) {
   if (!k || k.length < 8) return '••••••••';
-  return k.slice(0, 6) + '••••••••••••' + k.slice(-4);
+  return `${k.slice(0, 6)}••••••••••••${k.slice(-4)}`;
 }
 
 export function fmtCtx(n) {
