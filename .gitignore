@@ -1,7 +1,11 @@
 # Claude Code development framework — not app code
 .claude/
+.codex/
+.planning/codebase/
+.tmp/
 README-SWARM.md
 managed-settings.example.json
+CODEBASE_AUDIT_REPORT.md
 
 # OS
 .DS_Store
