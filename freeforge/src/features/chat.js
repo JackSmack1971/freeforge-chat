@@ -1,8 +1,7 @@
 import { streamCompletion } from '../api.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
-import { renderAllMessages, scrollBottom, setStreamMode } from '../ui/messages.js';
-import { toast } from '../ui/toast.js';
+import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 
 export async function sendMessage(text) {
   text = text.trim();
@@ -27,7 +26,7 @@ export async function sendMessage(text) {
   S.messages.push(asstMsg);
 
   setStreamMode(true);
-  renderAllMessages();
+  appendNewMessages();
   $('thinking').classList.remove('hidden');
   scrollBottom(false);
 
@@ -76,7 +75,7 @@ export async function sendMessage(text) {
       S.streamTarget = null;
       setStreamMode(false);
       LS.set('ff_msgs', S.messages);
-      renderAllMessages();
+      if (!replaceMessage(asstMsg, true)) renderAllMessages();
       renderCtxPill();
       scrollBottom();
       return exactTokens;

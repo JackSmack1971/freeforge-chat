@@ -17,21 +17,24 @@ async function collectFiles(dir) {
   return files.flat();
 }
 
-test('messages.js innerHTML sinks only use escaped, sanitized, or static content', async () => {
+test('messages.js renders user-authored content with text nodes and limits HTML sinks to sanitized markdown', async () => {
   const source = await read('freeforge/src/ui/messages.js');
 
   assert.match(source, /list\.innerHTML = '';/);
-  assert.match(source, /\$\{esc\(msg\.content\)\.replace\(\/\\n\/g, '<br>'\)\}/);
-  assert.match(source, /\$\{esc\(msg\.content\)\}/);
-  assert.match(source, /msg\.streaming\s*\?[\s\S]*\$\{esc\(msg\.content\)\}[\s\S]*:\s*`<div class="msg-content text-zinc-200 leading-relaxed text-sm">\$\{renderMd\(msg\.content\)\}<\/div>`/);
-  assert.match(source, /copyBtn\.innerHTML = `<svg class="w-3 h-3"[\s\S]*Copied!`;/);
-  assert.match(source, /copyBtn\.innerHTML = `<svg class="w-3 h-3"[\s\S]*Copy`;/);
+  assert.doesNotMatch(source, /wrap\.innerHTML\s*=/);
+  assert.match(source, /bubble\.textContent = msg\.content;/);
+  assert.match(source, /badge\.textContent = msg\.content;/);
+  assert.match(source, /content\.textContent = msg\.content;/);
+  assert.match(source, /content\.innerHTML = renderMd\(msg\.content\);/);
+  assert.match(source, /setButtonContent\(copyBtn, 'M5 13l4 4L19 7', 'Copied!'\);/);
+  assert.match(source, /setButtonContent\(copyBtn, 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z', 'Copy'\);/);
 });
 
 test('toast.js escapes toast messages before inserting markup', async () => {
   const source = await read('freeforge/src/ui/toast.js');
 
-  assert.match(source, /el\.innerHTML = `[\s\S]*<span>\$\{esc\(msg\)\}<\/span>`;/);
+  assert.match(source, /const body = msg\.includes\(safeAction\) \? esc\(msg\)\.replace\(esc\(safeAction\), safeAction\) : esc\(msg\);/);
+  assert.match(source, /el\.innerHTML = `[\s\S]*<span>\$\{body\}<\/span>`;/);
 });
 
 test('models.js limits innerHTML to static placeholders and uses textContent for model labels', async () => {
