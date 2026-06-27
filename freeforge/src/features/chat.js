@@ -2,6 +2,7 @@ import { streamCompletion } from '../api.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
+import { toast } from '../ui/toast.js';
 
 export async function sendMessage(text) {
   text = text.trim();

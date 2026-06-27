@@ -1,6 +1,5 @@
-import { S, $ } from '../state.js';
 import { renderMd } from '../markdown.js';
-import { $, esc, S } from '../state.js';
+import { $, S } from '../state.js';
 import { toast } from './toast.js';
 
 let renderedCount = 0;
