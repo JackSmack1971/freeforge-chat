@@ -87,6 +87,12 @@ export async function updateKey() {
   btn.disabled = true;
   try {
     const models = await fetchFreeModels(key);
+    if (!models.length) {
+      const err = $('settings-key-error');
+      err.textContent = 'No free models found for this key';
+      err.classList.remove('hidden');
+      return;
+    }
     S.apiKey = key;
     S.models = models;
     setStoredKey(key);
