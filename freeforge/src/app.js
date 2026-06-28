@@ -103,6 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // new chat
   $('new-chat-btn').addEventListener('click', newChat);
+  // toast action buttons — delegated
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-action="new-chat"]')) newChat();
+  });
 
   // input textarea
   const inp = $('msg-input');

@@ -22,10 +22,6 @@ export function renderCtxPill() {
 
   if (pct >= 90 && !S.ctxToastFired) {
     S.ctxToastFired = true;
-    toast(
-      'Context nearly full — <button onclick="newChat()" class="toast-action-btn">New Chat</button>',
-      'warning',
-      0
-    );
+    toast('Context nearly full', 'warning', 0, { id: 'new-chat', label: 'New Chat' });
   }
 }
