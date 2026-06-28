@@ -37,7 +37,7 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 ### Validated
 
 - ✓ Onboarding card with key input, show/hide toggle, validation via `/models` endpoint, inline error messages — existing
-- ✓ Save key to localStorage; skip onboarding if key present on reload — existing
+- ✓ Save key to session-scoped storage; skip onboarding if key present on reload — existing
 - ✓ Main chat UI: top nav (logo, model selector, settings gear, new chat) — existing
 - ✓ Fetch and filter `:free` OpenRouter models for the model selector dropdown — existing
 - ✓ Streaming responses via ReadableStream + SSE (`data: [DONE]` handling) — existing
@@ -59,14 +59,9 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 
 ### Active
 
-- [ ] **QUAL-01**: Accessibility audit and remediation — proper ARIA labels, focus management, keyboard navigation, screen reader announcements for streaming content
-- [ ] **QUAL-02**: Mobile UX polish — touch targets, safe-area insets, virtual keyboard behavior on iOS/Android
-- [ ] **QUAL-03**: Code review and cleanup — dead code, inconsistencies between `freeforge.html` (root) and `freeforge/index.html`, consolidation decision
-- [ ] **QUAL-04**: Security hardening — DOMPurify integration in both HTML files, CSP meta tag, verify no XSS vectors in markdown rendering
-- [ ] **QUAL-05**: UX polish — model selector shows context length, empty state with suggestion chips, smooth transitions on screen switches, footer link
-- [ ] **QUAL-06**: Error resilience — graceful handling of no-free-models response, empty stream, malformed JSON in SSE, AbortController cleanup
-- [ ] **QUAL-07**: README and documentation — usage instructions, screenshot, project description suitable for GitHub portfolio
-- [ ] **QUAL-08**: Performance and loading — CDN SRI hashes verified, graceful degradation if CDNs fail, lazy rendering for long conversations
+- [ ] **EDIT-01**: User can click their own sent message to open inline edit mode with the original text prefilled
+- [ ] **EDIT-02**: Confirming an edit truncates later messages and resends from the edited turn through the existing chat flow
+- [ ] **EDIT-03**: User can undo one edit in the same session before the truncated slice is persisted
 
 ### Out of Scope
 
@@ -75,6 +70,8 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 - Multi-conversation history / sidebar — adds complexity without portfolio value
 - Custom model fine-tuning or system prompt UI — out of v1 scope
 - PWA / service worker — nice-to-have but not the focus
+- New conversation model — the edit milestone must reuse the current send/regenerate flow
+- Persistent edit history — undo only needs to cover the current session
 
 ## Key Decisions
 
@@ -105,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-27 after v1.0 milestone completion*
+*Last updated: 2026-06-28 after v1.1 milestone initialization*
