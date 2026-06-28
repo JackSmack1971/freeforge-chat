@@ -63,6 +63,14 @@ HTML, CSS, and JavaScript files directly.
 - DOMPurify for HTML sanitization
 - Netlify for static deployment and response headers
 
+## Runtime CDN Assets
+
+- `marked@18.0.4` from `https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js`
+  with `sha384-8RA8Ah4c9upJmKfg5nH01OgjZoQ3mRX+ngrKYWXQYj2dHYxFqYz8POSlii33f0wB`
+- `dompurify@3.4.8` from `https://cdn.jsdelivr.net/npm/dompurify@3.4.8/dist/purify.min.js`
+  with `sha384-jrsBdrv4eDpEYIq32u13DPbvB6tRmqIDnA6UlgFBoexpetaiWi7g/VbfMEL1WVen`
+- `tailwindcss@3` from `https://cdn.tailwindcss.com`
+
 ## Privacy Notes
 
 - API keys are stored in `sessionStorage`, scoped to the current browser tab
