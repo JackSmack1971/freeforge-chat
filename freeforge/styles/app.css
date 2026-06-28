@@ -61,7 +61,6 @@ body{background:#09090b;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFo
 .toast{animation:toastIn .25s ease-out,toastOut .25s ease-in 2.75s forwards}
 @keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(110%)}}
-#settings-modal.open{display:flex}
 .modal-bg{background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
 .modal-card{animation:slideUp .2s ease-out}
 select{-webkit-appearance:none;appearance:none}
