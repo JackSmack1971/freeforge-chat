@@ -79,6 +79,7 @@ export function openPalette() {
   const input = document.getElementById('cmd-search');
   if (!palette || !input) return;
   palette.classList.remove('hidden');
+  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
   input.value = '';
   render('');
   input.focus();
@@ -88,6 +89,7 @@ export function openPalette() {
 export function closePalette() {
   const palette = document.getElementById('cmd-palette');
   palette?.classList.add('hidden');
+  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
   palette?.removeEventListener('keydown', trapFocus);
   if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
   previousFocus = null;
