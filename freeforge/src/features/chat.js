@@ -2,7 +2,7 @@ import { streamCompletion } from '../api.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
-import { toast } from '../ui/toast.js';
+import { clearPersistent, toast } from '../ui/toast.js';
 
 function setLiveRegion(id, text) {
   const region = $(id);
@@ -130,6 +130,7 @@ export function copyLastResponse() {
 
 export function newChat() {
   if (S.abort) { S.abort.abort(); S.abort = null; }
+  clearPersistent();
   S.messages = [];
   S.streaming = false;
   S.contextTokens = 0;

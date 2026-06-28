@@ -118,7 +118,7 @@
 
     <div class="flex-1 min-w-0 flex items-center">
       <div class="relative w-full max-w-xs">
-        <select id="model-select" class="w-full text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-lg pl-3 pr-7 py-2 cursor-pointer hover:border-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors truncate">
+        <select id="model-select" aria-label="Select AI model" class="w-full text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-lg pl-3 pr-7 py-2 cursor-pointer hover:border-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors truncate">
           <option value="">Loading models…</option>
         </select>
         <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
@@ -144,6 +144,7 @@
         id="palette-trigger-btn"
         title="Command palette (Ctrl+K)"
         aria-label="Open command palette"
+        aria-expanded="false"
         class="nav-icon-btn palette-trigger">
         ⌘
       </button>
@@ -210,7 +211,7 @@
   <div class="surface-strip border-t border-zinc-800 px-4 py-3 flex-shrink-0">
     <div class="max-w-3xl mx-auto">
       <div id="input-box" class="input-shell-surface flex items-end gap-3 rounded-2xl border border-zinc-700 focus-within:border-indigo-500 transition-colors px-4 py-3">
-        <textarea id="msg-input" placeholder="Message FreeForge…" rows="1" maxlength="32000"
+        <textarea id="msg-input" aria-label="Chat message" placeholder="Message FreeForge…" rows="1" maxlength="32000"
                   class="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-400 focus:outline-none leading-relaxed"></textarea>
         <button id="send-btn" aria-label="Send message" class="gradient-btn flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all">
           <svg id="send-icon" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +228,7 @@
 </div>
 
 <!-- ========== SETTINGS MODAL ========== -->
-<div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
+<div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-hidden="true" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
   <div id="settings-backdrop" class="absolute inset-0 modal-bg"></div>
   <div class="surface-card relative w-full max-w-md rounded-2xl border border-zinc-800 p-6 z-10 modal-card">
     <div class="flex items-center justify-between mb-5">

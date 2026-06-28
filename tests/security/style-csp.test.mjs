@@ -15,6 +15,13 @@ test('style-src is restricted to self-hosted stylesheets', async () => {
   assert.doesNotMatch(netlify, /style-src [^"]*cdn\.jsdelivr\.net/);
 });
 
+test('script-src is pinned to the two CDN script hashes', async () => {
+  const netlify = await read('netlify.toml');
+
+  assert.match(netlify, /script-src 'self' 'sha384-8RA8Ah4c9upJmKfg5nH01OgjZoQ3mRX\+ngrKYWXQYj2dHYxFqYz8POSlii33f0wB' 'sha384-jrsBdrv4eDpEYIq32u13DPbvB6tRmqIDnA6UlgFBoexpetaiWi7g\/VbfMEL1WVen'/);
+  assert.doesNotMatch(netlify, /script-src [^"]*cdn\.jsdelivr\.net/);
+});
+
 test('index.html uses a local Tailwind stylesheet', async () => {
   const html = await read('freeforge/index.html');
 
