@@ -1,9 +1,9 @@
 import { newChat, regenerate, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
-import { hideObError, validateAndConnect } from './features/onboarding.js';
+import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, LS, S, getErrorLog, getStoredKey, recordError } from './state.js';
+import { $, LS, S, clearStoredKey, getStoredKey, recordError } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { renderAllMessages, scrollBottom } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
@@ -24,11 +24,18 @@ async function init() {
   if (Array.isArray(savedMsgs)) {
     S.messages = savedMsgs.filter(m => !m.streaming);
   }
+  const modelLoad = await loadModels(savedKey);
+  if (modelLoad === 'empty') {
+    clearStoredKey();
+    S.apiKey = null;
+    showScreen('onboarding');
+    showObError('No free models found for this key');
+    return;
+  }
 
   showScreen('chat');
   renderAllMessages();
   scrollBottom(false);
-  await loadModels(savedKey);
   renderCtxPill();
 }
 

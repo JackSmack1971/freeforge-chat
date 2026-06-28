@@ -31,7 +31,10 @@ export async function loadModels(key) {
   try {
     const models = rankModels(await fetchFreeModels(key));
     S.models = models;
-    if (!models.length) { sel.innerHTML = '<option value="">No free models found</option>'; return; }
+    if (!models.length) {
+      sel.innerHTML = '<option value="">No free models found</option>';
+      return 'empty';
+    }
     buildOptions(models);
     const saved = LS.get('ff_model');
     const validSaved = saved && models.find(m => m.id === saved);
@@ -42,10 +45,12 @@ export async function loadModels(key) {
       const pick = models[0]?.id;
       if (pick) { sel.value = pick; S.selectedModel = pick; LS.set('ff_model', pick); }
     }
+    return 'ok';
   } catch (e) {
     sel.innerHTML = '<option value="">Failed to load models</option>';
     toast(`Could not load models: ${e.message}`, 'error');
     if (e.message.includes('Invalid')) showInvalidBanner();
+    return 'error';
   }
 }
 

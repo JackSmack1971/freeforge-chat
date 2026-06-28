@@ -2,6 +2,7 @@
 .claude/
 .codex/
 .planning/codebase/
+docs/
 .tmp/
 README-SWARM.md
 managed-settings.example.json
