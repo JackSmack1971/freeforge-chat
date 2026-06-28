@@ -34,3 +34,7 @@ export function toast(msg, type = 'info', ms = 3000, action = null) {
   $('toasts').appendChild(el);
   if (ms > 0) setTimeout(() => el.remove(), ms + 300);
 }
+
+export function clearPersistent() {
+  $('toasts')?.querySelectorAll('.toast-persistent').forEach(el => el.remove());
+}
