@@ -7,11 +7,21 @@
   "scripts": {
     "test": "cd .. && node --test tests/security/*.test.mjs"
   },
-  "dependencies": {
-    "dompurify": "3.4.8",
-    "marked": "18.0.4"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.0"
+  "_cdnDependencies": {
+    "note": "Runtime libraries are loaded from CDN with SRI and are not npm-installed.",
+    "marked": {
+      "version": "18.0.4",
+      "cdn": "https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js",
+      "sri": "sha384-8RA8Ah4c9upJmKfg5nH01OgjZoQ3mRX+ngrKYWXQYj2dHYxFqYz8POSlii33f0wB"
+    },
+    "dompurify": {
+      "version": "3.4.8",
+      "cdn": "https://cdn.jsdelivr.net/npm/dompurify@3.4.8/dist/purify.min.js",
+      "sri": "sha384-jrsBdrv4eDpEYIq32u13DPbvB6tRmqIDnA6UlgFBoexpetaiWi7g/VbfMEL1WVen"
+    },
+    "tailwindcss": {
+      "version": "3",
+      "cdn": "https://cdn.tailwindcss.com"
+    }
   }
 }
