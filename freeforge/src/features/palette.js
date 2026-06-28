@@ -33,7 +33,9 @@ function render(query = '') {
   list.innerHTML = '';
   filteredActions.forEach((a, i) => {
     const li = document.createElement('li');
+    li.id = `cmd-item-${i}`;
     li.role = 'option';
+    li.setAttribute('aria-selected', String(i === activeIndex));
     li.className = i === activeIndex ? 'cmd-item cmd-active' : 'cmd-item';
     li.textContent = a.label;
     if (a.shortcut) {
@@ -44,6 +46,8 @@ function render(query = '') {
     li.addEventListener('click', () => a.action());
     list.appendChild(li);
   });
+  const srch = document.getElementById('cmd-search');
+  if (srch) srch.setAttribute('aria-activedescendant', filteredActions.length ? `cmd-item-${activeIndex}` : '');
 }
 
 export function openPalette() {
