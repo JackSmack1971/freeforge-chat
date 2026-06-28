@@ -33,7 +33,7 @@ function executeClearKey() {
 function getFocusableInModal() {
   return [...$('settings-modal').querySelectorAll(
     'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )].filter(el => el.closest('.hidden') === null && el.offsetParent !== null);
+  )].filter(el => el.offsetParent !== null);
 }
 
 export function clearKeyError() {
@@ -73,7 +73,8 @@ export function openSettings() {
   clearKeyError();
   resetClearButton($('settings-clear-btn'));
   const modal = $('settings-modal');
-  modal.classList.add('open');
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
   modal.addEventListener('keydown', trapFocus);
   const [first] = getFocusableInModal();
   if (first) first.focus();
@@ -83,7 +84,8 @@ export function closeSettings() {
   resetClearButton($('settings-clear-btn'));
   clearKeyError();
   const modal = $('settings-modal');
-  modal.classList.remove('open');
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
   modal.removeEventListener('keydown', trapFocus);
   if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
   previousFocus = null;
