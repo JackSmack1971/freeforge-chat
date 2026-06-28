@@ -17,6 +17,7 @@ const PURIFY_CONFIG = {
     'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
   ],
   ALLOWED_ATTR: ['href', 'title', 'class'],
+  ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
   FORBID_ATTR: ['style', 'onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
   FORCE_BODY: true,
 };
