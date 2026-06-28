@@ -7,7 +7,7 @@ let renderedCount = 0;
 function injectCodeBlockUI(container) {
   for (const pre of container.querySelectorAll('pre')) {
     const codeEl = pre.querySelector('code');
-    if (!codeEl || pre.querySelector('.copy-code-btn')) return;
+    if (!codeEl || pre.querySelector('.copy-code-btn')) continue;
     const langClass = [...codeEl.classList].find(c => c.startsWith('language-'));
     const lang = langClass ? langClass.replace('language-', '') : '';
 
