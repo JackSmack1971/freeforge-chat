@@ -2,7 +2,7 @@ import { esc } from './state.js';
 
 // Module-level initialization (SEC-07): call once at module load, not per-render.
 // marked.use() must not be called inside a function or loop per marked.js docs.
-marked.use({ breaks: true, gfm: true });
+if (typeof marked !== 'undefined') marked.use({ breaks: true, gfm: true });
 
 // Explicit allowlist prevents CSS injection (style=) and blocks tags outside
 // the markdown rendering surface area. Keep attributes narrow so untrusted
@@ -31,6 +31,7 @@ if (typeof DOMPurify !== 'undefined') {
 
 export function renderMd(text) {
   if (!text) return '';
+  if (typeof marked === 'undefined') return esc(text).replace(/\n/g, '<br>');
   try {
     const raw = marked.parse(text);
     // Sanitize LLM-generated HTML before injecting into the DOM.
