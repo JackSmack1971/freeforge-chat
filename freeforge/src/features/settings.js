@@ -1,7 +1,7 @@
 import { fetchFreeModels } from '../api.js';
 import { $, LS, S, clearStoredKey, maskKey, setStoredKey } from '../state.js';
 import { hideInvalidBanner, showScreen } from '../ui/screen.js';
-import { toast } from '../ui/toast.js';
+import { clearPersistent, toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
 const CLEAR_CONFIRM_MS = 3000;
@@ -18,6 +18,7 @@ function resetClearButton(btn) {
 }
 
 function executeClearKey() {
+  clearPersistent();
   clearStoredKey();
   for (const k of ['ff_msgs', 'ff_model']) {
     LS.del(k);
