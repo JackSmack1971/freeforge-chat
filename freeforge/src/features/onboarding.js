@@ -41,8 +41,13 @@ export function showObError(msg) {
   const el = $('ob-key-error');
   el.textContent = msg;
   el.classList.remove('hidden');
+  $('ob-key-input').setAttribute('aria-invalid', 'true');
 }
 
 export function hideObError() {
-  $('ob-key-error').classList.add('hidden');
+  const input = $('ob-key-input');
+  input.setAttribute('aria-invalid', 'false');
+  const el = $('ob-key-error');
+  el.textContent = '';
+  el.classList.add('hidden');
 }
