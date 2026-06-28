@@ -1,5 +1,5 @@
 import { fetchFreeModels } from '../api.js';
-import { $, LS, S, fmtCtx } from '../state.js';
+import { $, fmtCtx, LS, S } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { toast } from '../ui/toast.js';

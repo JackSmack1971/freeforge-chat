@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MemoryStorage, MockElement, installGlobals, importFresh, importShared, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
+import { importFresh, importShared, installGlobals, MemoryStorage, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 function makeSseBody(chunks) {
   return new ReadableStream({
@@ -51,7 +51,7 @@ test('markdown.js sanitizes links and falls back when DOMPurify is unavailable o
     },
     DOMPurify: {
       hooks,
-      addHook(name, fn) {
+      addHook(_name, fn) {
         hooks.push(fn);
       },
       sanitize(raw) {
@@ -109,7 +109,7 @@ test('screen.js and toast.js update visibility and render escaped, actionable to
     marked: { use() {}, parse: text => text },
     DOMPurify: { addHook() {}, sanitize: raw => raw },
     navigator: { clipboard: makeClipboard() },
-    setTimeout: (fn, ms) => {
+    setTimeout: (_fn, ms) => {
       timeoutCalls.push(ms);
       return 1;
     },
@@ -693,7 +693,7 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     navigator: { clipboard: makeClipboard() },
     marked: { use() {}, parse: text => text },
     DOMPurify: { addHook() {}, sanitize: raw => raw },
-    setTimeout: (fn, ms) => 1,
+    setTimeout: (_fn, _ms) => 1,
     clearTimeout() {},
   });
   try {
