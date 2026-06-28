@@ -5,23 +5,27 @@ import test from 'node:test';
 
 const ESC_IMPL = "const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\\"/g, '&quot;');";
 
-async function loadMarkdownModule({ parseImpl, sanitizeImpl } = {}) {
+async function loadMarkdownModule({ parseImpl, sanitizeImpl, markedAvailable = true } = {}) {
   const filePath = path.resolve('freeforge/src/markdown.js');
   const source = await readFile(filePath, 'utf8');
   const transformed = source.replace("import { esc } from './state.js';", ESC_IMPL);
 
-  globalThis.marked = {
-    useCalls: [],
-    parseCalls: [],
-    use(options) {
-      this.useCalls.push(options);
-    },
-    parse(text) {
-      this.parseCalls.push(text);
-      if (parseImpl) return parseImpl(text);
-      return `<p>${text}</p>`;
-    },
-  };
+  if (markedAvailable) {
+    globalThis.marked = {
+      useCalls: [],
+      parseCalls: [],
+      use(options) {
+        this.useCalls.push(options);
+      },
+      parse(text) {
+        this.parseCalls.push(text);
+        if (parseImpl) return parseImpl(text);
+        return `<p>${text}</p>`;
+      },
+    };
+  } else {
+    globalThis.marked = undefined;
+  }
 
   if (sanitizeImpl) {
     globalThis.DOMPurify = {
@@ -77,8 +81,22 @@ test('renderMd passes the hardened purifier config into DOMPurify', async () => 
   assert.deepEqual(config.ALLOWED_ATTR, ['href', 'title', 'class']);
   assert.ok(config.ALLOWED_TAGS.includes('a'));
   assert.ok(config.ALLOWED_TAGS.includes('code'));
+  assert.equal(config.ALLOWED_URI_REGEXP.toString(), '/^(?:https?|mailto):/i');
   assert.ok(config.FORBID_ATTR.includes('onclick'));
   assert.equal(config.FORCE_BODY, true);
+});
+
+test('renderMd strips javascript hrefs while keeping safe links', async () => {
+  const { renderMd } = await loadMarkdownModule({
+    parseImpl: () => '<a href="javascript:alert(1)">bad</a><a href="https://example.com">ok</a><a href="mailto:test@example.com">mail</a>',
+    sanitizeImpl: (raw, _config) => raw.replace(/href="javascript:[^"]*"/g, ''),
+  });
+
+  const output = renderMd('link');
+
+  assert.doesNotMatch(output, /javascript:alert\(1\)/);
+  assert.match(output, /href="https:\/\/example\.com"/);
+  assert.match(output, /href="mailto:test@example\.com"/);
 });
 
 test('renderMd falls back to escaped plaintext when DOMPurify is unavailable', async () => {
@@ -103,4 +121,19 @@ test('renderMd falls back to escaped plaintext when marked.parse throws', async 
 
   assert.equal(output, '&lt;b&gt;unsafe&lt;/b&gt;');
   assert.equal(globalThis.DOMPurify.calls.length, 0);
+});
+
+test('markdown.js module initializes without throwing when marked CDN is unavailable', async () => {
+  await assert.doesNotReject(
+    () => loadMarkdownModule({ markedAvailable: false }),
+    'markdown.js must not throw ReferenceError when marked is undefined',
+  );
+});
+
+test('renderMd returns escaped plaintext when marked CDN is unavailable', async () => {
+  const { renderMd } = await loadMarkdownModule({ markedAvailable: false });
+
+  const output = renderMd('<b>hello</b>\nworld');
+
+  assert.equal(output, '&lt;b&gt;hello&lt;/b&gt;<br>world');
 });

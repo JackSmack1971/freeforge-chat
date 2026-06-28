@@ -2,7 +2,7 @@ import { streamCompletion } from '../api.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
-import { toast } from '../ui/toast.js';
+import { clearPersistent, toast } from '../ui/toast.js';
 
 function setLiveRegion(id, text) {
   const region = $(id);
@@ -68,8 +68,8 @@ export async function sendMessage(text) {
         S.contextTokens = exactTokens;
         S.usageIsExact = true;
       } else {
-        const charEstimate = Math.ceil((trimmedText.length + S.lastAssistantResponse.length) / 4);
-        S.contextTokens = charEstimate;
+        const totalChars = S.messages.filter(m => m.role === 'user' || m.role === 'assistant').reduce((sum, m) => sum + (m.content?.length ?? 0), 0);
+        S.contextTokens = Math.ceil(totalChars / 4);
         S.usageIsExact = false;
       }
       if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
@@ -130,6 +130,7 @@ export function copyLastResponse() {
 
 export function newChat() {
   if (S.abort) { S.abort.abort(); S.abort = null; }
+  clearPersistent();
   S.messages = [];
   S.streaming = false;
   S.contextTokens = 0;

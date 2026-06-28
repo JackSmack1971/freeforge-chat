@@ -1,7 +1,7 @@
 import { fetchFreeModels } from '../api.js';
 import { $, clearStoredKey, LS, maskKey, S, setStoredKey } from '../state.js';
 import { hideInvalidBanner, showScreen } from '../ui/screen.js';
-import { toast } from '../ui/toast.js';
+import { clearPersistent, toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
 const CLEAR_CONFIRM_MS = 3000;
@@ -18,6 +18,7 @@ function resetClearButton(btn) {
 }
 
 function executeClearKey() {
+  clearPersistent();
   clearStoredKey();
   for (const k of ['ff_msgs', 'ff_model']) {
     LS.del(k);
@@ -33,7 +34,7 @@ function executeClearKey() {
 function getFocusableInModal() {
   return [...$('settings-modal').querySelectorAll(
     'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )].filter(el => el.closest('.hidden') === null && el.offsetParent !== null);
+  )].filter(el => el.offsetParent !== null);
 }
 
 export function clearKeyError() {
@@ -73,7 +74,9 @@ export function openSettings() {
   clearKeyError();
   resetClearButton($('settings-clear-btn'));
   const modal = $('settings-modal');
+  modal.classList.remove('hidden');
   modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
   modal.addEventListener('keydown', trapFocus);
   const [first] = getFocusableInModal();
   if (first) first.focus();
@@ -83,7 +86,9 @@ export function closeSettings() {
   resetClearButton($('settings-clear-btn'));
   clearKeyError();
   const modal = $('settings-modal');
+  modal.classList.add('hidden');
   modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
   modal.removeEventListener('keydown', trapFocus);
   if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
   previousFocus = null;
