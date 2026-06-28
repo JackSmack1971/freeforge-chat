@@ -79,6 +79,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
     }
   } catch (e) {
     if (e.name === 'AbortError') return onDone(donePayload, full);
+    try { reader.cancel(); } catch {}
     onError('Stream interrupted.');
     return;
   }
