@@ -13,6 +13,7 @@ const BASE_ACTIONS = [
 
 let activeIndex = 0;
 let filteredActions = [];
+let previousFocus = null;
 
 function buildActions() {
   const modelActions = (S.models ?? []).map(m => ({
@@ -52,6 +53,7 @@ function render(query = '') {
 
 export function openPalette() {
   activeIndex = 0;
+  previousFocus = document.activeElement;
   const palette = document.getElementById('cmd-palette');
   const input = document.getElementById('cmd-search');
   if (!palette || !input) return;
@@ -63,6 +65,8 @@ export function openPalette() {
 
 export function closePalette() {
   document.getElementById('cmd-palette')?.classList.add('hidden');
+  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
+  previousFocus = null;
 }
 
 document.getElementById('cmd-search')?.addEventListener('input', e => {
