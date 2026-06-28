@@ -81,8 +81,22 @@ test('renderMd passes the hardened purifier config into DOMPurify', async () => 
   assert.deepEqual(config.ALLOWED_ATTR, ['href', 'title', 'class']);
   assert.ok(config.ALLOWED_TAGS.includes('a'));
   assert.ok(config.ALLOWED_TAGS.includes('code'));
+  assert.equal(config.ALLOWED_URI_REGEXP.toString(), '/^(?:https?|mailto):/i');
   assert.ok(config.FORBID_ATTR.includes('onclick'));
   assert.equal(config.FORCE_BODY, true);
+});
+
+test('renderMd strips javascript hrefs while keeping safe links', async () => {
+  const { renderMd } = await loadMarkdownModule({
+    parseImpl: () => '<a href="javascript:alert(1)">bad</a><a href="https://example.com">ok</a><a href="mailto:test@example.com">mail</a>',
+    sanitizeImpl: (raw, config) => raw.replace(/href="javascript:[^"]*"/g, ''),
+  });
+
+  const output = renderMd('link');
+
+  assert.doesNotMatch(output, /javascript:alert\(1\)/);
+  assert.match(output, /href="https:\/\/example\.com"/);
+  assert.match(output, /href="mailto:test@example\.com"/);
 });
 
 test('renderMd falls back to escaped plaintext when DOMPurify is unavailable', async () => {
