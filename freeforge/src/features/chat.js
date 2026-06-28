@@ -4,6 +4,11 @@ import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 import { toast } from '../ui/toast.js';
 
+function setLiveRegion(id, text) {
+  const region = $(id);
+  if (region) region.textContent = text;
+}
+
 export async function sendMessage(text) {
   text = text.trim();
   if (!text || S.streaming) return;
@@ -27,6 +32,8 @@ export async function sendMessage(text) {
   S.messages.push(asstMsg);
 
   setStreamMode(true);
+  setLiveRegion('sr-alert', '');
+  setLiveRegion('sr-status', 'Assistant is responding…');
   appendNewMessages();
   $('thinking').classList.remove('hidden');
   scrollBottom(false);
@@ -75,6 +82,7 @@ export async function sendMessage(text) {
       S.abort = null;
       S.streamTarget = null;
       setStreamMode(false);
+      setLiveRegion('sr-status', 'Response complete');
       LS.set('ff_msgs', S.messages);
       if (!replaceMessage(asstMsg, true)) renderAllMessages();
       renderCtxPill();
@@ -88,6 +96,8 @@ export async function sendMessage(text) {
       S.abort = null;
       S.streamTarget = null;
       setStreamMode(false);
+      setLiveRegion('sr-status', '');
+      setLiveRegion('sr-alert', errMsg);
       toast(errMsg, 'error', 6000);
       renderAllMessages();
     },

@@ -4,19 +4,29 @@
 
 FreeForge is a self-contained, zero-dependency browser chat UI that talks directly to the OpenRouter API using only free models. No server, no build step, no tracking — just open the HTML file and chat.
 
-The v1 implementation is feature-complete: onboarding with key validation, streaming chat, model selector, markdown rendering, copy/regenerate buttons, localStorage persistence, settings modal, error handling, and responsive dark UI. This project is the **quality pass** that takes it from "it works" to "impressive portfolio piece" — tight code, accessible markup, polished UX, and clean architecture.
+The v1 implementation shipped as a quality pass: onboarding with key validation, streaming chat, model selector, hardened markdown rendering, copy/regenerate buttons, session-scoped key persistence, settings modal, error handling, and responsive dark UI. This project is the **quality pass** that took it from "it works" to "impressive portfolio piece" — tight code, accessible markup, polished UX, and clean architecture.
 
 ## Core Value
 
 A single HTML file you can open, share, or deploy anywhere — beautiful enough to show in a portfolio, tight enough to show in the code.
 
+## Current Milestone: v1.1 Inline Message Editing
+
+**Goal:** Let users edit a sent user message in place, then resend the conversation from that point through the existing `regenerate()` / `sendMessage()` path.
+
+**Target features:**
+- Click a user message bubble to open inline edit mode
+- Confirming an edit truncates later messages and resends the edited prompt
+- A single-slot, session-only undo toast restores truncated messages before persistence
+
 ## Context
 
 - **Type:** Brownfield — code is already written and functional
 - **Stack:** Vanilla ES modules, Tailwind CDN, marked.js CDN (DOMPurify in freeforge/index.html), no build step
-- **Entry point:** `freeforge/index.html` (canonical) and `freeforge.html` (root alias)
+- **Entry point:** `freeforge/index.html` (canonical)
 - **Owner:** Solo project / portfolio
 - **Target:** Public GitHub repo + portfolio showcase
+- **Current focus:** Inline message editing built on the existing chat lifecycle, with no new message history model
 
 ## Who It's For
 
@@ -73,8 +83,9 @@ Developers who want free AI chat without an account wall, and anyone reviewing t
 | No build step | Zero-friction open-and-use; portfolio viewers can read the source directly | Preserved — ES modules + CDN only |
 | Vanilla JS over React/Vue | Demonstrates fundamentals; no framework overhead for a small app | Preserved |
 | client-side only storage | Privacy-first; no server to maintain | Preserved |
-| marked.js via CDN | Full Markdown spec; lightweight enough for CDN delivery | Keep; ensure DOMPurify is paired with it in all entry points |
-| Two HTML entry points | `freeforge.html` (root) vs `freeforge/index.html` — root file lacks DOMPurify | Consolidate in QUAL-03/QUAL-04 |
+| marked.js via CDN | Full Markdown spec; lightweight enough for CDN delivery | Keep; DOMPurify is paired with it in the canonical entry point |
+| Two HTML entry points | `freeforge.html` (root) vs `freeforge/index.html` — root file lacked DOMPurify | Resolved — root file removed, canonical entry is `freeforge/index.html` |
+| Inline edit flow reuses resend path | Editing should truncate history once and call the existing send flow instead of introducing a second message pipeline | Pending |
 
 ## Evolution
 
@@ -94,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-04 after initialization*
+*Last updated: 2026-06-27 after v1.0 milestone completion*

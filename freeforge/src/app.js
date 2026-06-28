@@ -2,12 +2,18 @@ import { newChat, regenerate, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
-import { clearKey, closeSettings, openSettings, updateKey } from './features/settings.js';
+import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, getErrorLog, getStoredKey, LS, recordError, S } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { renderAllMessages, scrollBottom } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
 import { toast } from './ui/toast.js';
+
+function syncObToggleVis(show) {
+  const btn = $('ob-toggle-vis');
+  btn.setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
+  btn.setAttribute('aria-pressed', String(show));
+}
 
 async function init() {
   const savedKey = getStoredKey();
@@ -57,10 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const inp = $('ob-key-input');
     const show = inp.type === 'password';
     inp.type = show ? 'text' : 'password';
-    $('ob-toggle-vis').setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
+    syncObToggleVis(show);
     $('ob-eye-show').classList.toggle('hidden', show);
     $('ob-eye-hide').classList.toggle('hidden', !show);
   });
+  syncObToggleVis(false);
   $('ob-key-input').addEventListener('input', hideObError);
   $('ob-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('ob-save-btn').click(); });
   $('ob-save-btn').addEventListener('click', () => validateAndConnect($('ob-key-input').value));
@@ -83,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('settings-backdrop').addEventListener('click', closeSettings);
   $('settings-clear-btn').addEventListener('click', clearKey);
   $('settings-update-btn').addEventListener('click', updateKey);
+  $('settings-new-key').addEventListener('input', clearSettingsKeyError);
   $('banner-update-btn').addEventListener('click', () => { hideInvalidBanner(); openSettings(); });
 
   // new chat
