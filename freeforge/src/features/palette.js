@@ -24,6 +24,27 @@ function buildActions() {
   return [...BASE_ACTIONS, ...modelActions];
 }
 
+function getFocusableInPalette() {
+  return [...document.getElementById('cmd-palette-inner')?.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  ) ?? []];
+}
+
+function trapFocus(e) {
+  if (e.key !== 'Tab') return;
+  const focusable = getFocusableInPalette();
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 function render(query = '') {
   filteredActions = buildActions().filter(a =>
     a.label.toLowerCase().includes(query.toLowerCase())
@@ -61,10 +82,13 @@ export function openPalette() {
   input.value = '';
   render('');
   input.focus();
+  palette.addEventListener('keydown', trapFocus);
 }
 
 export function closePalette() {
-  document.getElementById('cmd-palette')?.classList.add('hidden');
+  const palette = document.getElementById('cmd-palette');
+  palette?.classList.add('hidden');
+  palette?.removeEventListener('keydown', trapFocus);
   if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
   previousFocus = null;
 }
