@@ -142,5 +142,3 @@ export function newChat() {
   renderAllMessages();
   renderCtxPill();
 }
-
-if (typeof window !== 'undefined') window.newChat = newChat;
