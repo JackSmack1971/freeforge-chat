@@ -83,7 +83,7 @@ export async function sendMessage(text) {
       S.streamTarget = null;
       setStreamMode(false);
       setLiveRegion('sr-status', 'Response complete');
-      LS.set('ff_msgs', S.messages);
+      if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
       if (!replaceMessage(asstMsg, true)) renderAllMessages();
       renderCtxPill();
       scrollBottom();
