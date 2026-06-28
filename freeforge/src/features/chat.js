@@ -65,11 +65,11 @@ export async function sendMessage(text) {
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
       if (exactTokens !== null) {
-        S.contextTokens += exactTokens;
+        S.contextTokens = exactTokens;
         S.usageIsExact = true;
       } else {
         const charEstimate = Math.ceil((text.length + S.lastAssistantResponse.length) / 4);
-        S.contextTokens += charEstimate;
+        S.contextTokens = charEstimate;
         S.usageIsExact = false;
       }
       if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
