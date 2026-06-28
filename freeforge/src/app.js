@@ -59,6 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
   installErrorCapture();
 
   // onboarding
+  $('ob-key-input').closest('form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    $('ob-save-btn').click();
+  });
   $('ob-toggle-vis').addEventListener('click', () => {
     const inp = $('ob-key-input');
     const show = inp.type === 'password';
@@ -85,6 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // settings
+  $('settings-new-key').closest('form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    $('settings-update-btn').click();
+  });
   $('settings-btn').addEventListener('click', openSettings);
   $('close-settings-btn').addEventListener('click', closeSettings);
   $('settings-backdrop').addEventListener('click', closeSettings);
