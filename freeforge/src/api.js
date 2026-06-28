@@ -1,20 +1,27 @@
 import { showInvalidBanner } from './ui/screen.js';
 
 export async function fetchFreeModels(key) {
-  const res = await fetch('https://openrouter.ai/api/v1/models', {
-    headers: { 'Authorization': `Bearer ${key}` },
-  });
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('Invalid API key');
-    if (res.status === 429) throw new Error('Rate limited — try again shortly');
-    throw new Error(`Failed to fetch models (${res.status})`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { 'Authorization': `Bearer ${key}` },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('Invalid API key');
+      if (res.status === 429) throw new Error('Rate limited — try again shortly');
+      throw new Error(`Failed to fetch models (${res.status})`);
+    }
+    const data = await res.json();
+    return (data.data || []).filter(m => {
+      if (m.id?.endsWith(':free')) return true;
+      const p = m.pricing;
+      return p && parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
+    }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const data = await res.json();
-  return (data.data || []).filter(m => {
-    if (m.id?.endsWith(':free')) return true;
-    const p = m.pricing;
-    return p && parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
-  }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
 }
 
 export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError, signal }) {
