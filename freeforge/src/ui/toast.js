@@ -36,5 +36,5 @@ export function toast(msg, type = 'info', ms = 3000, action = null) {
 }
 
 export function clearPersistent() {
-  $('toasts')?.querySelectorAll('.toast-persistent').forEach(el => el.remove());
+  for (const el of $('toasts')?.querySelectorAll('.toast-persistent') ?? []) el.remove();
 }

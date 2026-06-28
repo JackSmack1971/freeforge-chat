@@ -9,7 +9,7 @@ test('persistent toasts are cleared by new chat and key reset', async () => {
   const settingsJs = await readFile(path.resolve('freeforge/src/features/settings.js'), 'utf8');
 
   assert.match(toastJs, /export function clearPersistent\(\)/);
-  assert.match(toastJs, /querySelectorAll\('\.toast-persistent'\)\.forEach\(el => el\.remove\(\)\)/);
+  assert.match(toastJs, /for \(const el of \$\('toasts'\)\?\.querySelectorAll\('\.toast-persistent'\) \?\? \[\]\) el\.remove\(\);/);
   assert.match(chatJs, /clearPersistent\(\);/);
   assert.match(settingsJs, /clearPersistent\(\);/);
 });
