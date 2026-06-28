@@ -4,9 +4,34 @@ import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
+const INLINE_EDIT_UNDO_MS = 6000;
+
 function setLiveRegion(id, text) {
   const region = $(id);
   if (region) region.textContent = text;
+}
+
+function inlineEditUndoMatchesToken(undo, token) {
+  return Boolean(undo && undo.token === token);
+}
+
+function clearInlineEditUndo(token = null) {
+  const undo = S.inlineEditUndo;
+  if (!undo) return false;
+  if (token && !inlineEditUndoMatchesToken(undo, token)) return false;
+  if (undo.timeout) clearTimeout(undo.timeout);
+  S.inlineEditUndo = null;
+  return true;
+}
+
+function setInlineEditUndo(slice) {
+  clearInlineEditUndo();
+  const token = uid();
+  const timeout = setTimeout(() => {
+    clearInlineEditUndo(token);
+  }, INLINE_EDIT_UNDO_MS);
+  S.inlineEditUndo = { slice, token, timeout };
+  return token;
 }
 
 function validateSendText(text) {
@@ -21,6 +46,7 @@ function truncateConversationFromUserMessage(messageId) {
   const idx = S.messages.findIndex(m => m.id === messageId && m.role === 'user');
   if (idx === -1) return null;
   const text = S.messages[idx].content;
+  setInlineEditUndo(S.messages.slice(idx));
   S.messages.splice(idx);
   S.inlineEditId = null;
   LS.set('ff_msgs', S.messages);
@@ -155,6 +181,7 @@ export function copyLastResponse() {
 
 export function newChat() {
   if (S.abort) { S.abort.abort(); S.abort = null; }
+  clearInlineEditUndo();
   clearPersistent();
   S.messages = [];
   S.streaming = false;
@@ -168,4 +195,26 @@ export function newChat() {
   LS.set('ff_msgs', []);
   renderAllMessages();
   renderCtxPill();
+}
+
+export function restoreInlineEditUndo(token) {
+  const undo = S.inlineEditUndo;
+  if (!inlineEditUndoMatchesToken(undo, token)) return false;
+  const slice = undo.slice;
+  clearInlineEditUndo(token);
+  S.messages.splice(0, S.messages.length, ...slice);
+  S.inlineEditId = null;
+  LS.set('ff_msgs', S.messages);
+  renderAllMessages();
+  renderCtxPill();
+  return true;
+}
+
+export function hasInlineEditUndo(token) {
+  return inlineEditUndoMatchesToken(S.inlineEditUndo, token);
+}
+
+export function selfCheckInlineEditUndo() {
+  const token = uid();
+  return inlineEditUndoMatchesToken({ token }, token) && !inlineEditUndoMatchesToken({ token }, `${token}-x`);
 }

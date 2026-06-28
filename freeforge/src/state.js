@@ -7,6 +7,7 @@ export const S = {
   abort: null,
   streamTarget: null,
   inlineEditId: null,
+  inlineEditUndo: null,
   contextTokens: 0,
   usageIsExact: false,
   ctxToastFired: false,
