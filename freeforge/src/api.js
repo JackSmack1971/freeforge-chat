@@ -33,7 +33,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ model: modelId, messages: msgs, stream: true }),
+      body: JSON.stringify({ model: modelId, messages: msgs, stream: true, stream_options: { include_usage: true } }),
       signal,
     });
   } catch (e) {
