@@ -33,7 +33,21 @@ function executeClearKey() {
 function getFocusableInModal() {
   return [...$('settings-modal').querySelectorAll(
     'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )].filter(el => !el.closest('.hidden'));
+  )].filter(el => el.closest('.hidden') === null && el.offsetParent !== null);
+}
+
+export function clearKeyError() {
+  const err = $('settings-key-error');
+  err.textContent = '';
+  err.classList.add('hidden');
+  $('settings-new-key').setAttribute('aria-invalid', 'false');
+}
+
+function showKeyError(msg) {
+  const err = $('settings-key-error');
+  err.textContent = msg;
+  err.classList.remove('hidden');
+  $('settings-new-key').setAttribute('aria-invalid', 'true');
 }
 
 function trapFocus(e) {
@@ -56,7 +70,7 @@ export function openSettings() {
   previousFocus = document.activeElement;
   $('settings-key-display').textContent = maskKey(S.apiKey);
   $('settings-new-key').value = '';
-  $('settings-key-error').classList.add('hidden');
+  clearKeyError();
   resetClearButton($('settings-clear-btn'));
   const modal = $('settings-modal');
   modal.classList.add('open');
@@ -67,6 +81,7 @@ export function openSettings() {
 
 export function closeSettings() {
   resetClearButton($('settings-clear-btn'));
+  clearKeyError();
   const modal = $('settings-modal');
   modal.classList.remove('open');
   modal.removeEventListener('keydown', trapFocus);
@@ -77,9 +92,7 @@ export function closeSettings() {
 export async function updateKey() {
   const key = $('settings-new-key').value.trim();
   if (!key) {
-    const err = $('settings-key-error');
-    err.textContent = 'Enter a key';
-    err.classList.remove('hidden');
+    showKeyError('Enter a key');
     return;
   }
   const btn = $('settings-update-btn');
@@ -88,9 +101,7 @@ export async function updateKey() {
   try {
     const models = await fetchFreeModels(key);
     if (!models.length) {
-      const err = $('settings-key-error');
-      err.textContent = 'No free models found for this key';
-      err.classList.remove('hidden');
+      showKeyError('No free models found for this key');
       return;
     }
     S.apiKey = key;
@@ -98,15 +109,13 @@ export async function updateKey() {
     setStoredKey(key);
     $('settings-key-display').textContent = maskKey(key);
     $('settings-new-key').value = '';
-    $('settings-key-error').classList.add('hidden');
+    clearKeyError();
     hideInvalidBanner();
     populateModelsFromState();
     closeSettings();
     toast('API key updated!', 'success');
   } catch (e) {
-    const err = $('settings-key-error');
-    err.textContent = e.message || 'Invalid key';
-    err.classList.remove('hidden');
+    showKeyError(e.message || 'Invalid key');
   } finally {
     btn.textContent = 'Update Key';
     btn.disabled = false;
