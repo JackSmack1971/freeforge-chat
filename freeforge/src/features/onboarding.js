@@ -8,6 +8,7 @@ import { populateModelsFromState } from './models.js';
 export async function validateAndConnect(key) {
   key = key.trim();
   if (!key) { showObError('Enter your API key first'); return; }
+  if (!key.startsWith('sk-or-v1-')) { showObError("Keys must start with 'sk-or-v1-'"); return; }
 
   $('ob-save-label').classList.add('hidden');
   $('ob-save-loading').classList.remove('hidden');
