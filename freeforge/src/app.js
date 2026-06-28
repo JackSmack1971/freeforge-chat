@@ -51,8 +51,6 @@ function installErrorCapture() {
     });
   });
 
-  // Local-only inspection hook for debugging without external telemetry.
-  window.__freeforgeGetErrorLog = getErrorLog;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

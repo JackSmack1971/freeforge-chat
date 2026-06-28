@@ -1,20 +1,27 @@
 import { showInvalidBanner } from './ui/screen.js';
 
 export async function fetchFreeModels(key) {
-  const res = await fetch('https://openrouter.ai/api/v1/models', {
-    headers: { 'Authorization': `Bearer ${key}` },
-  });
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('Invalid API key');
-    if (res.status === 429) throw new Error('Rate limited — try again shortly');
-    throw new Error(`Failed to fetch models (${res.status})`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { 'Authorization': `Bearer ${key}` },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('Invalid API key');
+      if (res.status === 429) throw new Error('Rate limited — try again shortly');
+      throw new Error(`Failed to fetch models (${res.status})`);
+    }
+    const data = await res.json();
+    return (data.data || []).filter(m => {
+      if (m.id?.endsWith(':free')) return true;
+      const p = m.pricing;
+      return p && Number.parseFloat(p.prompt || '1') === 0 && Number.parseFloat(p.completion || '1') === 0;
+    }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const data = await res.json();
-  return (data.data || []).filter(m => {
-    if (m.id?.endsWith(':free')) return true;
-    const p = m.pricing;
-    return p && Number.parseFloat(p.prompt || '1') === 0 && Number.parseFloat(p.completion || '1') === 0;
-  }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
 }
 
 export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError, signal }) {
@@ -26,7 +33,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ model: modelId, messages: msgs, stream: true }),
+      body: JSON.stringify({ model: modelId, messages: msgs, stream: true, stream_options: { include_usage: true } }),
       signal,
     });
   } catch (e) {
@@ -74,6 +81,7 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
     }
   } catch (e) {
     if (e.name === 'AbortError') return onDone(donePayload, full);
+    try { reader.cancel(); } catch {}
     onError('Stream interrupted.');
     return;
   }

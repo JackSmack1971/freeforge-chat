@@ -65,11 +65,11 @@ export async function sendMessage(text) {
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
       if (exactTokens !== null) {
-        S.contextTokens += exactTokens;
+        S.contextTokens = exactTokens;
         S.usageIsExact = true;
       } else {
         const charEstimate = Math.ceil((trimmedText.length + S.lastAssistantResponse.length) / 4);
-        S.contextTokens += charEstimate;
+        S.contextTokens = charEstimate;
         S.usageIsExact = false;
       }
       if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
@@ -83,7 +83,7 @@ export async function sendMessage(text) {
       S.streamTarget = null;
       setStreamMode(false);
       setLiveRegion('sr-status', 'Response complete');
-      LS.set('ff_msgs', S.messages);
+      if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
       if (!replaceMessage(asstMsg, true)) renderAllMessages();
       renderCtxPill();
       scrollBottom();
@@ -142,5 +142,3 @@ export function newChat() {
   renderAllMessages();
   renderCtxPill();
 }
-
-if (typeof window !== 'undefined') window.newChat = newChat;

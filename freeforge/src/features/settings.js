@@ -95,6 +95,10 @@ export async function updateKey() {
     showKeyError('Enter a key');
     return;
   }
+  if (!key.startsWith('sk-or-v1-')) {
+    showKeyError("Keys must start with 'sk-or-v1-'");
+    return;
+  }
   const btn = $('settings-update-btn');
   btn.textContent = 'Validating…';
   btn.disabled = true;

@@ -13,6 +13,7 @@ const BASE_ACTIONS = [
 
 let activeIndex = 0;
 let filteredActions = [];
+let previousFocus = null;
 
 function buildActions() {
   const modelActions = (S.models ?? []).map(m => ({
@@ -33,7 +34,9 @@ function render(query = '') {
   list.innerHTML = '';
   filteredActions.forEach((a, i) => {
     const li = document.createElement('li');
+    li.id = `cmd-item-${i}`;
     li.role = 'option';
+    li.setAttribute('aria-selected', String(i === activeIndex));
     li.className = i === activeIndex ? 'cmd-item cmd-active' : 'cmd-item';
     li.textContent = a.label;
     if (a.shortcut) {
@@ -44,10 +47,13 @@ function render(query = '') {
     li.addEventListener('click', () => a.action());
     list.appendChild(li);
   });
+  const srch = document.getElementById('cmd-search');
+  if (srch) srch.setAttribute('aria-activedescendant', filteredActions.length ? `cmd-item-${activeIndex}` : '');
 }
 
 export function openPalette() {
   activeIndex = 0;
+  previousFocus = document.activeElement;
   const palette = document.getElementById('cmd-palette');
   const input = document.getElementById('cmd-search');
   if (!palette || !input) return;
@@ -59,6 +65,8 @@ export function openPalette() {
 
 export function closePalette() {
   document.getElementById('cmd-palette')?.classList.add('hidden');
+  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
+  previousFocus = null;
 }
 
 document.getElementById('cmd-search')?.addEventListener('input', e => {
