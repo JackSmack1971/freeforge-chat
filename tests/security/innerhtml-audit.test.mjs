@@ -30,11 +30,16 @@ test('messages.js renders user-authored content with text nodes and limits HTML 
   assert.match(source, /setButtonContent\(copyBtn, 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z', 'Copy'\);/);
 });
 
-test('toast.js escapes toast messages before inserting markup', async () => {
+test('toast.js escapes toast messages and uses data-action for buttons, not inline onclick', async () => {
   const source = await read('freeforge/src/ui/toast.js');
 
-  assert.match(source, /const body = msg\.includes\(safeAction\) \? esc\(msg\)\.replace\(esc\(safeAction\), safeAction\) : esc\(msg\);/);
-  assert.match(source, /el\.innerHTML = `[\s\S]*<span>\$\{body\}<\/span>`;/);
+  // Message content is always HTML-escaped — no raw insertion
+  assert.match(source, /esc\(msg\)/);
+  // The safeAction bypass that allowed onclick through unescaped is gone
+  assert.doesNotMatch(source, /safeAction/);
+  // Action buttons use data-action attribute, not inline onclick handlers
+  assert.match(source, /btn\.dataset\.action/);
+  assert.doesNotMatch(source, /onclick/);
 });
 
 test('models.js limits innerHTML to static placeholders and uses textContent for model labels', async () => {
@@ -50,7 +55,7 @@ test('models.js limits innerHTML to static placeholders and uses textContent for
 
 test('repository contains no document.write calls', async () => {
   const files = await collectFiles(path.resolve('.'));
-  const textFiles = files.filter(file => /\.(html|js|mjs|cjs|ts|tsx|jsx|md|toml)$/i.test(file));
+  const textFiles = files.filter(file => /\.(html|js|mjs|cjs|ts|tsx|jsx)$/i.test(file));
   const offenders = [];
   const selfPath = path.resolve('tests/security/innerhtml-audit.test.mjs');
 

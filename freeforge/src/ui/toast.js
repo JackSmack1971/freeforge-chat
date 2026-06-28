@@ -19,13 +19,18 @@ const ICONS = {
   info:    'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
 };
 
-export function toast(msg, type = 'info', ms = 3000) {
+export function toast(msg, type = 'info', ms = 3000, action = null) {
   const el = document.createElement('div');
   el.className = `toast toast-card pointer-events-auto flex items-start gap-2.5 px-3.5 py-3 rounded-xl border text-sm shadow-xl ${PALETTE[type]} ${SURFACE[type]}`;
   if (ms === 0) el.classList.add('toast-persistent');
-  const safeAction = '<button onclick="newChat()" class="toast-action-btn">New Chat</button>';
-  const body = msg.includes(safeAction) ? esc(msg).replace(esc(safeAction), safeAction) : esc(msg);
-  el.innerHTML = `<svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ICONS[type]}"/></svg><span>${body}</span>`;
+  el.innerHTML = `<svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ICONS[type]}"/></svg><span>${esc(msg)}</span>`;
+  if (action) {
+    const btn = document.createElement('button');
+    btn.className = 'toast-action-btn';
+    btn.dataset.action = action.id;
+    btn.textContent = action.label;
+    el.querySelector('span').appendChild(btn);
+  }
   $('toasts').appendChild(el);
   if (ms > 0) setTimeout(() => el.remove(), ms + 300);
 }
