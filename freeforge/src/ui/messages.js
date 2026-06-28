@@ -5,7 +5,7 @@ import { toast } from './toast.js';
 let renderedCount = 0;
 
 function injectCodeBlockUI(container) {
-  container.querySelectorAll('pre').forEach(pre => {
+  for (const pre of container.querySelectorAll('pre')) {
     const codeEl = pre.querySelector('code');
     if (!codeEl || pre.querySelector('.copy-code-btn')) return;
     const langClass = [...codeEl.classList].find(c => c.startsWith('language-'));
@@ -26,7 +26,7 @@ function injectCodeBlockUI(container) {
         .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
     });
     pre.appendChild(btn);
-  });
+  }
 }
 
 export function scrollBottom(smooth = true) {

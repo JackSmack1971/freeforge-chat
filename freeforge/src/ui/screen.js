@@ -1,9 +1,9 @@
 import { $ } from '../state.js';
 
 export function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(el => {
+  for (const el of document.querySelectorAll('.screen')) {
     el.classList.remove('active');
-  });
+  }
   $(`screen-${name}`).classList.add('active');
 }
 

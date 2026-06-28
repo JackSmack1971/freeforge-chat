@@ -10,9 +10,9 @@ function setLiveRegion(id, text) {
 }
 
 export async function sendMessage(text) {
-  text = text.trim();
-  if (!text || S.streaming) return;
-  if (text.length > 32000) {
+  const trimmedText = text.trim();
+  if (!trimmedText || S.streaming) return;
+  if (trimmedText.length > 32000) {
     toast('Message too long (max 32,000 characters)', 'error');
     return;
   }
@@ -21,7 +21,7 @@ export async function sendMessage(text) {
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
   S.lastAssistantResponse = '';
 
-  S.messages.push({ id: uid(), role: 'user', content: text });
+  S.messages.push({ id: uid(), role: 'user', content: trimmedText });
 
   if (isFirst) {
     S.messages.push({ id: uid(), role: 'notice', content: "You're chatting with a free OpenRouter model. Speed and quality may vary." });
@@ -68,7 +68,7 @@ export async function sendMessage(text) {
         S.contextTokens += exactTokens;
         S.usageIsExact = true;
       } else {
-        const charEstimate = Math.ceil((text.length + S.lastAssistantResponse.length) / 4);
+        const charEstimate = Math.ceil((trimmedText.length + S.lastAssistantResponse.length) / 4);
         S.contextTokens += charEstimate;
         S.usageIsExact = false;
       }

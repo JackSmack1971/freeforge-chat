@@ -6,8 +6,8 @@ import { toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
 export async function validateAndConnect(key) {
-  key = key.trim();
-  if (!key) { showObError('Enter your API key first'); return; }
+  const trimmedKey = key.trim();
+  if (!trimmedKey) { showObError('Enter your API key first'); return; }
 
   $('ob-save-label').classList.add('hidden');
   $('ob-save-loading').classList.remove('hidden');
@@ -15,11 +15,11 @@ export async function validateAndConnect(key) {
   $('ob-save-btn').disabled = true;
 
   try {
-    const models = await fetchFreeModels(key);
+    const models = await fetchFreeModels(trimmedKey);
     if (!models.length) { showObError('No free models found for this key'); return; }
-    S.apiKey = key;
+    S.apiKey = trimmedKey;
     S.models = models;
-    setStoredKey(key);
+    setStoredKey(trimmedKey);
     toast('Connected successfully!', 'success');
     showScreen('chat');
     renderAllMessages();
