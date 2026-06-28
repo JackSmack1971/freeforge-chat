@@ -29,15 +29,15 @@
 
 - [x] **A11Y-01**: Add `role="log" aria-label="Chat history" aria-live="polite"` to `#msgs-list` for completed messages
 - [x] **A11Y-02**: Add static `<div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>` and `<div id="sr-alert" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>` before `</body>` in `index.html`
-- [ ] **A11Y-03**: Announce streaming lifecycle — write "Assistant is responding…" to `#sr-status` on stream start, "Response complete" on done, error text to `#sr-alert` on error (in `chat.js` callbacks)
+- [x] **A11Y-03**: Announce streaming lifecycle — write "Assistant is responding…" to `#sr-status` on stream start, "Response complete" on done, error text to `#sr-alert` on error (in `chat.js` callbacks)
 - [x] **A11Y-04**: Fix settings modal — add `role="dialog" aria-modal="true" aria-labelledby="settings-title"` to the modal card; add `id="settings-title"` to the "Settings" heading
-- [ ] **A11Y-05**: Implement focus trap in `settings.js` — trap Tab/Shift+Tab to modal focusable elements (filter by `offsetParent !== null` to exclude `.hidden` elements); return focus to `#settings-btn` on close
+- [x] **A11Y-05**: Implement focus trap in `settings.js` — trap Tab/Shift+Tab to modal focusable elements (filter by `offsetParent !== null` to exclude `.hidden` elements); return focus to `#settings-btn` on close
 - [x] **A11Y-06**: Wire `<label for>` attributes to all inputs — `ob-key-input` and settings key input; add `aria-describedby` pointing to error message elements; set `aria-invalid="true"` on validation failure
 - [x] **A11Y-07**: Add `aria-label` to all 7 icon-only interactive elements: settings gear, send button, stop button, password toggle (`ob-toggle-vis`), new-chat button, close-settings button, banner update button
-- [ ] **A11Y-08**: Sync send/stop accessible name with stream state — update `aria-label` on `#send-btn` in `setStreamMode()` (`"Send message"` / `"Stop generating"`)
+- [x] **A11Y-08**: Sync send/stop accessible name with stream state — update `aria-label` on `#send-btn` in `setStreamMode()` (`"Send message"` / `"Stop generating"`)
 - [x] **A11Y-09**: Fix placeholder contrast — replace `placeholder-zinc-600` with `placeholder-zinc-400` in all inputs (current ratio 1.93:1; minimum 4.5:1)
 - [x] **A11Y-10**: Add skip link — `<a href="#msg-input" class="sr-only focus:not-sr-only">Skip to chat input</a>` as first child of `<body>`
-- [ ] **A11Y-11**: Add `aria-pressed` to password visibility toggle; announce toggle state to AT
+- [x] **A11Y-11**: Add `aria-pressed` to password visibility toggle; announce toggle state to AT
 - [x] **A11Y-12**: Add `.sr-only` CSS class and `:focus-visible` outline rule to `styles/app.css`
 
 ### Code Quality & Architecture

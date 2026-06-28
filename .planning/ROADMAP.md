@@ -8,7 +8,7 @@ FreeForge is a functional, feature-complete vanilla JS chat UI. Phase 1 (Securit
 
 - [x] **Phase 1: Security Hardening** - Eliminate XSS vectors, upgrade CVE-affected libraries, add CSP, and delete the vulnerable root entry point
 - [x] **Phase 2: Audit Cleanup** - Close the two remaining review warnings from v1.0 before milestone close
-- [ ] **Phase 3: Accessibility** - Retrofit the static accessibility primitives, live regions, labels, and focus styling for the chat UI
+- [x] **Phase 3: Accessibility** - Retrofit the static accessibility primitives, live regions, labels, and focus styling for the chat UI (completed 2026-06-28)
 
 ## Phase Details
 
@@ -39,7 +39,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 3/3 | Complete | 2026-06-04 |
 | 2. Audit Cleanup | 2/2 | Complete | 2026-06-27 |
-| 3. Accessibility | 1/3 | In Progress|  |
+| 3. Accessibility | 3/3 | Complete   | 2026-06-28 |
 
 ### Phase 2: Audit Cleanup
 
@@ -70,9 +70,9 @@ Plans:
   2. The skip link jumps straight to the chat input, the settings dialog semantics remain intact, and the static icon-only controls have explicit names
   3. Placeholder text and keyboard focus are visibly distinguishable, with a reusable screen-reader-only utility available in the stylesheet
 
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 
 - [x] 03-01-PLAN.md — Add the static accessibility primitives in `index.html` and `styles/app.css`
-- [ ] 03-02-PLAN.md — Wire streaming announcements and stateful accessibility updates in the chat flow
-- [ ] 03-03-PLAN.md — Tighten modal focus handling and validation-state feedback for settings/onboarding
+- [x] 03-02-PLAN.md — Wire streaming announcements and stateful accessibility updates in the chat flow
+- [x] 03-03-PLAN.md — Tighten modal focus handling and validation-state feedback for settings/onboarding
