@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { importFresh, importShared, installGlobals, MemoryStorage, MockElement, MockInputElement, MockTextAreaElement, makeBaseDom, makeClipboard, makeWindow } from '../helpers/mock-dom.mjs';
+import { MemoryStorage, MockElement, MockInputElement, MockTextAreaElement, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard, makeWindow } from '../helpers/mock-dom.mjs';
 
 function makeSseBody(chunks) {
   return new ReadableStream({
