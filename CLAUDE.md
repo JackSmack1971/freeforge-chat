@@ -82,17 +82,17 @@ The v1 implementation is feature-complete: onboarding with key validation, strea
 
 - None — FreeForge uses vanilla ES modules with no framework
 - Claude Code settings schema (`https://json.schemastore.org/claude-code-settings.json`) governs `.claude/settings.json`
-- Tailwind CSS v3 (JIT) — Loaded via CDN at `https://cdn.tailwindcss.com` in `freeforge/index.html`; no local install
-- marked v9.1.6 — Loaded via jsDelivr CDN with SRI hash in `freeforge/index.html`
-- DOMPurify v3.1.6 — Loaded via jsDelivr CDN with SRI hash in `freeforge/index.html`
+- Tailwind CSS v3 — Bundled locally as `freeforge/styles/tailwind.min.css`; no CDN
+- marked v18.0.4 — Loaded via jsDelivr CDN with SRI hash in `freeforge/index.html`
+- DOMPurify v3.4.8 — Loaded via jsDelivr CDN with SRI hash in `freeforge/index.html`
 - Not detected — No test framework, test files, or test scripts present
 - Not detected — No bundler (Vite, webpack, esbuild, etc.), no build step; files are served as-is
 
 ## Key Dependencies
 
-- `marked@9.1.6` — Markdown-to-HTML rendering for AI responses (`freeforge/src/markdown.js`)
-- `dompurify@3.1.6` — XSS sanitization of rendered LLM output (`freeforge/src/markdown.js`)
-- `tailwindcss@3` (JIT CDN) — All UI styling in `freeforge/index.html`
+- `marked@18.0.4` — Markdown-to-HTML rendering for AI responses (`freeforge/src/markdown.js`)
+- `dompurify@3.4.8` — XSS sanitization of rendered LLM output (`freeforge/src/markdown.js`)
+- `tailwindcss@3` (local bundle) — All UI styling in `freeforge/index.html`
 - Node.js standard library — Used by hook scripts in `.claude/hooks/**/*.js` (fs, path, child_process implied)
 
 ## Configuration
