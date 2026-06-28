@@ -39,10 +39,10 @@ export function renderMd(text) {
     const clean = DOMPurify.sanitize(raw, PURIFY_CONFIG);
     const div = document.createElement('div');
     div.innerHTML = clean;
-    div.querySelectorAll('a[href]').forEach(a => {
+    for (const a of div.querySelectorAll('a[href]')) {
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener noreferrer');
-    });
+    }
     return div.innerHTML;
   } catch {
     return esc(text).replace(/\n/g, '<br>');

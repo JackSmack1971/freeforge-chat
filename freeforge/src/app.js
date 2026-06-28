@@ -3,7 +3,7 @@ import { loadModels } from './features/models.js';
 import { hideObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, getStoredKey, LS, recordError, S } from './state.js';
+import { $, LS, S, getErrorLog, getStoredKey, recordError } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { renderAllMessages, scrollBottom } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';

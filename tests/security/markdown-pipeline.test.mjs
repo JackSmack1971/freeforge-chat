@@ -33,7 +33,7 @@ async function loadMarkdownModule({ parseImpl, sanitizeImpl } = {}) {
       },
     };
   } else {
-    delete globalThis.DOMPurify;
+    globalThis.DOMPurify = undefined;
   }
 
   globalThis.document = {

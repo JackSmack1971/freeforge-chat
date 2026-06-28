@@ -17,7 +17,7 @@ export async function fetchFreeModels(key) {
     return (data.data || []).filter(m => {
       if (m.id?.endsWith(':free')) return true;
       const p = m.pricing;
-      return p && parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
+      return p && Number.parseFloat(p.prompt || '1') === 0 && Number.parseFloat(p.completion || '1') === 0;
     }).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
   } finally {
     clearTimeout(timeoutId);
@@ -55,7 +55,9 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
 
   const reader = res.body.getReader();
   const dec = new TextDecoder();
-  let buf = '', full = '', donePayload = '{}';
+  let buf = '';
+  let full = '';
+  let donePayload = '{}';
 
   try {
     while (true) {
