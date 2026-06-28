@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-      - 'test-issue-*'
-      - 'fix-issue-*'
-      - 'chore-issue-*'
+      - 'test/issue-*'
+      - 'fix/issue-*'
+      - 'chore/issue-*'
   pull_request:
 
 jobs:
