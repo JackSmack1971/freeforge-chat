@@ -9,14 +9,32 @@ function setLiveRegion(id, text) {
   if (region) region.textContent = text;
 }
 
-export async function sendMessage(text) {
+function validateSendText(text) {
   const trimmedText = text.trim();
-  if (!trimmedText || S.streaming) return;
-  if (trimmedText.length > 32000) {
-    toast('Message too long (max 32,000 characters)', 'error');
+  if (!trimmedText || S.streaming) return { ok: false, trimmedText };
+  if (trimmedText.length > 32000) return { ok: false, trimmedText, toast: ['Message too long (max 32,000 characters)', 'error'] };
+  if (!S.selectedModel) return { ok: false, trimmedText, toast: ['Select a model first', 'warning'] };
+  return { ok: true, trimmedText };
+}
+
+function truncateConversationFromUserMessage(messageId) {
+  const idx = S.messages.findIndex(m => m.id === messageId && m.role === 'user');
+  if (idx === -1) return null;
+  const text = S.messages[idx].content;
+  S.messages.splice(idx);
+  S.inlineEditId = null;
+  LS.set('ff_msgs', S.messages);
+  renderAllMessages();
+  return text;
+}
+
+export async function sendMessage(text) {
+  const validation = validateSendText(text);
+  if (!validation.ok) {
+    if (validation.toast) toast(...validation.toast);
     return;
   }
-  if (!S.selectedModel) { toast('Select a model first', 'warning'); return; }
+  const { trimmedText } = validation;
 
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
   S.lastAssistantResponse = '';
@@ -104,20 +122,27 @@ export async function sendMessage(text) {
   });
 }
 
+export async function resendFromUserMessage(messageId, text) {
+  const validation = validateSendText(text);
+  if (!validation.ok) {
+    if (validation.toast) toast(...validation.toast);
+    return false;
+  }
+
+  if (truncateConversationFromUserMessage(messageId) === null) {
+    toast('That message is no longer available', 'error');
+    return false;
+  }
+
+  await sendMessage(validation.trimmedText);
+  return true;
+}
+
 export async function regenerate() {
   if (S.streaming) return;
-  const lastAsstIdx = S.messages.findLastIndex(m => m.role === 'assistant');
-  if (lastAsstIdx === -1) return;
-  S.messages.splice(lastAsstIdx, 1);
-  const lastUserIdx = S.messages.findLastIndex(m => m.role === 'user');
-  if (lastUserIdx === -1) return;
-  const text = S.messages[lastUserIdx].content;
-  S.messages.splice(lastUserIdx, 1);
-  const noticeIdx = S.messages.findIndex(m => m.role === 'notice');
-  if (noticeIdx !== -1) S.messages.splice(noticeIdx, 1);
-  LS.set('ff_msgs', S.messages);
-  renderAllMessages();
-  await sendMessage(text);
+  const lastUser = [...S.messages].reverse().find(m => m.role === 'user');
+  if (!lastUser) return;
+  await resendFromUserMessage(lastUser.id, lastUser.content);
 }
 
 export function copyLastResponse() {
@@ -133,6 +158,7 @@ export function newChat() {
   clearPersistent();
   S.messages = [];
   S.streaming = false;
+  S.inlineEditId = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
   S.ctxToastFired = false;

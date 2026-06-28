@@ -1,11 +1,11 @@
-import { newChat, regenerate, sendMessage } from './features/chat.js';
+import { newChat, regenerate, resendFromUserMessage, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
-import { renderAllMessages, scrollBottom } from './ui/messages.js';
+import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
 import { toast } from './ui/toast.js';
 
@@ -147,6 +147,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (S.streaming) return;
       submitInput(e.target.textContent);
     }
+  });
+
+  // inline edit entry — delegated
+  document.addEventListener('click', e => {
+    if (S.streaming) return;
+    const confirm = e.target.closest('[data-inline-edit-confirm="true"]');
+    if (confirm) {
+      const row = confirm.closest('[data-id]');
+      const msgId = row?.dataset.id;
+      const textarea = confirm.closest('.msg-bubble')?.querySelector('.msg-inline-textarea');
+      const text = textarea?.value.trim() || '';
+      if (!msgId || !text) return;
+      resendFromUserMessage(msgId, text);
+      return;
+    }
+
+    const cancel = e.target.closest('[data-inline-edit-cancel="true"]');
+    if (cancel) {
+      cancelInlineEdit();
+      return;
+    }
+
+    const bubble = e.target.closest('.msg-user-surface[data-inline-edit-target="true"]');
+    if (!bubble) return;
+    const msgId = bubble.closest('[data-id]')?.dataset.id;
+    if (msgId) startInlineEdit(msgId);
   });
 
   // regenerate — delegated to avoid circular dep between messages.js and chat.js

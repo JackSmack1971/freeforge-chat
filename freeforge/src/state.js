@@ -6,6 +6,7 @@ export const S = {
   streaming: false,
   abort: null,
   streamTarget: null,
+  inlineEditId: null,
   contextTokens: 0,
   usageIsExact: false,
   ctxToastFired: false,
