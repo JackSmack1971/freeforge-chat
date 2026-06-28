@@ -22,4 +22,4 @@ jobs:
           node-version: '22'
 
       - name: Run zero-install Biome lint pass
-        run: npx --yes @biomejs/biome check freeforge/src tests/security
+        run: npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
