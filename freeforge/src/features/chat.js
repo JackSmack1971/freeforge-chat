@@ -68,8 +68,8 @@ export async function sendMessage(text) {
         S.contextTokens = exactTokens;
         S.usageIsExact = true;
       } else {
-        const charEstimate = Math.ceil((trimmedText.length + S.lastAssistantResponse.length) / 4);
-        S.contextTokens = charEstimate;
+        const totalChars = S.messages.filter(m => m.role === 'user' || m.role === 'assistant').reduce((sum, m) => sum + (m.content?.length ?? 0), 0);
+        S.contextTokens = Math.ceil(totalChars / 4);
         S.usageIsExact = false;
       }
       if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;

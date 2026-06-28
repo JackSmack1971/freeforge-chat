@@ -11,7 +11,13 @@ test('chat.js replaces context token totals instead of accumulating them', async
   const source = await read('freeforge/src/features/chat.js');
 
   assert.match(source, /S\.contextTokens = exactTokens;/);
-  assert.match(source, /S\.contextTokens = charEstimate;/);
   assert.doesNotMatch(source, /S\.contextTokens \+= exactTokens;/);
-  assert.doesNotMatch(source, /S\.contextTokens \+= charEstimate;/);
+});
+
+test('chat.js estimate path sums all messages rather than only the current turn', async () => {
+  const source = await read('freeforge/src/features/chat.js');
+
+  assert.match(source, /S\.messages\.filter/, 'estimate must iterate over S.messages');
+  assert.match(source, /S\.contextTokens = Math\.ceil\(totalChars \/ 4\);/);
+  assert.doesNotMatch(source, /S\.contextTokens = charEstimate;/, 'single-turn estimate variable must be removed');
 });
