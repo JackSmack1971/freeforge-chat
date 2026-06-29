@@ -1,4 +1,5 @@
 import { streamCompletion } from '../api.js';
+import { buildRequestMessages } from '../agent-runtime.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
@@ -81,16 +82,17 @@ export async function sendMessage(text) {
   $('thinking').classList.remove('hidden');
   scrollBottom(false);
 
-  const payload = S.messages
-    .filter(m => (m.role === 'user' || m.role === 'assistant') && m.id !== asstId)
-    .map(m => ({ role: m.role, content: m.content }));
+  const payload = buildRequestMessages(S.messages.filter(m => m.id !== asstId), S.activeAgent);
 
   let firstToken = true;
   const ctrl = new AbortController();
   S.abort = ctrl;
   S.streamTarget = null;
 
-  await streamCompletion(payload, S.selectedModel, S.apiKey, {
+  await streamCompletion({
+    messages: payload,
+    modelId: S.selectedModel,
+    apiKey: S.apiKey,
     signal: ctrl.signal,
     onToken(_delta, full) {
       if (firstToken) {
