@@ -3,7 +3,7 @@ import { refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
-import { closePalette, openPalette } from './features/palette.js';
+import { closePalette, initPalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
 import { closeAgentLibrary, openAgentLibrary } from './ui/agent-library.js';
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // command palette
+  initPalette();
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       const active = document.activeElement;
