@@ -2,6 +2,9 @@
 .claude/
 .codex/
 .planning/codebase/
+.repository-hygiene/
+.session-feedback/
+coverage/
 docs/
 .tmp/
 README-SWARM.md
