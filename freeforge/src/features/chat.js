@@ -45,13 +45,12 @@ function validateSendText(text) {
 function truncateConversationFromUserMessage(messageId) {
   const idx = S.messages.findIndex(m => m.id === messageId && m.role === 'user');
   if (idx === -1) return null;
-  const text = S.messages[idx].content;
-  setInlineEditUndo(S.messages.slice(idx));
+  const token = setInlineEditUndo(S.messages.slice(idx));
   S.messages.splice(idx);
   S.inlineEditId = null;
   LS.set('ff_msgs', S.messages);
   renderAllMessages();
-  return text;
+  return token;
 }
 
 export async function sendMessage(text) {
@@ -152,23 +151,34 @@ export async function resendFromUserMessage(messageId, text) {
   const validation = validateSendText(text);
   if (!validation.ok) {
     if (validation.toast) toast(...validation.toast);
-    return false;
+    return null;
   }
 
-  if (truncateConversationFromUserMessage(messageId) === null) {
+  const token = truncateConversationFromUserMessage(messageId);
+  if (token === null) {
     toast('That message is no longer available', 'error');
-    return false;
+    return null;
   }
 
-  await sendMessage(validation.trimmedText);
-  return true;
+  void sendMessage(validation.trimmedText);
+  return token;
 }
 
 export async function regenerate() {
   if (S.streaming) return;
   const lastUser = [...S.messages].reverse().find(m => m.role === 'user');
-  if (!lastUser) return;
-  await resendFromUserMessage(lastUser.id, lastUser.content);
+  if (!lastUser) {
+    if (S.messages.length) newChat();
+    return;
+  }
+  const validation = validateSendText(lastUser.content);
+  if (!validation.ok) return;
+  const token = truncateConversationFromUserMessage(lastUser.id);
+  if (token === null) {
+    toast('That message is no longer available', 'error');
+    return;
+  }
+  await sendMessage(validation.trimmedText);
 }
 
 export function copyLastResponse() {
