@@ -5,6 +5,8 @@ import { hideObError, showObError, validateAndConnect } from './features/onboard
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
+import { refreshAgentUi } from './features/agents.js';
+import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
 import { closeAgentLibrary } from './ui/agent-library.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
@@ -61,6 +63,7 @@ async function init() {
   showScreen('chat');
   renderAllMessages();
   scrollBottom(false);
+  refreshAgentUi();
   renderCtxPill();
 }
 

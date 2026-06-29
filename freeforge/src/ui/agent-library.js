@@ -72,9 +72,8 @@ export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAg
   }
 
   for (const agent of agents) {
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'w-full text-left rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors';
+    const item = document.createElement('div');
+    item.className = 'rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3';
     item.dataset.agentId = agent.id;
 
     const top = document.createElement('div');
@@ -97,7 +96,28 @@ export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAg
     badge.textContent = activeAgentId === agent.id ? 'Active' : 'Saved';
 
     top.append(nameWrap, badge);
-    item.appendChild(top);
+    const actions = document.createElement('div');
+    actions.className = 'mt-3 flex flex-wrap gap-2';
+
+    const makeAction = (label, action) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rounded-lg border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors';
+      btn.dataset.agentAction = action;
+      btn.dataset.agentId = agent.id;
+      btn.textContent = label;
+      return btn;
+    };
+
+    actions.append(
+      makeAction(activeAgentId === agent.id ? 'Active' : 'Use', 'set-active'),
+      makeAction('Edit', 'edit'),
+      makeAction('Duplicate', 'duplicate'),
+      makeAction('Export', 'export'),
+      makeAction('Delete', 'delete')
+    );
+
+    item.append(top, actions);
     list.appendChild(item);
   }
 }

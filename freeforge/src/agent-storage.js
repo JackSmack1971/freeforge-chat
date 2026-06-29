@@ -45,6 +45,14 @@ function parseAgentInput(input) {
   return input;
 }
 
+function makeUniqueAgentId(id, agents) {
+  const existing = new Set(agents.map(agent => agent.id));
+  if (!existing.has(id)) return id;
+  let nextId = generateAgentId();
+  while (existing.has(nextId)) nextId = generateAgentId();
+  return nextId;
+}
+
 export function loadAgents() {
   const version = LS.get(AGENT_SCHEMA_VERSION_KEY);
   if (version != null && version !== AGENT_SCHEMA_VERSION) return [];
@@ -97,10 +105,11 @@ export function exportAgent(id) {
 export function importAgent(input) {
   const parsed = parseAgentInput(input);
   const agent = normalizeAgent(parsed);
-  return saveAgent(agent);
+  const agents = loadAgents();
+  const nextId = makeUniqueAgentId(agent.id, agents);
+  return saveAgent(nextId === agent.id ? agent : { ...agent, id: nextId });
 }
 
 export function createAgentId() {
   return generateAgentId();
 }
-
