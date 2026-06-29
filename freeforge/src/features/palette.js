@@ -1,8 +1,11 @@
 import { S } from '../state.js';
-import { copyLastResponse, newChat } from './chat.js';
+import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
 import { changeModel } from './models.js';
 import { openSettings } from './settings.js';
+import { refreshAgentUi } from './agents.js';
+import { openAgentLibrary } from '../ui/agent-library.js';
+import { renderAgentBuilder } from '../ui/agent-builder.js';
 
 const BASE_ACTIONS = [
   { label: 'New Chat', shortcut: 'N', action: () => { newChat(); closePalette(); } },
@@ -16,12 +19,33 @@ let filteredActions = [];
 let previousFocus = null;
 
 function buildActions() {
+  const agentActions = [
+    { label: 'Manage Agents', shortcut: 'A', action: () => { closePalette(); openAgentLibrary(); refreshAgentUi(); } },
+    { label: 'New Agent', shortcut: 'Shift+A', action: () => { closePalette(); openAgentLibrary(); renderAgentBuilder(null); } },
+  ];
+
+  const switchActions = (S.agents ?? []).map(agent => ({
+    label: `Switch Agent → ${agent.name || agent.id}`,
+    shortcut: '',
+    action: () => {
+      if (agent.id === S.activeAgentId) {
+        closePalette();
+        return;
+      }
+      const selected = S.agents.find(x => x.id === agent.id);
+      if (!selected) return;
+      setActiveAgent(selected);
+      refreshAgentUi();
+      closePalette();
+    },
+  }));
+
   const modelActions = (S.models ?? []).map(m => ({
     label: `Switch Model → ${m.name ?? m.id}`,
     shortcut: '',
     action: () => { changeModel(m.id); closePalette(); },
   }));
-  return [...BASE_ACTIONS, ...modelActions];
+  return [...BASE_ACTIONS, ...agentActions, ...switchActions, ...modelActions];
 }
 
 function getFocusableInPalette() {
