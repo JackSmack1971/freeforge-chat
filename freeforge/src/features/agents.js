@@ -11,6 +11,7 @@ const NEW_BTN_ID = 'agent-library-new-btn';
 const IMPORT_BTN_ID = 'agent-library-import-btn';
 const EXPORT_BTN_ID = 'agent-library-export-btn';
 const CANCEL_BTN_ID = 'agent-builder-cancel-btn';
+const SELECT_ID = 'agent-select';
 
 function getFormAgentId() {
   return $(FORM_ID)?.dataset.agentId || '';
@@ -27,8 +28,33 @@ function refreshAgentState() {
   }
 }
 
+function renderAgentSelector() {
+  const sel = $(SELECT_ID);
+  if (!sel) return;
+  sel.textContent = '';
+
+  if (!S.agents.length) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No agents yet';
+    sel.appendChild(opt);
+    sel.disabled = true;
+    return;
+  }
+
+  sel.disabled = false;
+  for (const agent of S.agents) {
+    const opt = document.createElement('option');
+    opt.value = agent.id;
+    opt.textContent = agent.name || 'Untitled agent';
+    if (agent.id === S.activeAgentId) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
 function refreshAgentUi() {
   refreshAgentState();
+  renderAgentSelector();
   renderAgentLibrary(S.agents, S.activeAgentId);
   const formAgent = getFormAgentId() ? getAgent(getFormAgentId()) : S.activeAgent;
   renderAgentBuilder(formAgent || null);
