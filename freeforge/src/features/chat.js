@@ -1,5 +1,5 @@
-import { streamCompletion } from '../api.js';
 import { buildRequestContext } from '../agent-runtime.js';
+import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
