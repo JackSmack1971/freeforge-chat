@@ -8,7 +8,7 @@ There is no browser automation framework in the tree.
 ## Test Runner
 
 - Node’s built-in test runner (`node:test`)
-- `freeforge/package.json` exposes `npm test` as `node --test`
+- `freeforge/package.json` exposes `npm test` from the `freeforge/` package root
 - Tests live in `tests/security/**/*.mjs`
 
 ## Current Coverage
@@ -47,7 +47,7 @@ There is no browser automation framework in the tree.
 
 - `node --test`
 - `node --test tests/security`
-- `cd freeforge && npm test` is not the primary path here because the repo root is not the package root
+- `cd freeforge && npm test`
 
 ## Risk Areas
 
