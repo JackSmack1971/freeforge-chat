@@ -4,19 +4,62 @@ import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
+const INLINE_EDIT_UNDO_MS = 6000;
+
 function setLiveRegion(id, text) {
   const region = $(id);
   if (region) region.textContent = text;
 }
 
-export async function sendMessage(text) {
+function inlineEditUndoMatchesToken(undo, token) {
+  return Boolean(undo && undo.token === token);
+}
+
+function clearInlineEditUndo(token = null) {
+  const undo = S.inlineEditUndo;
+  if (!undo) return false;
+  if (token && !inlineEditUndoMatchesToken(undo, token)) return false;
+  if (undo.timeout) clearTimeout(undo.timeout);
+  S.inlineEditUndo = null;
+  return true;
+}
+
+function setInlineEditUndo(slice) {
+  clearInlineEditUndo();
+  const token = uid();
+  const timeout = setTimeout(() => {
+    clearInlineEditUndo(token);
+  }, INLINE_EDIT_UNDO_MS);
+  S.inlineEditUndo = { slice, token, timeout };
+  return token;
+}
+
+function validateSendText(text) {
   const trimmedText = text.trim();
-  if (!trimmedText || S.streaming) return;
-  if (trimmedText.length > 32000) {
-    toast('Message too long (max 32,000 characters)', 'error');
+  if (!trimmedText || S.streaming) return { ok: false, trimmedText };
+  if (trimmedText.length > 32000) return { ok: false, trimmedText, toast: ['Message too long (max 32,000 characters)', 'error'] };
+  if (!S.selectedModel) return { ok: false, trimmedText, toast: ['Select a model first', 'warning'] };
+  return { ok: true, trimmedText };
+}
+
+function truncateConversationFromUserMessage(messageId) {
+  const idx = S.messages.findIndex(m => m.id === messageId && m.role === 'user');
+  if (idx === -1) return null;
+  const token = setInlineEditUndo(S.messages.slice(idx));
+  S.messages.splice(idx);
+  S.inlineEditId = null;
+  LS.set('ff_msgs', S.messages);
+  renderAllMessages();
+  return token;
+}
+
+export async function sendMessage(text) {
+  const validation = validateSendText(text);
+  if (!validation.ok) {
+    if (validation.toast) toast(...validation.toast);
     return;
   }
-  if (!S.selectedModel) { toast('Select a model first', 'warning'); return; }
+  const { trimmedText } = validation;
 
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
   S.lastAssistantResponse = '';
@@ -104,20 +147,38 @@ export async function sendMessage(text) {
   });
 }
 
+export async function resendFromUserMessage(messageId, text) {
+  const validation = validateSendText(text);
+  if (!validation.ok) {
+    if (validation.toast) toast(...validation.toast);
+    return null;
+  }
+
+  const token = truncateConversationFromUserMessage(messageId);
+  if (token === null) {
+    toast('That message is no longer available', 'error');
+    return null;
+  }
+
+  void sendMessage(validation.trimmedText);
+  return token;
+}
+
 export async function regenerate() {
   if (S.streaming) return;
-  const lastAsstIdx = S.messages.findLastIndex(m => m.role === 'assistant');
-  if (lastAsstIdx === -1) return;
-  S.messages.splice(lastAsstIdx, 1);
-  const lastUserIdx = S.messages.findLastIndex(m => m.role === 'user');
-  if (lastUserIdx === -1) return;
-  const text = S.messages[lastUserIdx].content;
-  S.messages.splice(lastUserIdx, 1);
-  const noticeIdx = S.messages.findIndex(m => m.role === 'notice');
-  if (noticeIdx !== -1) S.messages.splice(noticeIdx, 1);
-  LS.set('ff_msgs', S.messages);
-  renderAllMessages();
-  await sendMessage(text);
+  const lastUser = [...S.messages].reverse().find(m => m.role === 'user');
+  if (!lastUser) {
+    if (S.messages.length) newChat();
+    return;
+  }
+  const validation = validateSendText(lastUser.content);
+  if (!validation.ok) return;
+  const token = truncateConversationFromUserMessage(lastUser.id);
+  if (token === null) {
+    toast('That message is no longer available', 'error');
+    return;
+  }
+  await sendMessage(validation.trimmedText);
 }
 
 export function copyLastResponse() {
@@ -130,9 +191,11 @@ export function copyLastResponse() {
 
 export function newChat() {
   if (S.abort) { S.abort.abort(); S.abort = null; }
+  clearInlineEditUndo();
   clearPersistent();
   S.messages = [];
   S.streaming = false;
+  S.inlineEditId = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
   S.ctxToastFired = false;
@@ -142,4 +205,26 @@ export function newChat() {
   LS.set('ff_msgs', []);
   renderAllMessages();
   renderCtxPill();
+}
+
+export function restoreInlineEditUndo(token) {
+  const undo = S.inlineEditUndo;
+  if (!inlineEditUndoMatchesToken(undo, token)) return false;
+  const slice = undo.slice;
+  clearInlineEditUndo(token);
+  S.messages.splice(0, S.messages.length, ...slice);
+  S.inlineEditId = null;
+  LS.set('ff_msgs', S.messages);
+  renderAllMessages();
+  renderCtxPill();
+  return true;
+}
+
+export function hasInlineEditUndo(token) {
+  return inlineEditUndoMatchesToken(S.inlineEditUndo, token);
+}
+
+export function selfCheckInlineEditUndo() {
+  const token = uid();
+  return inlineEditUndoMatchesToken({ token }, token) && !inlineEditUndoMatchesToken({ token }, `${token}-x`);
 }

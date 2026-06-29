@@ -1,11 +1,11 @@
-import { newChat, regenerate, sendMessage } from './features/chat.js';
+import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
-import { renderAllMessages, scrollBottom } from './ui/messages.js';
+import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
 import { toast } from './ui/toast.js';
 
@@ -13,6 +13,16 @@ function syncObToggleVis(show) {
   const btn = $('ob-toggle-vis');
   btn.setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
   btn.setAttribute('aria-pressed', String(show));
+}
+
+function getToastAction(node) {
+  let cur = node;
+  while (cur) {
+    const action = cur.dataset?.action;
+    if (action) return action;
+    cur = cur.parentNode;
+  }
+  return null;
 }
 
 async function init() {
@@ -110,7 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
   $('new-chat-btn').addEventListener('click', newChat);
   // toast action buttons — delegated
   document.addEventListener('click', e => {
-    if (e.target.closest('[data-action="new-chat"]')) newChat();
+    const action = getToastAction(e.target);
+    if (!action) return;
+    if (action === 'new-chat') {
+      newChat();
+      return;
+    }
+    if (action.startsWith('inline-edit-undo:')) {
+      const token = action.slice('inline-edit-undo:'.length);
+      if (S.abort) { S.abort.abort(); S.abort = null; }
+      restoreInlineEditUndo(token);
+    }
   });
 
   // input textarea
@@ -147,6 +167,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (S.streaming) return;
       submitInput(e.target.textContent);
     }
+  });
+
+  // inline edit entry — delegated
+  document.addEventListener('click', e => {
+    if (S.streaming) return;
+    const confirm = e.target.closest('[data-inline-edit-confirm="true"]');
+    if (confirm) {
+      const row = confirm.closest('[data-id]');
+      const msgId = row?.dataset.id;
+      const textarea = confirm.closest('.msg-bubble')?.querySelector('.msg-inline-textarea');
+      const text = textarea?.value.trim() || '';
+      if (!msgId || !text) return;
+      resendFromUserMessage(msgId, text).then(token => {
+        if (token) toast('Edit saved', 'success', 6000, { id: `inline-edit-undo:${token}`, label: 'Undo' });
+      });
+      return;
+    }
+
+    const cancel = e.target.closest('[data-inline-edit-cancel="true"]');
+    if (cancel) {
+      cancelInlineEdit();
+      return;
+    }
+
+    const bubble = e.target.closest('.msg-user-surface[data-inline-edit-target="true"]');
+    if (!bubble) return;
+    const msgId = bubble.closest('[data-id]')?.dataset.id;
+    if (msgId) startInlineEdit(msgId);
   });
 
   // regenerate — delegated to avoid circular dep between messages.js and chat.js
