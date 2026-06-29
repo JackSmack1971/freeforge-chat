@@ -17,13 +17,12 @@ Closes #
 
 ## What Changed
 
-- 
+-
 
 ## Testing
 
-- 
+-
 
 ## Risk
 
-- 
-
+-
