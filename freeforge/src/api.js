@@ -127,4 +127,3 @@ export async function streamCompletion(request, ...legacyArgs) {
   }
   return onDone(donePayload, full);
 }
-
