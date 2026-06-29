@@ -1,5 +1,5 @@
-import { generateAgentId, normalizeAgent } from './agent-schema.js';
 import { LS } from './state.js';
+import { generateAgentId, normalizeAgent } from './agent-schema.js';
 
 const AGENT_STORAGE_KEY = 'ff_agents_v1';
 const ACTIVE_AGENT_KEY = 'ff_active_agent_id';
