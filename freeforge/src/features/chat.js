@@ -1,5 +1,5 @@
-import { streamCompletion } from '../api.js';
 import { buildRequestMessages } from '../agent-runtime.js';
+import { streamCompletion } from '../api.js';
 import { $, LS, S, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';

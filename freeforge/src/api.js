@@ -25,6 +25,9 @@ export async function fetchFreeModels(key) {
 }
 
 export async function streamCompletion({ messages, modelId, apiKey, parameters = {}, onToken, onDone, onError, signal }) {
+  onToken ||= () => {};
+  onDone ||= () => {};
+  onError ||= () => {};
   let res;
   try {
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
