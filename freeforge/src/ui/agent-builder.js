@@ -41,8 +41,15 @@ export function renderAgentBuilder(agent = null) {
   if (openingMessage) openingMessage.value = agent?.instructions?.openingMessage || '';
   if (starterPrompts) starterPrompts.value = (agent?.instructions?.starterPrompts || []).join('\n');
   if (preferredModelId) preferredModelId.value = agent?.model?.preferredModelId || '';
-  if (temperature) temperature.value = agent?.model?.temperature ?? '';
-  if (maxTokens) maxTokens.value = agent?.model?.maxTokens ?? '';
+  if (preferredModelId) preferredModelId.placeholder = 'Optional';
+  if (temperature) {
+    temperature.value = agent?.model?.temperature ?? '';
+    temperature.placeholder = 'Optional';
+  }
+  if (maxTokens) {
+    maxTokens.value = agent?.model?.maxTokens ?? '';
+    maxTokens.placeholder = 'Optional';
+  }
 }
 
 export function readAgentBuilderDraft() {

@@ -1,5 +1,5 @@
-import { buildRequestMessages } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
+import { buildRequestContext } from '../agent-runtime.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
@@ -111,7 +111,7 @@ export async function sendMessage(text) {
 
   const convoAgent = S.conversationAgent || snapshotAgent(S.activeAgent);
   if (!S.conversationAgent && convoAgent) syncConversationAgent();
-  const payload = buildRequestMessages(S.messages.filter(m => m.id !== asstId), convoAgent);
+  const request = buildRequestContext(S.messages.filter(m => m.id !== asstId), convoAgent);
 
   let firstToken = true;
   const ctrl = new AbortController();
@@ -119,9 +119,10 @@ export async function sendMessage(text) {
   S.streamTarget = null;
 
   await streamCompletion({
-    messages: payload,
+    messages: request.messages,
     modelId: S.selectedModel,
     apiKey: S.apiKey,
+    parameters: request.parameters,
     signal: ctrl.signal,
     onToken(_delta, full) {
       if (firstToken) {
