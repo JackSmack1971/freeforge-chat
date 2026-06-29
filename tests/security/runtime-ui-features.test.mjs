@@ -156,7 +156,8 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
       { id: 'alpha-model', context_length: 1000 },
       { id: 'beta-model', name: 'Beta', context_length: 1000 },
     ];
-    const { openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
@@ -202,7 +203,8 @@ test('palette.js no-ops safely when required DOM nodes are missing', async () =>
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = null;
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.getElementById = id => (id === 'cmd-list' ? null : originalGet(id));
     doc.activeElement = doc.getElementById('settings-btn');
@@ -241,7 +243,8 @@ test('palette.js action buttons execute their handlers', async () => {
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = [{ id: 'alpha', name: 'Alpha' }];
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     S.messages = [
       { id: 'u1', role: 'user', content: 'hello' },
