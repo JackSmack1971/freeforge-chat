@@ -1,33 +1,33 @@
-# Contributing to FreeForge Chat
+# Contributing
 
-FreeForge Chat is intentionally small: no package install, no build step, and no server. Keep changes narrow and tied to the issue you are fixing.
+FreeForge is a small static repo. Keep changes narrow and only touch files the issue or PR actually needs.
 
-## Before You Open a PR
+## Before You Start
 
-1. Open the app directly with `freeforge/index.html` if you need a quick manual check.
-2. Run `git diff --check` to catch whitespace and patch issues.
-3. Run `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security`.
-4. Run `node --test tests/security/*.test.mjs`.
-5. Add screenshots or logs only when they help explain the change.
+- Check the open issue or open one if the work is not already tracked.
+- Assign yourself and mark the issue in progress before editing.
+- Comment the intended plan and target files on the issue.
 
 ## Workflow
 
-- Open a GitHub issue for bugs or feature requests.
-- Work on a short-lived branch tied to the issue number.
-- Keep pull requests focused on one behavior, doc update, or hygiene fix.
-- Use squash merge only. GitHub is configured to delete the head branch on merge.
-- Mention `@JackSmack1971` in the PR or issue when you need review or clarification.
+- Use the smallest safe change.
+- Prefer existing patterns over new abstractions.
+- Keep repo-hygiene and control-plane changes isolated.
+- Add tests when behavior changes.
 
-## What to Avoid
+## Commands
 
-- Large refactors that are unrelated to the issue.
-- Adding dependencies, build steps, or generated files without a clear need.
-- Editing secrets, keys, or environment-specific files.
+- `cd freeforge && npm test`
+- `git status --short`
+- `git branch --show-current`
 
-## Useful Commands
+## Pull Requests
 
-```bash
-git diff --check
-npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
-node --test tests/security/*.test.mjs
-```
+- Link the PR to the source issue.
+- Describe the change, verification, and rollback path.
+- Keep the diff scoped to the issue.
+
+## Ownership
+
+- If you are the only maintainer available, assign the issue to yourself.
+- If a future ownership map exists, follow `.github/CODEOWNERS`.
