@@ -24,16 +24,56 @@ export async function fetchFreeModels(key) {
   }
 }
 
-export async function streamCompletion(msgs, modelId, key, { onToken, onDone, onError, signal }) {
+// export async function streamCompletion({ messages, modelId, apiKey, parameters = {}, onToken, onDone, onError, signal })
+export async function streamCompletion(request, ...legacyArgs) {
+  let messages;
+  let modelId;
+  let apiKey;
+  let parameters = {};
+  let onToken;
+  let onDone;
+  let onError;
+  let signal;
+
+  if (Array.isArray(request)) {
+    messages = request;
+    modelId = legacyArgs[0];
+    apiKey = legacyArgs[1];
+    const opts = legacyArgs[2] || {};
+    onToken = opts.onToken;
+    onDone = opts.onDone;
+    onError = opts.onError;
+    signal = opts.signal;
+  } else {
+    ({
+      messages,
+      modelId,
+      apiKey,
+      parameters = {},
+      onToken,
+      onDone,
+      onError,
+      signal,
+    } = request || {});
+  }
+  onToken ||= () => {};
+  onDone ||= () => {};
+  onError ||= () => {};
   let res;
   try {
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${key}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ model: modelId, messages: msgs, stream: true, stream_options: { include_usage: true } }),
+      body: JSON.stringify({
+        model: modelId,
+        messages,
+        stream: true,
+        stream_options: { include_usage: true },
+        ...parameters,
+      }),
       signal,
     });
   } catch (e) {
@@ -87,4 +127,3 @@ export async function streamCompletion(msgs, modelId, key, { onToken, onDone, on
   }
   return onDone(donePayload, full);
 }
-

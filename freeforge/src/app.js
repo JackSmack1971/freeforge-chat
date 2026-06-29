@@ -1,11 +1,14 @@
-import { newChat, regenerate, sendMessage } from './features/chat.js';
+import { loadAgents } from './agent-storage.js';
+import { refreshAgentUi } from './features/agents.js';
+import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
-import { hideObError, validateAndConnect } from './features/onboarding.js';
+import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, LS, S, getErrorLog, getStoredKey, recordError } from './state.js';
+import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
+import { closeAgentLibrary, openAgentLibrary } from './ui/agent-library.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
-import { renderAllMessages, scrollBottom } from './ui/messages.js';
+import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
 import { toast } from './ui/toast.js';
 
@@ -15,20 +18,51 @@ function syncObToggleVis(show) {
   btn.setAttribute('aria-pressed', String(show));
 }
 
+function getToastAction(node) {
+  let cur = node;
+  while (cur) {
+    const action = cur.dataset?.action;
+    if (action) return action;
+    cur = cur.parentNode;
+  }
+  return null;
+}
+
 async function init() {
   const savedKey = getStoredKey();
-  if (!savedKey) { showScreen('onboarding'); return; }
+  if (!savedKey) {
+    showScreen('onboarding');
+    return;
+  }
 
   S.apiKey = savedKey;
+  S.agents = loadAgents();
+  const savedActiveAgentId = LS.get('ff_active_agent_id');
+  S.activeAgent = S.agents.find(agent => agent.id === savedActiveAgentId) || S.agents[0] || null;
+  S.activeAgentId = S.activeAgent?.id ?? null;
+
   const savedMsgs = LS.get('ff_msgs');
   if (Array.isArray(savedMsgs)) {
     S.messages = savedMsgs.filter(m => !m.streaming);
   }
 
+  const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
+  S.conversationAgent = savedConversationAgent ? snapshotAgent(savedConversationAgent) : snapshotAgent(S.activeAgent);
+  S.conversationAgentId = S.conversationAgent?.id ?? null;
+
+  const modelLoad = await loadModels(savedKey);
+  if (modelLoad === 'empty') {
+    clearStoredKey();
+    S.apiKey = null;
+    showScreen('onboarding');
+    showObError('No free models found for this key');
+    return;
+  }
+
   showScreen('chat');
   renderAllMessages();
   scrollBottom(false);
-  await loadModels(savedKey);
+  refreshAgentUi();
   renderCtxPill();
 }
 
@@ -50,7 +84,6 @@ function installErrorCapture() {
       msg: reason?.message || String(reason),
     });
   });
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,6 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  $('agent-select')?.addEventListener('change', e => {
+    const agent = S.agents.find(x => x.id === e.target.value);
+    if (!agent || agent.id === S.activeAgentId) return;
+    setActiveAgent(agent);
+    refreshAgentUi();
+  });
+
   // settings
   $('settings-new-key').closest('form')?.addEventListener('submit', e => {
     e.preventDefault();
@@ -98,12 +138,26 @@ document.addEventListener('DOMContentLoaded', () => {
   $('settings-update-btn').addEventListener('click', updateKey);
   $('settings-new-key').addEventListener('input', clearSettingsKeyError);
   $('banner-update-btn').addEventListener('click', () => { hideInvalidBanner(); openSettings(); });
+  $('agent-library-btn')?.addEventListener('click', () => {
+    openAgentLibrary();
+    refreshAgentUi();
+  });
 
   // new chat
   $('new-chat-btn').addEventListener('click', newChat);
   // toast action buttons — delegated
   document.addEventListener('click', e => {
-    if (e.target.closest('[data-action="new-chat"]')) newChat();
+    const action = getToastAction(e.target);
+    if (!action) return;
+    if (action === 'new-chat') {
+      newChat();
+      return;
+    }
+    if (action.startsWith('inline-edit-undo:')) {
+      const token = action.slice('inline-edit-undo:'.length);
+      if (S.abort) { S.abort.abort(); S.abort = null; }
+      restoreInlineEditUndo(token);
+    }
   });
 
   // input textarea
@@ -142,6 +196,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // inline edit entry — delegated
+  document.addEventListener('click', e => {
+    if (S.streaming) return;
+    const confirm = e.target.closest('[data-inline-edit-confirm="true"]');
+    if (confirm) {
+      const row = confirm.closest('[data-id]');
+      const msgId = row?.dataset.id;
+      const textarea = confirm.closest('.msg-bubble')?.querySelector('.msg-inline-textarea');
+      const text = textarea?.value.trim() || '';
+      if (!msgId || !text) return;
+      resendFromUserMessage(msgId, text).then(token => {
+        if (token) toast('Edit saved', 'success', 6000, { id: `inline-edit-undo:${token}`, label: 'Undo' });
+      });
+      return;
+    }
+
+    const cancel = e.target.closest('[data-inline-edit-cancel="true"]');
+    if (cancel) {
+      cancelInlineEdit();
+      return;
+    }
+
+    const bubble = e.target.closest('.msg-user-surface[data-inline-edit-target="true"]');
+    if (!bubble) return;
+    const msgId = bubble.closest('[data-id]')?.dataset.id;
+    if (msgId) startInlineEdit(msgId);
+  });
+
   // regenerate — delegated to avoid circular dep between messages.js and chat.js
   document.addEventListener('click', e => {
     if (e.target.closest('.regen-btn')) regenerate();
@@ -166,7 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // escape closes modal
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    closeAgentLibrary();
+    closeSettings();
+  });
 
   init();
 });

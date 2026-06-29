@@ -2,10 +2,17 @@ export const S = {
   apiKey: null,
   models: [],
   selectedModel: null,
+  agents: [],
+  activeAgentId: null,
+  activeAgent: null,
+  conversationAgentId: null,
+  conversationAgent: null,
   messages: [],
   streaming: false,
   abort: null,
   streamTarget: null,
+  inlineEditId: null,
+  inlineEditUndo: null,
   contextTokens: 0,
   usageIsExact: false,
   ctxToastFired: false,
@@ -21,6 +28,27 @@ export const LS = {
 export const $ = id => document.getElementById(id);
 export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+export function snapshotAgent(agent) {
+  if (!agent) return null;
+  return {
+    id: agent.id,
+    name: agent.name,
+    description: agent.description,
+    icon: agent.icon ? { ...agent.icon } : null,
+    instructions: {
+      systemPrompt: agent.instructions?.systemPrompt || '',
+      openingMessage: agent.instructions?.openingMessage || '',
+      starterPrompts: Array.isArray(agent.instructions?.starterPrompts) ? [...agent.instructions.starterPrompts] : [],
+    },
+    model: {
+      preferredModelId: agent.model?.preferredModelId ?? null,
+      temperature: agent.model?.temperature ?? null,
+      maxTokens: agent.model?.maxTokens ?? null,
+    },
+  };
+}
+
 const ERROR_LOG_LIMIT = 50;
 const errorLog = [];
 

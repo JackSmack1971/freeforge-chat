@@ -18,6 +18,7 @@ Entries are newest first.
 **Stats:**
 - 2 phases, 5 plans, 7 tasks
 - Snapshot archived in `.planning/milestones/`
+- Known deferred items at close: 1 (see STATE.md Deferred Items)
 
 **Git range:** current milestone snapshot on `chore-issue-54-zero-build-quality-check`
 

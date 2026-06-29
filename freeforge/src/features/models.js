@@ -25,27 +25,51 @@ function buildOptions(models) {
   return sel;
 }
 
+function getPreferredAgentModelId() {
+  return S.conversationAgent?.model?.preferredModelId || S.activeAgent?.model?.preferredModelId || null;
+}
+
+function selectModel(sel, modelId) {
+  sel.value = modelId;
+  S.selectedModel = modelId;
+  LS.set('ff_model', modelId);
+}
+
 export async function loadModels(key) {
   const sel = $('model-select');
   sel.innerHTML = '<option value="">Loading models…</option>';
   try {
     const models = rankModels(await fetchFreeModels(key));
     S.models = models;
-    if (!models.length) { sel.innerHTML = '<option value="">No free models found</option>'; return; }
+    if (!models.length) {
+      sel.innerHTML = '<option value="">No free models found</option>';
+      return 'empty';
+    }
     buildOptions(models);
     const saved = LS.get('ff_model');
     const validSaved = saved && models.find(m => m.id === saved);
     if (validSaved) {
-      sel.value = saved;
-      S.selectedModel = saved;
-    } else {
-      const pick = models[0]?.id;
-      if (pick) { sel.value = pick; S.selectedModel = pick; LS.set('ff_model', pick); }
+      selectModel(sel, saved);
+      return;
     }
+
+    const preferred = getPreferredAgentModelId();
+    const validPreferred = preferred && models.find(m => m.id === preferred);
+    if (validPreferred) {
+      selectModel(sel, preferred);
+      return;
+    }
+
+    const pick = models[0]?.id;
+    if (pick) {
+      selectModel(sel, pick);
+    }
+    return 'ok';
   } catch (e) {
     sel.innerHTML = '<option value="">Failed to load models</option>';
     toast(`Could not load models: ${e.message}`, 'error');
     if (e.message.includes('Invalid')) showInvalidBanner();
+    return 'error';
   }
 }
 
@@ -56,8 +80,13 @@ export function populateModelsFromState() {
   buildOptions(S.models);
   const saved = LS.get('ff_model');
   const validSaved = saved && S.models.find(m => m.id === saved);
-  if (validSaved) { sel.value = saved; S.selectedModel = saved; }
-  else if (S.models[0]) { sel.value = S.models[0].id; S.selectedModel = S.models[0].id; }
+  if (validSaved) { selectModel(sel, saved); return; }
+
+  const preferred = getPreferredAgentModelId();
+  const validPreferred = preferred && S.models.find(m => m.id === preferred);
+  if (validPreferred) { selectModel(sel, preferred); return; }
+
+  if (S.models[0]) { selectModel(sel, S.models[0].id); }
 }
 
 export function changeModel(modelId) {

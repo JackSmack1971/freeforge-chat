@@ -35,6 +35,10 @@ This project does not require a package manager or build step.
 2. Open `freeforge/index.html` directly in a supported browser.
 3. Enter your OpenRouter API key when prompted.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repo-specific workflow, commands, and review expectations.
+
 ## Deployment
 
 The repository is preconfigured for Netlify static hosting.

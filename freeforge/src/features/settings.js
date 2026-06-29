@@ -75,6 +75,7 @@ export function openSettings() {
   resetClearButton($('settings-clear-btn'));
   const modal = $('settings-modal');
   modal.classList.remove('hidden');
+  modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   modal.addEventListener('keydown', trapFocus);
   const [first] = getFocusableInModal();
@@ -86,6 +87,7 @@ export function closeSettings() {
   clearKeyError();
   const modal = $('settings-modal');
   modal.classList.add('hidden');
+  modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   modal.removeEventListener('keydown', trapFocus);
   if (previousFocus && document.contains(previousFocus)) previousFocus.focus();

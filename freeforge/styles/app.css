@@ -21,6 +21,11 @@ body{background:#09090b;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFo
 .empty-state-badge{background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.3)}
 .assistant-avatar-surface,.assistant-bubble-surface,.input-shell-surface{background:#27272a;border:1px solid #3f3f46}
 .msg-user-surface{background:linear-gradient(135deg,#4338ca,#6d28d9)}
+.msg-user-surface[data-inline-edit-target="true"]{cursor:pointer;transition:filter .15s ease,transform .15s ease}
+.msg-user-surface[data-inline-edit-target="true"]:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.msg-inline-editor{background:linear-gradient(135deg,#312e81,#5b21b6);border:1px solid rgba(129,140,248,.3);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.msg-inline-textarea{min-height:5.5rem;max-height:14rem;overflow-y:auto;resize:vertical}
+.msg-inline-actions{margin-top:.75rem}
 .toast-host,.toast-card{max-width:320px}
 .toast-card{word-break:break-word}
 .toast-surface-success{background:rgba(6,78,59,.35)}

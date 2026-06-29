@@ -3,6 +3,30 @@ import { $, S } from '../state.js';
 import { toast } from './toast.js';
 
 let renderedCount = 0;
+const DEFAULT_STARTER_PROMPTS = [
+  'Explain quantum computing',
+  'Write a Python script',
+  'Help me brainstorm ideas',
+  'Debug my code',
+];
+
+function getStarterPrompts() {
+  const prompts = S.conversationAgent?.instructions?.starterPrompts;
+  return Array.isArray(prompts) && prompts.length ? prompts : DEFAULT_STARTER_PROMPTS;
+}
+
+function renderStarterPrompts() {
+  const host = document.getElementById('starter-prompts');
+  if (!host) return;
+  host.textContent = '';
+  for (const prompt of getStarterPrompts()) {
+    const btn = document.createElement('button');
+    btn.className = 'suggestion text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors';
+    btn.type = 'button';
+    btn.textContent = prompt;
+    host.appendChild(btn);
+  }
+}
 
 function injectCodeBlockUI(container) {
   for (const pre of container.querySelectorAll('pre')) {
@@ -44,6 +68,7 @@ export function setStreamMode(active) {
 function syncMessageVisibility() {
   const list = $('msgs-list');
   const empty = $('empty-state');
+  renderStarterPrompts();
 
   if (S.messages.length === 0) {
     empty.classList.remove('hidden');
@@ -114,6 +139,51 @@ function setButtonContent(btn, iconPath, label, options = {}) {
   btn.replaceChildren(svgIcon(iconPath, { classes: 'w-3 h-3', ...options }), document.createTextNode(label));
 }
 
+function getInlineEditMsg() {
+  return S.messages.find(m => m.id === S.inlineEditId && m.role === 'user') || null;
+}
+
+export function startInlineEdit(messageId) {
+  const msg = S.messages.find(m => m.id === messageId && m.role === 'user');
+  if (!msg) return;
+  S.inlineEditId = messageId;
+  renderAllMessages();
+  requestAnimationFrame(() => {
+    const textarea = document.querySelector(`[data-id="${messageId}"] .msg-inline-textarea`);
+    textarea?.focus();
+    textarea?.setSelectionRange(textarea.value.length, textarea.value.length);
+  });
+}
+
+export function cancelInlineEdit() {
+  if (!S.inlineEditId) return;
+  S.inlineEditId = null;
+  renderAllMessages();
+}
+
+function buildInlineEditor(msg) {
+  const editor = el('div', 'msg-inline-editor px-4 py-3 rounded-2xl rounded-tr-sm');
+  const textarea = el('textarea', 'msg-inline-textarea w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-sm leading-relaxed text-zinc-100 placeholder-zinc-500 focus:border-indigo-400 focus:outline-none');
+  textarea.value = msg.content;
+  textarea.setAttribute('aria-label', 'Edit message');
+  textarea.rows = Math.max(2, Math.min(8, msg.content.split('\n').length || 2));
+
+  const actions = el('div', 'msg-inline-actions flex items-center justify-end gap-2');
+  const confirmBtn = el('button', 'msg-inline-confirm rounded-lg border border-indigo-400/40 bg-indigo-500/20 px-3 py-1.5 text-xs font-medium text-indigo-100 transition-colors hover:border-indigo-300 hover:bg-indigo-500/30');
+  confirmBtn.type = 'button';
+  confirmBtn.dataset.inlineEditConfirm = 'true';
+  confirmBtn.textContent = 'Save';
+
+  const cancelBtn = el('button', 'msg-inline-cancel rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white');
+  cancelBtn.type = 'button';
+  cancelBtn.dataset.inlineEditCancel = 'true';
+  cancelBtn.textContent = 'Cancel';
+
+  actions.append(confirmBtn, cancelBtn);
+  editor.append(textarea, actions);
+  return editor;
+}
+
 export function buildMsgEl(msg, showRegen = false) {
   const wrap = document.createElement('div');
   wrap.className = 'msg-bubble';
@@ -122,9 +192,15 @@ export function buildMsgEl(msg, showRegen = false) {
   if (msg.role === 'user') {
     const row = el('div', 'flex justify-end');
     const shell = el('div', 'max-w-[82%] sm:max-w-[72%]');
-    const bubble = el('div', 'msg-user-surface px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed whitespace-pre-wrap break-words');
-    bubble.textContent = msg.content;
-    shell.appendChild(bubble);
+    const activeEdit = getInlineEditMsg();
+    if (activeEdit && activeEdit.id === msg.id) {
+      shell.appendChild(buildInlineEditor(msg));
+    } else {
+      const bubble = el('div', 'msg-user-surface px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white leading-relaxed whitespace-pre-wrap break-words');
+      bubble.dataset.inlineEditTarget = 'true';
+      bubble.textContent = msg.content;
+      shell.appendChild(bubble);
+    }
     row.appendChild(shell);
     wrap.appendChild(row);
     return wrap;
@@ -141,9 +217,16 @@ export function buildMsgEl(msg, showRegen = false) {
 
   const row = el('div', 'flex items-start gap-3');
   const avatar = el('div', 'assistant-avatar-surface w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5');
-  const avatarIcon = svgIcon('M13 10V3L4 14h7v7l9-11h-7z');
-  avatarIcon.classList.add('text-zinc-400');
-  avatar.appendChild(avatarIcon);
+  const agent = S.conversationAgent;
+  if (agent?.icon?.value) {
+    avatar.classList.add('text-sm');
+    avatar.textContent = agent.icon.value;
+    avatar.title = agent.name || 'Assistant';
+  } else {
+    const avatarIcon = svgIcon('M13 10V3L4 14h7v7l9-11h-7z');
+    avatarIcon.classList.add('text-zinc-400');
+    avatar.appendChild(avatarIcon);
+  }
 
   const main = el('div', 'flex-1 min-w-0');
   const bubble = el('div', 'assistant-bubble-surface rounded-2xl rounded-tl-sm px-4 py-3');

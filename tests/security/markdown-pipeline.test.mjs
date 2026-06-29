@@ -89,7 +89,7 @@ test('renderMd passes the hardened purifier config into DOMPurify', async () => 
 test('renderMd strips javascript hrefs while keeping safe links', async () => {
   const { renderMd } = await loadMarkdownModule({
     parseImpl: () => '<a href="javascript:alert(1)">bad</a><a href="https://example.com">ok</a><a href="mailto:test@example.com">mail</a>',
-    sanitizeImpl: (raw, config) => raw.replace(/href="javascript:[^"]*"/g, ''),
+    sanitizeImpl: (raw, _config) => raw.replace(/href="javascript:[^"]*"/g, ''),
   });
 
   const output = renderMd('link');

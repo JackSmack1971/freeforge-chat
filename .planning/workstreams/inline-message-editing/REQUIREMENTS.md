@@ -1,18 +1,18 @@
 # Requirements: Inline Message Editing
 
-**Defined:** 2026-06-27
+**Defined:** 2026-06-28
 **Core Value:** A single HTML file you can open, share, or deploy anywhere - beautiful enough to show in a portfolio, tight enough to show in the code.
 
 ## v1 Requirements
 
 ### Inline Edit Entry
 
-- [ ] **EDIT-01**: Clicking any rendered user message opens an inline editor in place of that bubble, with the message text prefilled
-- [ ] **EDIT-02**: Confirming an edit truncates `S.messages` at that message and resends the edited text through the existing `sendMessage()` path, reusing the current regenerate/history pattern instead of creating a new message pipeline
+- [ ] **EDIT-01**: User can click their own sent message to open inline edit mode with the original text prefilled
+- [ ] **EDIT-02**: Confirming an edit truncates later messages and resends from the edited turn through the existing chat flow
 
 ### Undo and Safety
 
-- [ ] **EDIT-03**: After an edit confirm, the UI shows a 6-second session-only undo toast that restores the truncated message slice if tapped before the resend is persisted, using a single-slot undo buffer
+- [ ] **EDIT-03**: User can undo one edit in the same session before the truncated slice is persisted
 
 ## v2 Requirements
 
@@ -45,5 +45,5 @@
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-06-27*
-*Last updated: 2026-06-27 after inline-message-editing milestone start*
+*Requirements defined: 2026-06-28*
+*Last updated: 2026-06-28 after inline-message-editing milestone initialization*
