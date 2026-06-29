@@ -1,7 +1,7 @@
 # Repository Hygiene Audit
 
-Generated: `2026-06-29T16:47:23+00:00`  
-Repository: `C:/workspaces/DEPLOYED/NETLIFY/freeforge-chat`  
+Generated: `2026-06-29T16:47:23+00:00`
+Repository: `C:/workspaces/DEPLOYED/NETLIFY/freeforge-chat`
 HEAD: `ddf4491b98e2affb50bc0680883aec2022e2c9c6`
 
 ## Executive summary
