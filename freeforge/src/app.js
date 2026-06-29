@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  $('agent-select').addEventListener('change', e => {
+  $('agent-select')?.addEventListener('change', e => {
     const agent = S.agents.find(x => x.id === e.target.value);
     if (!agent || agent.id === S.activeAgentId) return;
     setActiveAgent(agent);
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('settings-update-btn').addEventListener('click', updateKey);
   $('settings-new-key').addEventListener('input', clearSettingsKeyError);
   $('banner-update-btn').addEventListener('click', () => { hideInvalidBanner(); openSettings(); });
-  $('agent-library-btn').addEventListener('click', () => {
+  $('agent-library-btn')?.addEventListener('click', () => {
     openAgentLibrary();
     refreshAgentUi();
   });
