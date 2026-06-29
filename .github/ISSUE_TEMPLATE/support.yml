@@ -1,0 +1,26 @@
+name: Support request
+description: Ask for help using the app or repository.
+title: 'question: '
+labels:
+  - question
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you need help with?
+      placeholder: Ask the question directly.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Optional background that will help answer the request.
+      placeholder: Relevant links, screenshots, or settings.
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What you tried
+      description: Optional.
+      placeholder: Steps you already tried.
