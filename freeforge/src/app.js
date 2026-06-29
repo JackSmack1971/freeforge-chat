@@ -1,4 +1,4 @@
-import { newChat, regenerate, resendFromUserMessage, sendMessage } from './features/chat.js';
+import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
@@ -13,6 +13,16 @@ function syncObToggleVis(show) {
   const btn = $('ob-toggle-vis');
   btn.setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
   btn.setAttribute('aria-pressed', String(show));
+}
+
+function getToastAction(node) {
+  let cur = node;
+  while (cur) {
+    const action = cur.dataset?.action;
+    if (action) return action;
+    cur = cur.parentNode;
+  }
+  return null;
 }
 
 async function init() {
@@ -110,7 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
   $('new-chat-btn').addEventListener('click', newChat);
   // toast action buttons — delegated
   document.addEventListener('click', e => {
-    if (e.target.closest('[data-action="new-chat"]')) newChat();
+    const action = getToastAction(e.target);
+    if (!action) return;
+    if (action === 'new-chat') {
+      newChat();
+      return;
+    }
+    if (action.startsWith('inline-edit-undo:')) {
+      const token = action.slice('inline-edit-undo:'.length);
+      if (S.abort) { S.abort.abort(); S.abort = null; }
+      restoreInlineEditUndo(token);
+    }
   });
 
   // input textarea
@@ -159,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const textarea = confirm.closest('.msg-bubble')?.querySelector('.msg-inline-textarea');
       const text = textarea?.value.trim() || '';
       if (!msgId || !text) return;
-      resendFromUserMessage(msgId, text);
+      resendFromUserMessage(msgId, text).then(token => {
+        if (token) toast('Edit saved', 'success', 6000, { id: `inline-edit-undo:${token}`, label: 'Undo' });
+      });
       return;
     }
 
