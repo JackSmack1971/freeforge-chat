@@ -100,5 +100,5 @@ test('generateAgentId uses crypto.randomUUID when available and falls back other
   assert.match(fallback, /^agent-[a-z0-9]+-[a-z0-9]{8}$/);
 
   if (original) Object.defineProperty(globalThis, 'crypto', original);
-  else delete globalThis.crypto;
+  else globalThis.crypto = undefined;
 });
