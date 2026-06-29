@@ -119,27 +119,29 @@ export function closePalette() {
   previousFocus = null;
 }
 
-document.getElementById('cmd-search')?.addEventListener('input', e => {
-  activeIndex = 0;
-  render(e.target.value);
-});
+export function initPalette() {
+  document.getElementById('cmd-search')?.addEventListener('input', e => {
+    activeIndex = 0;
+    render(e.target.value);
+  });
 
-document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePalette(); return; }
-  if (e.key === 'ArrowDown') {
-    activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'ArrowUp') {
-    activeIndex = Math.max(activeIndex - 1, 0);
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'Enter' && filteredActions[activeIndex]) {
-    filteredActions[activeIndex].action();
-  }
-});
+  document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePalette(); return; }
+    if (e.key === 'ArrowDown') {
+      activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
+      render(document.getElementById('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'ArrowUp') {
+      activeIndex = Math.max(activeIndex - 1, 0);
+      render(document.getElementById('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'Enter' && filteredActions[activeIndex]) {
+      filteredActions[activeIndex].action();
+    }
+  });
 
-document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
-document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+  document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
+  document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+}
