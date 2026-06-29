@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /freeforge
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    groups:
+      freeforge-deps:
+        patterns:
+          - '*'
+    open-pull-requests-limit: 5
