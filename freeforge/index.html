@@ -286,8 +286,13 @@
             <h3 class="text-sm font-semibold text-zinc-100">Library</h3>
             <p class="mt-1 text-xs text-zinc-500">Browse local agents and pick one to edit.</p>
           </div>
-          <button id="agent-library-new-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">New Agent</button>
+          <div class="flex items-center gap-2">
+            <button id="agent-library-import-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">Import</button>
+            <button id="agent-library-export-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">Export Active</button>
+            <button id="agent-library-new-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">New Agent</button>
+          </div>
         </div>
+        <input id="agent-library-import-input" type="file" accept="application/json,.json" class="hidden" />
         <div id="agent-library-list" class="space-y-2 max-h-[28rem] overflow-y-auto pr-1"></div>
       </section>
 

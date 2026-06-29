@@ -11,7 +11,13 @@ function getValue(id) {
   return getField(id)?.value.trim() || '';
 }
 
+function getForm() {
+  return getField(FORM_ID);
+}
+
 export function renderAgentBuilder(agent = null) {
+  const form = getForm();
+  if (form) form.dataset.agentId = agent?.id || '';
   const mode = agent ? 'Edit Agent' : 'Create Agent';
   const title = getField(TITLE_ID);
   if (title) title.textContent = mode;
@@ -63,6 +69,7 @@ export function openAgentBuilder(agent = null) {
   if (!modal) return;
   renderAgentBuilder(agent);
   modal.classList.remove('hidden');
+  getField('agent-name')?.focus();
 }
 
 export function closeAgentBuilder() {
@@ -71,4 +78,4 @@ export function closeAgentBuilder() {
   modal.classList.add('hidden');
 }
 
-document.getElementById(FORM_ID)?.addEventListener('submit', e => e.preventDefault());
+getForm()?.addEventListener('submit', e => e.preventDefault());
