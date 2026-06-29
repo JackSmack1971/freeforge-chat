@@ -1,0 +1,17 @@
+name: Support or security question
+description: Ask for help or report a security concern
+labels:
+  - question
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: What do you need?
+      description: Explain the question or concern.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Relevant details
+      description: Include any context that helps triage the request.
