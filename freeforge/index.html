@@ -263,6 +263,92 @@
 </div>
 
 
+<!-- ========== AGENT LIBRARY MODAL ========== -->
+<div id="agent-library-modal" role="dialog" aria-modal="true" aria-labelledby="agent-builder-title" aria-hidden="true" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
+  <div id="agent-library-backdrop" class="absolute inset-0 modal-bg"></div>
+  <div class="surface-card relative w-full max-w-6xl rounded-2xl border border-zinc-800 p-6 z-10 modal-card">
+    <div class="flex items-center justify-between gap-4 mb-5">
+      <div>
+        <h2 id="agent-builder-title" class="text-lg font-semibold text-zinc-100">Create Agent</h2>
+        <p id="agent-builder-mode" class="mt-1 text-xs text-zinc-500">Create a fresh agent profile.</p>
+      </div>
+      <button id="agent-library-close-btn" aria-label="Close agent library" class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section class="space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-100">Library</h3>
+            <p class="mt-1 text-xs text-zinc-500">Browse local agents and pick one to edit.</p>
+          </div>
+          <button id="agent-library-new-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">New Agent</button>
+        </div>
+        <div id="agent-library-list" class="space-y-2 max-h-[28rem] overflow-y-auto pr-1"></div>
+      </section>
+
+      <section class="rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+        <form id="agent-builder-form" class="space-y-4" autocomplete="off">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="agent-name" class="block text-xs font-medium text-zinc-400 mb-1.5">Name</label>
+              <input id="agent-name" type="text" maxlength="60" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="agent-icon" class="block text-xs font-medium text-zinc-400 mb-1.5">Icon</label>
+              <input id="agent-icon" type="text" maxlength="4" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+          </div>
+
+          <div>
+            <label for="agent-description" class="block text-xs font-medium text-zinc-400 mb-1.5">Description</label>
+            <input id="agent-description" type="text" maxlength="240" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label for="agent-system-prompt" class="block text-xs font-medium text-zinc-400 mb-1.5">System prompt</label>
+            <textarea id="agent-system-prompt" rows="5" maxlength="16000" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <div>
+            <label for="agent-opening-message" class="block text-xs font-medium text-zinc-400 mb-1.5">Opening message</label>
+            <textarea id="agent-opening-message" rows="3" maxlength="2000" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <div>
+            <label for="agent-starter-prompts" class="block text-xs font-medium text-zinc-400 mb-1.5">Starter prompts</label>
+            <textarea id="agent-starter-prompts" rows="4" maxlength="4000" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="One prompt per line"></textarea>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label for="agent-preferred-model-id" class="block text-xs font-medium text-zinc-400 mb-1.5">Preferred model</label>
+              <input id="agent-preferred-model-id" type="text" maxlength="160" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="agent-temperature" class="block text-xs font-medium text-zinc-400 mb-1.5">Temperature</label>
+              <input id="agent-temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label for="agent-max-tokens" class="block text-xs font-medium text-zinc-400 mb-1.5">Max tokens</label>
+              <input id="agent-max-tokens" type="number" min="1" max="131072" step="1" class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button id="agent-builder-cancel-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">Close</button>
+            <button id="agent-builder-save-btn" type="submit" class="gradient-btn rounded-lg px-3 py-2 text-xs font-semibold text-white">Save Agent</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+</div>
+
 <!-- Command Palette — visibility controlled by features/palette.js via .hidden class -->
 <div id="cmd-palette" class="hidden" role="dialog" aria-modal="true" aria-label="Command palette">
   <div id="cmd-palette-inner">
