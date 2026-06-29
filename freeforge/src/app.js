@@ -1,11 +1,10 @@
 import { loadAgents } from './agent-storage.js';
+import { refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
-import { refreshAgentUi } from './features/agents.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
 import { closeAgentLibrary } from './ui/agent-library.js';
 import { renderCtxPill } from './ui/ctx-pill.js';

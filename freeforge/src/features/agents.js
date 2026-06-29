@@ -1,9 +1,9 @@
 import { deleteAgent, exportAgent, getAgent, importAgent, loadAgents, saveAgent } from '../agent-storage.js';
-import { setActiveAgent } from './chat.js';
 import { $, LS, S } from '../state.js';
-import { closeAgentLibrary, openAgentLibrary, renderAgentLibrary } from '../ui/agent-library.js';
 import { readAgentBuilderDraft, renderAgentBuilder } from '../ui/agent-builder.js';
+import { closeAgentLibrary, openAgentLibrary, renderAgentLibrary } from '../ui/agent-library.js';
 import { toast } from '../ui/toast.js';
+import { setActiveAgent } from './chat.js';
 
 const IMPORT_INPUT_ID = 'agent-library-import-input';
 const FORM_ID = 'agent-builder-form';
