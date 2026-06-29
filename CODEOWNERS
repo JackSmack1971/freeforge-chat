@@ -1,0 +1,12 @@
+# Repository ownership for FreeForge Chat
+
+# Core app and support files
+/freeforge/ @JackSmack1971
+/.github/ @JackSmack1971
+/.claude/ @JackSmack1971
+/docs/ @JackSmack1971
+/tests/ @JackSmack1971
+/pending_rules/ @JackSmack1971
+
+# Default fallback for any path not matched above
+* @JackSmack1971
