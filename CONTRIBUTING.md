@@ -15,6 +15,7 @@ FreeForge Chat is intentionally small: no package install, no build step, and no
 - Open a GitHub issue for bugs or feature requests.
 - Work on a short-lived branch tied to the issue number.
 - Keep pull requests focused on one behavior, doc update, or hygiene fix.
+- Use squash merge only. GitHub is configured to delete the head branch on merge.
 - Mention `@JackSmack1971` in the PR or issue when you need review or clarification.
 
 ## What to Avoid
