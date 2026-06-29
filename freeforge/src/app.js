@@ -1,9 +1,10 @@
+import { loadAgents } from './agent-storage.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, LS, S, clearStoredKey, getStoredKey, recordError } from './state.js';
+import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
@@ -27,13 +28,26 @@ function getToastAction(node) {
 
 async function init() {
   const savedKey = getStoredKey();
-  if (!savedKey) { showScreen('onboarding'); return; }
+  if (!savedKey) {
+    showScreen('onboarding');
+    return;
+  }
 
   S.apiKey = savedKey;
+  S.agents = loadAgents();
+  const savedActiveAgentId = LS.get('ff_active_agent_id');
+  S.activeAgent = S.agents.find(agent => agent.id === savedActiveAgentId) || S.agents[0] || null;
+  S.activeAgentId = S.activeAgent?.id ?? null;
+
   const savedMsgs = LS.get('ff_msgs');
   if (Array.isArray(savedMsgs)) {
     S.messages = savedMsgs.filter(m => !m.streaming);
   }
+
+  const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
+  S.conversationAgent = savedConversationAgent ? snapshotAgent(savedConversationAgent) : snapshotAgent(S.activeAgent);
+  S.conversationAgentId = S.conversationAgent?.id ?? null;
+
   const modelLoad = await loadModels(savedKey);
   if (modelLoad === 'empty') {
     clearStoredKey();
@@ -67,7 +81,6 @@ function installErrorCapture() {
       msg: reason?.message || String(reason),
     });
   });
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
