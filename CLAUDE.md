@@ -20,11 +20,11 @@ Use the smallest safe change that satisfies the objective. Prefer reading existi
 
 ## Default Commands
 
-- Install: detect from lockfile (`npm ci`, `pnpm install --frozen-lockfile`, `uv sync`, `poetry install`, `cargo fetch`, etc.).
-- Lint: prefer `npm run lint`, `pnpm lint`, `ruff check`, `cargo clippy`, or project equivalent.
-- Typecheck: prefer `npm run typecheck`, `pnpm typecheck`, `mypy`, or project equivalent.
-- Test: prefer targeted tests first, then full suite for release readiness.
-- Build: prefer `npm run build`, `pnpm build`, `cargo build`, or project equivalent.
+- Install: no repo-level install step is required.
+- Lint: not defined for this repo.
+- Typecheck: not defined for this repo.
+- Test: use `cd freeforge && npm test`.
+- Build: not defined for this repo.
 
 ## Engineering Standards
 
