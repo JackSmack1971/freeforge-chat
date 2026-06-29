@@ -23,7 +23,7 @@ Use the smallest safe change that satisfies the objective. Prefer reading existi
 - Install: no repo-level install step is required.
 - Lint: not defined for this repo.
 - Typecheck: not defined for this repo.
-- Test: use `cd freeforge && npm test`.
+- Test: use `cd freeforge && npm test` for the only defined package script.
 - Build: not defined for this repo.
 
 ## Engineering Standards

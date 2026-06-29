@@ -73,7 +73,7 @@ The Tailwind Play CDN (`cdn.tailwindcss.com`) was verified to NOT use Web Worker
 
 ## Standard Stack
 
-### Core (no new packages installed — all existing CDN dependencies)
+### Core (no new packages installed — all existing CDN artifacts)
 
 | Library | Version | CDN URL | Why Standard |
 |---------|---------|---------|--------------|
@@ -89,19 +89,19 @@ None — library choices are locked by CONTEXT.md decisions.
 
 ---
 
-## Package Legitimacy Audit
+## Artifact Legitimacy Audit
 
-This phase upgrades two existing CDN-loaded libraries by version bump only — no new npm installs. The slopcheck protocol applies for completeness.
+This phase upgrades two existing CDN-loaded libraries by version bump only — no new npm installs. The artifact verification protocol applies for completeness.
 
-| Package | Registry | Age | Source Repo | slopcheck (npm) | Disposition |
+| Artifact | Registry | Age | Source Repo | npm metadata check | Disposition |
 |---------|----------|-----|-------------|-----------------|-------------|
 | dompurify@3.4.8 | npm | 12 yrs (2014) | github.com/cure53/DOMPurify | N/A — PyPI check irrelevant; npm confirmed [OK] | Approved |
 | marked@18.0.4 | npm | 15 yrs (2011) | github.com/markedjs/marked | N/A — PyPI check irrelevant; npm confirmed [OK] | Approved |
 
 Note: `slopcheck` was run against PyPI (wrong ecosystem). Both artifacts are JavaScript CDN bundles. Release metadata checks confirmed the pinned versions exist. No suspicious postinstall scripts — these are CDN `<script>` tags, not installed packages.
 
-**Packages removed due to [SLOP] verdict:** none
-**Packages flagged [SUS]:** none
+**Artifacts removed due to [SLOP] verdict:** none
+**Artifacts flagged [SUS]:** none
 
 ---
 
