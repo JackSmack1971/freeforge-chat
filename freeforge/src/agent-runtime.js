@@ -13,3 +13,18 @@ export function buildRequestMessages(messages, agent) {
   return payload;
 }
 
+export function buildRequestParameters(agent) {
+  const parameters = {};
+  const temperature = agent?.model?.temperature;
+  if (Number.isFinite(temperature)) parameters.temperature = temperature;
+  const maxTokens = agent?.model?.maxTokens;
+  if (Number.isFinite(maxTokens)) parameters.max_tokens = maxTokens;
+  return parameters;
+}
+
+export function buildRequestContext(messages, agent) {
+  return {
+    messages: buildRequestMessages(messages, agent),
+    parameters: buildRequestParameters(agent),
+  };
+}
