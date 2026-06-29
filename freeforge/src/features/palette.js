@@ -1,11 +1,11 @@
 import { S } from '../state.js';
+import { renderAgentBuilder } from '../ui/agent-builder.js';
+import { openAgentLibrary } from '../ui/agent-library.js';
+import { refreshAgentUi } from './agents.js';
 import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
 import { changeModel } from './models.js';
 import { openSettings } from './settings.js';
-import { refreshAgentUi } from './agents.js';
-import { openAgentLibrary } from '../ui/agent-library.js';
-import { renderAgentBuilder } from '../ui/agent-builder.js';
 
 const BASE_ACTIONS = [
   { label: 'New Chat', shortcut: 'N', action: () => { newChat(); closePalette(); } },
