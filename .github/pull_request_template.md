@@ -1,28 +1,23 @@
 ## Summary
 
-What changed and why.
+- What changed:
+- Why it changed:
 
-Closes #
+## Linked Issue
 
-## Type of Change
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Refactor
-- [ ] Performance improvement
-- [ ] Test-only change
-- [ ] Documentation update
-- [ ] Build / CI / tooling change
-- [ ] Other
-
-## What Changed
-
--
+- Related issue:
 
 ## Testing
 
--
+- Commands run:
+- Results:
+
+## Documentation
+
+- Updated:
+- Not needed:
 
 ## Risk
 
--
+- Impact:
+- Rollback:
