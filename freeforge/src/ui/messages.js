@@ -3,6 +3,30 @@ import { $, S } from '../state.js';
 import { toast } from './toast.js';
 
 let renderedCount = 0;
+const DEFAULT_STARTER_PROMPTS = [
+  'Explain quantum computing',
+  'Write a Python script',
+  'Help me brainstorm ideas',
+  'Debug my code',
+];
+
+function getStarterPrompts() {
+  const prompts = S.conversationAgent?.instructions?.starterPrompts;
+  return Array.isArray(prompts) && prompts.length ? prompts : DEFAULT_STARTER_PROMPTS;
+}
+
+function renderStarterPrompts() {
+  const host = document.getElementById('starter-prompts');
+  if (!host) return;
+  host.textContent = '';
+  for (const prompt of getStarterPrompts()) {
+    const btn = document.createElement('button');
+    btn.className = 'suggestion text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors';
+    btn.type = 'button';
+    btn.textContent = prompt;
+    host.appendChild(btn);
+  }
+}
 
 function injectCodeBlockUI(container) {
   for (const pre of container.querySelectorAll('pre')) {
@@ -44,6 +68,7 @@ export function setStreamMode(active) {
 function syncMessageVisibility() {
   const list = $('msgs-list');
   const empty = $('empty-state');
+  renderStarterPrompts();
 
   if (S.messages.length === 0) {
     empty.classList.remove('hidden');
@@ -192,9 +217,16 @@ export function buildMsgEl(msg, showRegen = false) {
 
   const row = el('div', 'flex items-start gap-3');
   const avatar = el('div', 'assistant-avatar-surface w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5');
-  const avatarIcon = svgIcon('M13 10V3L4 14h7v7l9-11h-7z');
-  avatarIcon.classList.add('text-zinc-400');
-  avatar.appendChild(avatarIcon);
+  const agent = S.conversationAgent;
+  if (agent?.icon?.value) {
+    avatar.classList.add('text-sm');
+    avatar.textContent = agent.icon.value;
+    avatar.title = agent.name || 'Assistant';
+  } else {
+    const avatarIcon = svgIcon('M13 10V3L4 14h7v7l9-11h-7z');
+    avatarIcon.classList.add('text-zinc-400');
+    avatar.appendChild(avatarIcon);
+  }
 
   const main = el('div', 'flex-1 min-w-0');
   const bubble = el('div', 'assistant-bubble-surface rounded-2xl rounded-tl-sm px-4 py-3');

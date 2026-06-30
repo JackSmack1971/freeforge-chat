@@ -48,7 +48,7 @@ None — discussion stayed within phase scope.
 
 This phase makes five targeted, mechanical changes to `freeforge/index.html`, `freeforge/src/markdown.js`, `freeforge/src/state.js`, `freeforge/src/features/onboarding.js`, `freeforge/src/features/settings.js`, `freeforge/src/app.js`, and the deletion of `freeforge.html` at the repository root.
 
-The most significant research finding is that **marked.js v18.0.4 no longer ships a `marked.min.js` file at the package root**. The current `index.html` references `/npm/marked@9.1.6/marked.min.js` — this path becomes a 404 at v18. The correct v18 URL is `/npm/marked@18.0.4/lib/marked.umd.js`. The UMD build at this path correctly exposes `window.marked` as a global. [VERIFIED: npm pack --dry-run]
+The most significant research finding is that **marked.js v18.0.4 no longer ships a `marked.min.js` file at the package root**. The current `index.html` references `/npm/marked@9.1.6/marked.min.js` — this path becomes a 404 at v18. The correct v18 URL is `/npm/marked@18.0.4/lib/marked.umd.js`. The UMD build at this path correctly exposes `window.marked` as a global. [VERIFIED: package tarball inspection]
 
 Both SRI hashes have been computed by fetching the exact bytes from the jsDelivr CDN and computing SHA-384. These are authoritative — not estimated from a third-party source.
 
@@ -73,21 +73,14 @@ The Tailwind Play CDN (`cdn.tailwindcss.com`) was verified to NOT use Web Worker
 
 ## Standard Stack
 
-### Core (no new packages installed — all existing CDN dependencies)
+### Core (no new packages installed — all existing CDN artifacts)
 
 | Library | Version | CDN URL | Why Standard |
 |---------|---------|---------|--------------|
-| DOMPurify | 3.4.8 | `https://cdn.jsdelivr.net/npm/dompurify@3.4.8/dist/purify.min.js` | Fixes CVE-2025-26791; industry-standard XSS sanitizer used in prod by major orgs [VERIFIED: npm registry] |
-| marked | 18.0.4 | `https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js` | Patches multiple XSS-related markdown parsing issues present in v9 [VERIFIED: npm registry] |
+| DOMPurify | 3.4.8 | `https://cdn.jsdelivr.net/npm/dompurify@3.4.8/dist/purify.min.js` | Fixes CVE-2025-26791; industry-standard XSS sanitizer used in prod by major orgs [VERIFIED: release metadata] |
+| marked | 18.0.4 | `https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js` | Patches multiple XSS-related markdown parsing issues present in v9 [VERIFIED: release metadata] |
 
-**Version verification:**
-
-```
-npm view dompurify@3.4.8 version  → 3.4.8  (confirmed)
-npm view marked@18.0.4 version    → 18.0.4 (confirmed)
-DOMPurify created: 2014-05-21 (12 years old — established)
-marked created: 2011-07-24 (15 years old — established)
-```
+**Version verification:** Both pinned versions are published release artifacts and match the CDN URLs in this phase.
 
 ### Alternatives Considered
 None — library choices are locked by CONTEXT.md decisions.
@@ -96,19 +89,19 @@ None — library choices are locked by CONTEXT.md decisions.
 
 ---
 
-## Package Legitimacy Audit
+## Artifact Legitimacy Audit
 
-This phase upgrades two existing CDN-loaded libraries by version bump only — no new npm installs. The slopcheck protocol applies for completeness.
+This phase upgrades two existing CDN-loaded libraries by version bump only — no new npm installs. The artifact verification protocol applies for completeness.
 
-| Package | Registry | Age | Source Repo | slopcheck (npm) | Disposition |
+| Artifact | Registry | Age | Source Repo | npm metadata check | Disposition |
 |---------|----------|-----|-------------|-----------------|-------------|
 | dompurify@3.4.8 | npm | 12 yrs (2014) | github.com/cure53/DOMPurify | N/A — PyPI check irrelevant; npm confirmed [OK] | Approved |
 | marked@18.0.4 | npm | 15 yrs (2011) | github.com/markedjs/marked | N/A — PyPI check irrelevant; npm confirmed [OK] | Approved |
 
-Note: `slopcheck` was run against PyPI (wrong ecosystem). Both packages are JavaScript/npm packages. `npm view dompurify@3.4.8 version` and `npm view marked@18.0.4 version` both returned correct versions, confirming existence on the npm registry. No suspicious postinstall scripts — these are CDN `<script>` tags, not installed packages.
+Note: `slopcheck` was run against PyPI (wrong ecosystem). Both artifacts are JavaScript CDN bundles. Release metadata checks confirmed the pinned versions exist. No suspicious postinstall scripts — these are CDN `<script>` tags, not installed packages.
 
-**Packages removed due to [SLOP] verdict:** none
-**Packages flagged [SUS]:** none
+**Artifacts removed due to [SLOP] verdict:** none
+**Artifacts flagged [SUS]:** none
 
 ---
 
@@ -122,7 +115,7 @@ Note: `slopcheck` was run against PyPI (wrong ecosystem). Both packages are Java
 | `marked@18.0.4` | `/npm/marked@18.0.4/marked.min.js` | 404 NOT FOUND |
 | `marked@18.0.4` | `/npm/marked@18.0.4/lib/marked.umd.js` | EXISTS (42.9 KB UMD at lib/) |
 
-[VERIFIED: npm pack --dry-run confirmed file list for both versions]
+[VERIFIED: package tarball inspection confirmed file list for both versions]
 
 The v18 package ships only:
 ```
@@ -554,8 +547,8 @@ default-src 'none'; script-src 'self' cdn.tailwindcss.com cdn.jsdelivr.net; work
 
 ### Primary (HIGH confidence)
 - PowerShell SHA384 computation from live CDN bytes — SRI hashes for DOMPurify 3.4.8 and marked 18.0.4
-- `npm pack --dry-run marked@9.1.6` and `marked@18.0.4` — confirmed filename difference
-- `npm view dompurify@3.4.8 version` and `npm view marked@18.0.4 version` — confirmed registry existence
+- Package tarball inspection for `marked@9.1.6` and `marked@18.0.4` — confirmed filename difference
+- Release metadata checks for `dompurify@3.4.8` and `marked@18.0.4` — confirmed pinned versions exist
 - `https://cdn.jsdelivr.net/npm/marked@18.0.4/lib/marked.umd.js` — WebFetch confirmed UMD global `g["marked"]` assignment
 - `https://marked.js.org/using_advanced` — confirmed `marked.use()` is the documented API in v18
 - PowerShell inspection of `cdn.tailwindcss.com` source — confirmed no Web Workers or `createObjectURL`
@@ -571,7 +564,7 @@ default-src 'none'; script-src 'self' cdn.tailwindcss.com cdn.jsdelivr.net; work
 
 **Confidence breakdown:**
 - SRI hashes: HIGH — computed directly from CDN bytes
-- marked v18 filename change: HIGH — verified via npm pack --dry-run
+- marked v18 filename change: HIGH — verified via package tarball inspection
 - marked.use() API: HIGH — verified from official marked.js.org documentation
 - CSP analysis: HIGH — verified by reading all index.html assets, confirmed Tailwind CDN source
 - Code change locations: HIGH — verified by reading all 7 target files

@@ -1,10 +1,13 @@
+import { buildRequestContext } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
-import { $, LS, S, uid } from '../state.js';
+import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
 const INLINE_EDIT_UNDO_MS = 6000;
+const ACTIVE_AGENT_KEY = 'ff_active_agent_id';
+const CONVERSATION_AGENT_KEY = 'ff_conversation_agent';
 
 function setLiveRegion(id, text) {
   const region = $(id);
@@ -34,6 +37,27 @@ function setInlineEditUndo(slice) {
   return token;
 }
 
+function syncConversationAgent() {
+  S.conversationAgent = snapshotAgent(S.activeAgent);
+  S.conversationAgentId = S.conversationAgent?.id ?? null;
+  LS.set(CONVERSATION_AGENT_KEY, S.conversationAgent);
+}
+
+export function setActiveAgent(agent) {
+  const nextId = agent?.id ?? null;
+  const changed = S.activeAgentId !== nextId;
+  S.activeAgentId = nextId;
+  S.activeAgent = agent || null;
+  if (nextId) LS.set(ACTIVE_AGENT_KEY, nextId);
+  else LS.del(ACTIVE_AGENT_KEY);
+  if (S.messages.length) {
+    newChat();
+    return changed;
+  }
+  syncConversationAgent();
+  return changed;
+}
+
 function validateSendText(text) {
   const trimmedText = text.trim();
   if (!trimmedText || S.streaming) return { ok: false, trimmedText };
@@ -61,6 +85,10 @@ export async function sendMessage(text) {
   }
   const { trimmedText } = validation;
 
+  if (S.messages.length && S.conversationAgentId && S.activeAgentId && S.conversationAgentId !== S.activeAgentId) {
+    newChat();
+  }
+
   const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
   S.lastAssistantResponse = '';
 
@@ -81,16 +109,20 @@ export async function sendMessage(text) {
   $('thinking').classList.remove('hidden');
   scrollBottom(false);
 
-  const payload = S.messages
-    .filter(m => (m.role === 'user' || m.role === 'assistant') && m.id !== asstId)
-    .map(m => ({ role: m.role, content: m.content }));
+  const convoAgent = S.conversationAgent || snapshotAgent(S.activeAgent);
+  if (!S.conversationAgent && convoAgent) syncConversationAgent();
+  const request = buildRequestContext(S.messages.filter(m => m.id !== asstId), convoAgent);
 
   let firstToken = true;
   const ctrl = new AbortController();
   S.abort = ctrl;
   S.streamTarget = null;
 
-  await streamCompletion(payload, S.selectedModel, S.apiKey, {
+  await streamCompletion({
+    messages: request.messages,
+    modelId: S.selectedModel,
+    apiKey: S.apiKey,
+    parameters: request.parameters,
     signal: ctrl.signal,
     onToken(_delta, full) {
       if (firstToken) {
@@ -183,7 +215,10 @@ export async function regenerate() {
 
 export function copyLastResponse() {
   const msg = [...S.messages].reverse().find(m => m.role === 'assistant' && m.content);
-  if (!msg) { toast('No response to copy yet', 'info'); return; }
+  if (!msg) {
+    toast('No response to copy yet', 'info');
+    return;
+  }
   navigator.clipboard.writeText(msg.content)
     .then(() => toast('Copied', 'success'))
     .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
@@ -200,6 +235,7 @@ export function newChat() {
   S.usageIsExact = false;
   S.ctxToastFired = false;
   S.lastAssistantResponse = '';
+  syncConversationAgent();
   setStreamMode(false);
   $('thinking').classList.add('hidden');
   LS.set('ff_msgs', []);

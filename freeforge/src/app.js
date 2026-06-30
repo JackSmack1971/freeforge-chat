@@ -1,9 +1,12 @@
-import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage } from './features/chat.js';
+import { loadAgents } from './agent-storage.js';
+import { refreshAgentUi } from './features/agents.js';
+import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
-import { closePalette, openPalette } from './features/palette.js';
+import { closePalette, initPalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
-import { $, LS, S, clearStoredKey, getStoredKey, recordError } from './state.js';
+import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
+import { closeAgentLibrary, openAgentLibrary } from './ui/agent-library.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
 import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
@@ -27,13 +30,26 @@ function getToastAction(node) {
 
 async function init() {
   const savedKey = getStoredKey();
-  if (!savedKey) { showScreen('onboarding'); return; }
+  if (!savedKey) {
+    showScreen('onboarding');
+    return;
+  }
 
   S.apiKey = savedKey;
+  S.agents = loadAgents();
+  const savedActiveAgentId = LS.get('ff_active_agent_id');
+  S.activeAgent = S.agents.find(agent => agent.id === savedActiveAgentId) || S.agents[0] || null;
+  S.activeAgentId = S.activeAgent?.id ?? null;
+
   const savedMsgs = LS.get('ff_msgs');
   if (Array.isArray(savedMsgs)) {
     S.messages = savedMsgs.filter(m => !m.streaming);
   }
+
+  const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
+  S.conversationAgent = savedConversationAgent ? snapshotAgent(savedConversationAgent) : snapshotAgent(S.activeAgent);
+  S.conversationAgentId = S.conversationAgent?.id ?? null;
+
   const modelLoad = await loadModels(savedKey);
   if (modelLoad === 'empty') {
     clearStoredKey();
@@ -46,6 +62,7 @@ async function init() {
   showScreen('chat');
   renderAllMessages();
   scrollBottom(false);
+  refreshAgentUi();
   renderCtxPill();
 }
 
@@ -67,7 +84,6 @@ function installErrorCapture() {
       msg: reason?.message || String(reason),
     });
   });
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -103,6 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  $('agent-select')?.addEventListener('change', e => {
+    const agent = S.agents.find(x => x.id === e.target.value);
+    if (!agent || agent.id === S.activeAgentId) return;
+    setActiveAgent(agent);
+    refreshAgentUi();
+  });
+
   // settings
   $('settings-new-key').closest('form')?.addEventListener('submit', e => {
     e.preventDefault();
@@ -115,6 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('settings-update-btn').addEventListener('click', updateKey);
   $('settings-new-key').addEventListener('input', clearSettingsKeyError);
   $('banner-update-btn').addEventListener('click', () => { hideInvalidBanner(); openSettings(); });
+  $('agent-library-btn')?.addEventListener('click', () => {
+    openAgentLibrary();
+    refreshAgentUi();
+  });
 
   // new chat
   $('new-chat-btn').addEventListener('click', newChat);
@@ -203,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // command palette
+  initPalette();
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       const active = document.activeElement;
@@ -221,7 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // escape closes modal
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    closeAgentLibrary();
+    closeSettings();
+  });
 
   init();
 });

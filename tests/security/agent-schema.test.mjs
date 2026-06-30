@@ -85,14 +85,28 @@ test('normalizeAgent rejects unsupported schema versions', () => {
 });
 
 test('generateAgentId uses crypto.randomUUID when available and falls back otherwise', () => {
-  const originalCrypto = globalThis.crypto;
-  globalThis.crypto = { randomUUID: () => 'uuid-from-crypto' };
-  assert.equal(generateAgentId(), 'uuid-from-crypto');
+  const cryptoDesc = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  try {
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      writable: true,
+      value: { randomUUID: () => 'uuid-from-crypto' },
+    });
+    assert.equal(generateAgentId(), 'uuid-from-crypto');
 
-  globalThis.crypto = {};
-  const fallback = generateAgentId();
-  assert.match(fallback, /^agent-[a-z0-9]+-[a-z0-9]{8}$/);
-
-  globalThis.crypto = originalCrypto;
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      writable: true,
+      value: {},
+    });
+    const fallback = generateAgentId();
+    assert.match(fallback, /^agent-[a-z0-9]+-[a-z0-9]{8}$/);
+  } finally {
+    if (cryptoDesc) Object.defineProperty(globalThis, 'crypto', cryptoDesc);
+    else Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+  }
 });
-

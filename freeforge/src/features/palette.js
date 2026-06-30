@@ -1,5 +1,8 @@
 import { S } from '../state.js';
-import { copyLastResponse, newChat } from './chat.js';
+import { renderAgentBuilder } from '../ui/agent-builder.js';
+import { openAgentLibrary } from '../ui/agent-library.js';
+import { refreshAgentUi } from './agents.js';
+import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
 import { changeModel } from './models.js';
 import { openSettings } from './settings.js';
@@ -16,12 +19,33 @@ let filteredActions = [];
 let previousFocus = null;
 
 function buildActions() {
+  const agentActions = [
+    { label: 'Manage Agents', shortcut: 'A', action: () => { closePalette(); openAgentLibrary(); refreshAgentUi(); } },
+    { label: 'New Agent', shortcut: 'Shift+A', action: () => { closePalette(); openAgentLibrary(); renderAgentBuilder(null); } },
+  ];
+
+  const switchActions = (S.agents ?? []).map(agent => ({
+    label: `Switch Agent → ${agent.name || agent.id}`,
+    shortcut: '',
+    action: () => {
+      if (agent.id === S.activeAgentId) {
+        closePalette();
+        return;
+      }
+      const selected = S.agents.find(x => x.id === agent.id);
+      if (!selected) return;
+      setActiveAgent(selected);
+      refreshAgentUi();
+      closePalette();
+    },
+  }));
+
   const modelActions = (S.models ?? []).map(m => ({
     label: `Switch Model → ${m.name ?? m.id}`,
     shortcut: '',
     action: () => { changeModel(m.id); closePalette(); },
   }));
-  return [...BASE_ACTIONS, ...modelActions];
+  return [...BASE_ACTIONS, ...agentActions, ...switchActions, ...modelActions];
 }
 
 function getFocusableInPalette() {
@@ -95,27 +119,29 @@ export function closePalette() {
   previousFocus = null;
 }
 
-document.getElementById('cmd-search')?.addEventListener('input', e => {
-  activeIndex = 0;
-  render(e.target.value);
-});
+export function initPalette() {
+  document.getElementById('cmd-search')?.addEventListener('input', e => {
+    activeIndex = 0;
+    render(e.target.value);
+  });
 
-document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePalette(); return; }
-  if (e.key === 'ArrowDown') {
-    activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'ArrowUp') {
-    activeIndex = Math.max(activeIndex - 1, 0);
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'Enter' && filteredActions[activeIndex]) {
-    filteredActions[activeIndex].action();
-  }
-});
+  document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePalette(); return; }
+    if (e.key === 'ArrowDown') {
+      activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
+      render(document.getElementById('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'ArrowUp') {
+      activeIndex = Math.max(activeIndex - 1, 0);
+      render(document.getElementById('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'Enter' && filteredActions[activeIndex]) {
+      filteredActions[activeIndex].action();
+    }
+  });
 
-document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
-document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+  document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
+  document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+}
