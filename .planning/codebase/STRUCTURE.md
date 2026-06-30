@@ -11,7 +11,7 @@ repo-level docs and policy files, and a small security-focused test suite.
 - `tests/security/` - Node-based invariants for security and rendering rules
 - `netlify.toml` - deployment and response headers
 - `biome.json` - linting scope and style config
-- `README.md`, `CLAUDE.md`, `SECURITY.md`, `CHANGELOG.md` - repo guidance
+- `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md` - repo guidance
 
 ## App Directory
 

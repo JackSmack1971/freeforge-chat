@@ -6,8 +6,8 @@ This milestone adds inline editing for user-authored messages without introducin
 
 ## Phases
 
-- [ ] **Phase 3: Inline Edit Entry** - Click any user bubble, open an in-place textarea, and route the confirmed edit through the existing resend flow
-- [ ] **Phase 4: Undo and Safety** - Add the session-only undo toast and verify the edit path does not create a new persistence or history model
+- [x] **Phase 3: Inline Edit Entry** - Click any user bubble, open an in-place textarea, and route the confirmed edit through the existing resend flow
+- [x] **Phase 4: Undo and Safety** - Add the session-only undo toast and verify the edit path does not create a new persistence or history model
 
 ## Phase Details
 
@@ -43,6 +43,5 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 3. Inline Edit Entry | 0/2 | Pending | - |
-| 4. Undo and Safety | 0/2 | Pending | - |
-
+| 3. Inline Edit Entry | 2/2 | Complete | 2026-06-28 |
+| 4. Undo and Safety | 2/2 | Complete | 2026-06-28 |

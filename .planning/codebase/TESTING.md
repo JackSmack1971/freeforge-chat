@@ -27,7 +27,7 @@ There is no browser automation framework in the tree.
 - `maskKey()` hides API keys in settings and onboarding UI
 - Stored keys migrate from persistent localStorage to sessionStorage
 - `renderMd()` sanitizes output or falls back to escaped text
-- The app avoids raw document.write usage
+- Source files contain no deprecated HTML-stream injection calls
 
 ## Test Style
 
