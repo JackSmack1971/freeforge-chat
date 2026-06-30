@@ -1,14 +1,17 @@
-# Development framework artifacts — not app code
+# Claude Code control-plane — local only, never tracked
 .claude/
+CLAUDE.md
+CLAUDE.local.md
 .codex/
-.planning/codebase/
-.repository-hygiene/
+.planning/
 .session-feedback/
+.repository-hygiene/
+pending_rules/
 coverage/
 docs/
 .tmp/
 README-SWARM.md
-managed-settings.example.json
+managed-settings*.json
 CODEBASE_AUDIT_REPORT.md
 
 # OS
