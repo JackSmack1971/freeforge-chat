@@ -29,6 +29,12 @@ Every completed implementation must include:
 - Raw final pass/fail status.
 - Known limitations or follow-up work.
 
+## Handoff Conventions
+
+- Canonical persisted handoff state lives in `.claude/handoff/current-task.json`, written through `/handoff` and resumed through `/resume-handoff`.
+- `.claude/agents/lead-engineer.md` may describe supplemental Markdown coordination briefs, but those briefs are not the source of truth for persisted task state.
+- Do not treat the retired `.handoffs/` path as authoritative unless a later repo rule explicitly redefines it.
+
 <!-- GSD:project-start source:PROJECT.md -->
 
 ## Project
