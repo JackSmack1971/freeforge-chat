@@ -27,6 +27,10 @@ function clearInlineEditUndo(token = null) {
   return true;
 }
 
+export function clearActiveRequestState() {
+  S.activeRequestId = null;
+}
+
 function setInlineEditUndo(slice) {
   clearInlineEditUndo();
   const token = uid();
@@ -115,6 +119,8 @@ export async function sendMessage(text) {
 
   let firstToken = true;
   const ctrl = new AbortController();
+  const requestId = uid();
+  S.activeRequestId = requestId;
   S.abort = ctrl;
   S.streamTarget = null;
 
@@ -125,6 +131,7 @@ export async function sendMessage(text) {
     parameters: request.parameters,
     signal: ctrl.signal,
     onToken(_delta, full) {
+      if (S.activeRequestId !== requestId) return;
       if (firstToken) {
         firstToken = false;
         $('thinking').classList.add('hidden');
@@ -136,6 +143,7 @@ export async function sendMessage(text) {
       scrollBottom(false);
     },
     onDone(rawPayload, full) {
+      if (S.activeRequestId !== requestId) return;
       let parsed;
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
@@ -155,7 +163,7 @@ export async function sendMessage(text) {
       asstMsg.streaming = false;
       S.streaming = false;
       S.abort = null;
-      S.streamTarget = null;
+      clearActiveRequestState();
       setStreamMode(false);
       setLiveRegion('sr-status', 'Response complete');
       if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
@@ -165,11 +173,12 @@ export async function sendMessage(text) {
       return exactTokens;
     },
     onError(errMsg) {
+      if (S.activeRequestId !== requestId) return;
       $('thinking').classList.add('hidden');
       S.messages = S.messages.filter(m => m.id !== asstId);
       S.streaming = false;
       S.abort = null;
-      S.streamTarget = null;
+      clearActiveRequestState();
       setStreamMode(false);
       setLiveRegion('sr-status', '');
       setLiveRegion('sr-alert', errMsg);
@@ -225,6 +234,7 @@ export function copyLastResponse() {
 }
 
 export function newChat() {
+  clearActiveRequestState();
   if (S.abort) { S.abort.abort(); S.abort = null; }
   clearInlineEditUndo();
   clearPersistent();
