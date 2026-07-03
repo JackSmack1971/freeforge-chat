@@ -44,7 +44,7 @@ function checkJavaScript(relativePath) {
 
 function scanFlatMarkdownDir(relativeDir) {
   const absoluteDir = path.join(projectDir, relativeDir);
-  if (!ensureExists(absoluteDir)) return;
+  if (!fs.existsSync(absoluteDir)) return;
   for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
     if (entry.isDirectory()) continue;
     if (!/\.md$/i.test(entry.name)) {
@@ -104,6 +104,15 @@ function shellPatternToRegex(allowedTool) {
   return new RegExp(`^${escaped}$`);
 }
 
+function hasHardcodedAbsolutePath(command) {
+  const normalized = String(command)
+    .replace(/\$CLAUDE_PROJECT_DIR/g, 'CLAUDE_PROJECT_DIR')
+    .replace(/\$HOME/g, 'HOME')
+    .replace(/%USERPROFILE%/gi, 'USERPROFILE')
+    .replace(/(^|[\s"'`(])~(?=[\\/])/g, '$1HOME');
+  return /(?:^|[\s"'`(])(?:[A-Za-z]:[\\/]|\/(?![/*]))/.test(normalized);
+}
+
 function validateEmbeddedShellAccess(relativePath, frontmatter, kind) {
   const body = readMarkdownBody(relativePath);
   const snippets = [...body.matchAll(/!`([^`]+)`/g)].map(match => match[1].trim());
@@ -114,6 +123,25 @@ function validateEmbeddedShellAccess(relativePath, frontmatter, kind) {
     if (!bashMatchers.some(regex => regex.test(snippet))) {
       findings.push(`${kind} ${relativePath} :: shell snippet not allowlisted: ${snippet}`);
     }
+  }
+}
+
+function validateAgent(relativePath) {
+  const frontmatter = parseFrontmatter(relativePath);
+  if (!frontmatter) return;
+  for (const key of ['name', 'description', 'model', 'permissionMode', 'maxTurns']) {
+    if (!frontmatter[key] || (Array.isArray(frontmatter[key]) && frontmatter[key].length === 0)) {
+      findings.push(`AGENT ${relativePath} :: missing ${key}`);
+    }
+  }
+  const tools = Array.isArray(frontmatter.tools) ? frontmatter.tools : [];
+  const disallowedTools = Array.isArray(frontmatter.disallowedTools) ? frontmatter.disallowedTools : [];
+  const isWriter = tools.some(tool => ['Write', 'Edit', 'MultiEdit'].includes(tool));
+  if (isWriter && frontmatter.isolation !== 'worktree') {
+    findings.push(`AGENT ${relativePath} :: writer agent missing isolation: worktree`);
+  }
+  if (!disallowedTools.includes('Agent')) {
+    findings.push(`AGENT ${relativePath} :: disallowedTools should include Agent`);
   }
 }
 
@@ -257,8 +285,19 @@ if (fs.existsSync(currentHandoffPath)) {
   }
 }
 
+scanFlatMarkdownDir('.claude/agents');
 scanFlatMarkdownDir('.claude/commands');
+scanFlatMarkdownDir('.claude/output-styles');
 scanFlatMarkdownDir('.claude/rules');
+
+const agentsDir = path.join(claudeDir, 'agents');
+if (ensureExists(agentsDir)) {
+  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      validateAgent(path.posix.join('.claude/agents', entry.name));
+    }
+  }
+}
 
 const commandsDir = path.join(claudeDir, 'commands');
 if (ensureExists(commandsDir)) {
@@ -266,6 +305,17 @@ if (ensureExists(commandsDir)) {
     if (entry.isFile() && /\.md$/i.test(entry.name)) {
       const relativePath = path.posix.join('.claude/commands', entry.name);
       validateCommandOrSkill(relativePath, 'COMMAND');
+      validateMarkdownReferences(relativePath);
+    }
+  }
+}
+
+const outputStylesDir = path.join(claudeDir, 'output-styles');
+if (fs.existsSync(outputStylesDir)) {
+  for (const entry of fs.readdirSync(outputStylesDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      const relativePath = path.posix.join('.claude/output-styles', entry.name);
+      validateCommandOrSkill(relativePath, 'OUTPUT_STYLE');
       validateMarkdownReferences(relativePath);
     }
   }
@@ -282,7 +332,24 @@ if (ensureExists(rulesDir)) {
   }
 }
 
-validateMarkdownReferences('.claude/handoff/README.md');
+const skillsDir = path.join(claudeDir, 'skills');
+if (fs.existsSync(skillsDir)) {
+  for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+    const skillPath = path.join(skillsDir, entry.name);
+    if (!entry.isDirectory()) {
+      findings.push(`UNEXPECTED .claude/skills/${entry.name}`);
+      continue;
+    }
+    const skillRelativePath = path.posix.join('.claude/skills', entry.name, 'SKILL.md');
+    ensureExists(path.join(skillPath, 'SKILL.md'));
+    validateCommandOrSkill(skillRelativePath, 'SKILL');
+    validateMarkdownReferences(skillRelativePath);
+  }
+}
+
+for (const relativePath of ['CLAUDE.md', 'README-SWARM.md', '.claude/handoff/README.md']) {
+  validateMarkdownReferences(relativePath);
+}
 
 for (const relativeDir of ['.claude/hooks/validators', '.claude/hooks/workflow', '.claude/workflows']) {
   const absoluteDir = path.join(projectDir, relativeDir);
@@ -298,12 +365,16 @@ if (settings?.hooks) {
   for (const hookGroups of Object.values(settings.hooks)) {
     for (const hookGroup of hookGroups || []) {
       for (const hook of hookGroup.hooks || []) {
-        const command = String(hook.command || '')
+        const rawCommand = String(hook.command || '');
+        const command = rawCommand
           .replace(/\$CLAUDE_PROJECT_DIR/g, projectDir)
           .replace(/^node\s+/, '')
           .replace(/^"(.*)"$/, '$1')
           .trim();
         if (!command) continue;
+        if (hasHardcodedAbsolutePath(rawCommand)) {
+          findings.push(`HOOK settings.json :: hardcoded absolute path in hook command: ${rawCommand}`);
+        }
         const targetPath = path.isAbsolute(command) ? command : path.join(projectDir, command);
         ensureExists(targetPath);
       }
