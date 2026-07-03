@@ -58,8 +58,7 @@ export function scrollBottom(smooth = true) {
   a.scrollTo({ top: a.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
 }
 
-export function setStreamMode(active) {
-  S.streaming = active;
+export function renderStreamIcons(active) {
   $('send-icon').classList.toggle('hidden', active);
   $('stop-icon').classList.toggle('hidden', !active);
   $('send-btn').setAttribute('aria-label', active ? 'Stop generating' : 'Send message');

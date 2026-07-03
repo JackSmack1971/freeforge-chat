@@ -395,16 +395,16 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
   try {
     const state = await importShared('freeforge/src/state.js');
     resetState(state.S);
-    const { scrollBottom, setStreamMode, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+    const { scrollBottom, renderStreamIcons, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
     state.S.messages = [];
 
     appendNewMessages();
     scrollBottom(false);
     assert.equal(doc.getElementById('msgs-area').scrollToArgs.behavior, 'instant');
 
-    setStreamMode(true);
+    renderStreamIcons(true);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Stop generating');
-    setStreamMode(false);
+    renderStreamIcons(false);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Send message');
 
     renderAllMessages();
