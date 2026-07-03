@@ -1,17 +1,15 @@
-# Claude Code control-plane — local only, never tracked
-.claude/
-CLAUDE.md
-CLAUDE.local.md
-.codex/
+# Claude Code control-plane runtime artifacts
+.claude/audit-runs/
+.claude/handoff/current-task.json
+.claude/settings.local.json
 .planning/
 .session-feedback/
 .repository-hygiene/
 pending_rules/
 coverage/
-docs/
 .tmp/
 README-SWARM.md
-managed-settings*.json
+managed-settings.json
 CODEBASE_AUDIT_REPORT.md
 
 # OS
