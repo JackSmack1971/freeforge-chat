@@ -1,6 +1,7 @@
 import { S } from '../state.js';
 import { renderAgentBuilder } from '../ui/agent-builder.js';
 import { openAgentLibrary } from '../ui/agent-library.js';
+import { createFocusTrap } from '../ui/focus-trap.js';
 import { refreshAgentUi } from './agents.js';
 import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
@@ -16,7 +17,13 @@ const BASE_ACTIONS = [
 
 let activeIndex = 0;
 let filteredActions = [];
-let previousFocus = null;
+let focusTrap = null;
+
+function getFocusTrap() {
+  const palette = document.getElementById('cmd-palette');
+  if (!focusTrap) focusTrap = createFocusTrap(palette);
+  return focusTrap;
+}
 
 function buildActions() {
   const agentActions = [
@@ -48,27 +55,6 @@ function buildActions() {
   return [...BASE_ACTIONS, ...agentActions, ...switchActions, ...modelActions];
 }
 
-function getFocusableInPalette() {
-  return [...document.getElementById('cmd-palette-inner')?.querySelectorAll(
-    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  ) ?? []];
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') return;
-  const focusable = getFocusableInPalette();
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault();
-    first.focus();
-  }
-}
-
 function render(query = '') {
   filteredActions = buildActions().filter(a =>
     a.label.toLowerCase().includes(query.toLowerCase())
@@ -98,7 +84,6 @@ function render(query = '') {
 
 export function openPalette() {
   activeIndex = 0;
-  previousFocus = document.activeElement;
   const palette = document.getElementById('cmd-palette');
   const input = document.getElementById('cmd-search');
   if (!palette || !input) return;
@@ -106,17 +91,15 @@ export function openPalette() {
   document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
   input.value = '';
   render('');
+  getFocusTrap().open();
   input.focus();
-  palette.addEventListener('keydown', trapFocus);
 }
 
 export function closePalette() {
   const palette = document.getElementById('cmd-palette');
   palette?.classList.add('hidden');
   document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
-  palette?.removeEventListener('keydown', trapFocus);
-  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
-  previousFocus = null;
+  getFocusTrap().close();
 }
 
 document.getElementById('cmd-search')?.addEventListener('input', e => {
