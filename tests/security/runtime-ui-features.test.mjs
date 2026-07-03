@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MemoryStorage, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
+import { MemoryStorage, MockElement, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 function makeSseBody(chunks) {
   return new ReadableStream({
@@ -212,12 +212,13 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
     assert.equal(doc.getElementById('cmd-list').children.length, 0);
     assert.equal(doc.getElementById('cmd-search').getAttribute('aria-activedescendant'), '');
 
-    doc.activeElement = doc.getElementById('cmd-search');
+    doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
     doc.getElementById('cmd-palette').dispatchEvent({ type: 'keydown', key: 'Escape' });
     assert.equal(doc.getElementById('cmd-palette').classList.contains('hidden'), true);
 
     closePalette();
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }
@@ -759,6 +760,9 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     modal.dispatchEvent({ type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } });
     modal.dispatchEvent({ type: 'keydown', key: 'Escape' });
     modal.children = savedChildren;
+    closeSettings();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+    openSettings();
 
     clearKeyError();
     assert.equal(doc.getElementById('settings-key-error').textContent, '');
@@ -817,6 +821,7 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
 
     closeSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }
@@ -1104,6 +1109,60 @@ test('chat.js keeps the active stream state when a stale abort callback resolves
   }
 });
 
+test('agent-library.js opens, traps focus, and restores focus on close', async () => {
+  const doc = makeBaseDom();
+  const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
+  const backdrop = doc.register(new MockElement('div', { id: 'agent-library-backdrop' }));
+  const closeBtn = doc.register(new MockElement('button', { id: 'agent-library-close-btn' }));
+  const extraBtn = doc.register(new MockElement('button', { id: 'agent-library-extra-btn' }));
+  const list = doc.register(new MockElement('div', { id: 'agent-library-list' }));
+  modal.appendChild(closeBtn);
+  modal.appendChild(extraBtn);
+  modal.appendChild(list);
+  modal.appendChild(backdrop);
+
+  const restore = installGlobals({
+    document: doc,
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { S } = await importShared('freeforge/src/state.js');
+    resetState(S);
+    S.agents = [{
+      id: 'alpha',
+      name: 'Alpha',
+      description: 'Primary agent',
+      icon: null,
+      instructions: { systemPrompt: 'Prompt', openingMessage: '', starterPrompts: [] },
+      model: {},
+    }];
+    S.activeAgentId = 'alpha';
+
+    const { openAgentLibrary, closeAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+
+    doc.activeElement = doc.getElementById('settings-btn');
+    openAgentLibrary();
+    assert.equal(doc.activeElement.id, 'agent-library-close-btn');
+
+    const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    assert.ok(focusables.length >= 2);
+    doc.activeElement = focusables[0];
+    const backwards = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(backwards);
+    assert.equal(backwards.prevented, true);
+    doc.activeElement = focusables.at(-1);
+    const forwards = { type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(forwards);
+    assert.equal(forwards.prevented, true);
+
+    closeAgentLibrary();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+  } finally {
+    restore();
+  }
+});
 test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({
