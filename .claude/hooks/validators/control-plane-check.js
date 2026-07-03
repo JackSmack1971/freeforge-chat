@@ -44,7 +44,7 @@ function checkJavaScript(relativePath) {
 
 function scanFlatMarkdownDir(relativeDir) {
   const absoluteDir = path.join(projectDir, relativeDir);
-  if (!ensureExists(absoluteDir)) return;
+  if (!fs.existsSync(absoluteDir)) return;
   for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
     if (entry.isDirectory()) continue;
     if (!/\.md$/i.test(entry.name)) {
@@ -311,7 +311,7 @@ if (ensureExists(commandsDir)) {
 }
 
 const outputStylesDir = path.join(claudeDir, 'output-styles');
-if (ensureExists(outputStylesDir)) {
+if (fs.existsSync(outputStylesDir)) {
   for (const entry of fs.readdirSync(outputStylesDir, { withFileTypes: true })) {
     if (entry.isFile() && /\.md$/i.test(entry.name)) {
       const relativePath = path.posix.join('.claude/output-styles', entry.name);
@@ -333,7 +333,7 @@ if (ensureExists(rulesDir)) {
 }
 
 const skillsDir = path.join(claudeDir, 'skills');
-if (ensureExists(skillsDir)) {
+if (fs.existsSync(skillsDir)) {
   for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
     const skillPath = path.join(skillsDir, entry.name);
     if (!entry.isDirectory()) {
