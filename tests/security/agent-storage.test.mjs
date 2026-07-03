@@ -111,7 +111,8 @@ test('refreshAgentUi snapshots conversationAgent with the same key set as snapsh
       systemPrompt: 'Use this prompt.',
     });
 
-    await importFresh('freeforge/src/features/agents.js');
+    const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
+    refreshAgentUi();
 
     assert.deepEqual(
       Object.keys(state.S.conversationAgent).sort(),
