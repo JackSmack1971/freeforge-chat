@@ -290,33 +290,45 @@ scanFlatMarkdownDir('.claude/commands');
 scanFlatMarkdownDir('.claude/output-styles');
 scanFlatMarkdownDir('.claude/rules');
 
-for (const entry of fs.readdirSync(path.join(claudeDir, 'agents'), { withFileTypes: true })) {
-  if (entry.isFile() && /\.md$/i.test(entry.name)) {
-    validateAgent(path.posix.join('.claude/agents', entry.name));
+const agentsDir = path.join(claudeDir, 'agents');
+if (ensureExists(agentsDir)) {
+  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      validateAgent(path.posix.join('.claude/agents', entry.name));
+    }
   }
 }
 
-for (const entry of fs.readdirSync(path.join(claudeDir, 'commands'), { withFileTypes: true })) {
-  if (entry.isFile() && /\.md$/i.test(entry.name)) {
-    const relativePath = path.posix.join('.claude/commands', entry.name);
-    validateCommandOrSkill(relativePath, 'COMMAND');
-    validateMarkdownReferences(relativePath);
+const commandsDir = path.join(claudeDir, 'commands');
+if (ensureExists(commandsDir)) {
+  for (const entry of fs.readdirSync(commandsDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      const relativePath = path.posix.join('.claude/commands', entry.name);
+      validateCommandOrSkill(relativePath, 'COMMAND');
+      validateMarkdownReferences(relativePath);
+    }
   }
 }
 
-for (const entry of fs.readdirSync(path.join(claudeDir, 'output-styles'), { withFileTypes: true })) {
-  if (entry.isFile() && /\.md$/i.test(entry.name)) {
-    const relativePath = path.posix.join('.claude/output-styles', entry.name);
-    validateCommandOrSkill(relativePath, 'OUTPUT_STYLE');
-    validateMarkdownReferences(relativePath);
+const outputStylesDir = path.join(claudeDir, 'output-styles');
+if (ensureExists(outputStylesDir)) {
+  for (const entry of fs.readdirSync(outputStylesDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      const relativePath = path.posix.join('.claude/output-styles', entry.name);
+      validateCommandOrSkill(relativePath, 'OUTPUT_STYLE');
+      validateMarkdownReferences(relativePath);
+    }
   }
 }
 
-for (const entry of fs.readdirSync(path.join(claudeDir, 'rules'), { withFileTypes: true })) {
-  if (entry.isFile() && /\.md$/i.test(entry.name)) {
-    const relativePath = path.posix.join('.claude/rules', entry.name);
-    validateRule(relativePath);
-    validateMarkdownReferences(relativePath);
+const rulesDir = path.join(claudeDir, 'rules');
+if (ensureExists(rulesDir)) {
+  for (const entry of fs.readdirSync(rulesDir, { withFileTypes: true })) {
+    if (entry.isFile() && /\.md$/i.test(entry.name)) {
+      const relativePath = path.posix.join('.claude/rules', entry.name);
+      validateRule(relativePath);
+      validateMarkdownReferences(relativePath);
+    }
   }
 }
 
