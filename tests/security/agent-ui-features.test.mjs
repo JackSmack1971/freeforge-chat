@@ -411,13 +411,14 @@ test('features/agents.js reports not-found errors for invalid actions', async ()
   const { doc, restore } = installAgentGlobals();
   try {
     await seedAgents();
-    const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
+    const { initAgents, refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
     const armAction = btn => {
       const orig = btn.closest.bind(btn);
       btn.closest = selector => (selector === '[data-agent-action]' ? btn : orig(selector));
       return btn;
     };
 
+    initAgents();
     refreshAgentUi();
 
     const fakeAction = (kind, id) => armAction(Object.assign(new MockElement('button'), {
