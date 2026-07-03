@@ -10,6 +10,7 @@ import {
   saveAgent,
   setActiveAgent,
 } from '../../freeforge/src/agent-storage.js';
+import { importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 class MemoryStorage {
   constructor(seed = {}, { throwOnSet = false } = {}) {
@@ -90,4 +91,34 @@ test('saveAgent returns null when storage quota prevents persistence', () => {
 
   assert.equal(saved, null);
   assert.equal(loadAgents().length, 0);
+});
+
+test('refreshAgentUi snapshots conversationAgent with the same key set as snapshotAgent', async () => {
+  const restore = installGlobals({
+    document: makeBaseDom(),
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { saveAgent } = await importShared('freeforge/src/agent-storage.js');
+    const state = await importShared('freeforge/src/state.js');
+
+    saveAgent({
+      name: 'Snapshot Agent',
+      systemPrompt: 'Use this prompt.',
+    });
+
+    const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
+    refreshAgentUi();
+
+    assert.deepEqual(
+      Object.keys(state.S.conversationAgent).sort(),
+      Object.keys(state.snapshotAgent(state.S.activeAgent)).sort()
+    );
+  } finally {
+    restore();
+  }
 });

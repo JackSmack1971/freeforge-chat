@@ -1163,7 +1163,6 @@ test('agent-library.js opens, traps focus, and restores focus on close', async (
     restore();
   }
 });
-
 test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({
