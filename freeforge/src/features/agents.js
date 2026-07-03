@@ -1,5 +1,5 @@
 import { deleteAgent, exportAgent, getAgent, importAgent, loadAgents, saveAgent } from '../agent-storage.js';
-import { $, LS, S } from '../state.js';
+import { $, LS, S, snapshotAgent } from '../state.js';
 import { initAgentBuilder, readAgentBuilderDraft, renderAgentBuilder } from '../ui/agent-builder.js';
 import { closeAgentLibrary, initAgentLibrary, openAgentLibrary, renderAgentLibrary } from '../ui/agent-library.js';
 import { toast } from '../ui/toast.js';
@@ -23,7 +23,7 @@ function refreshAgentState() {
   S.activeAgent = S.agents.find(agent => agent.id === activeId) || S.agents[0] || null;
   S.activeAgentId = S.activeAgent?.id ?? null;
   if (!S.messages.length) {
-    S.conversationAgent = S.activeAgent ? { ...S.activeAgent, icon: S.activeAgent.icon ? { ...S.activeAgent.icon } : null, instructions: { ...S.activeAgent.instructions, starterPrompts: [...(S.activeAgent.instructions?.starterPrompts || [])] }, model: { ...S.activeAgent.model } } : null;
+    S.conversationAgent = snapshotAgent(S.activeAgent);
     S.conversationAgentId = S.conversationAgent?.id ?? null;
   }
 }
