@@ -123,12 +123,69 @@ test('agent-library.js renders saved agents and traps focus in the modal', async
     assert.equal(doc.getElementById('agent-library-modal').getAttribute('aria-hidden'), 'false');
     assert.equal(doc.activeElement.id, 'agent-library-close-btn');
 
+    const modal = doc.getElementById('agent-library-modal');
+    const closeBtn = doc.getElementById('agent-library-close-btn');
+    const extraBtn = doc.getElementById('agent-library-extra-btn');
+    const originalQuery = modal.querySelectorAll.bind(modal);
+    modal.querySelectorAll = () => [closeBtn, extraBtn];
+    modal.listeners.get('keydown')[0]({
+      key: 'Tab',
+      shiftKey: true,
+      preventDefault() {},
+    });
+    assert.equal(doc.activeElement.id, extraBtn.id);
+    modal.listeners.get('keydown')[0]({
+      key: 'Tab',
+      shiftKey: false,
+      preventDefault() {},
+    });
+    assert.equal(doc.activeElement.id, closeBtn.id);
+    modal.querySelectorAll = originalQuery;
+
     closeAgentLibrary();
     assert.equal(doc.getElementById('agent-library-modal').classList.contains('hidden'), true);
     assert.equal(doc.getElementById('agent-library-modal').getAttribute('aria-hidden'), 'true');
     assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
+  }
+});
+
+test('agent-library.js renders the empty state and keeps agent fields as textContent', async () => {
+  {
+    const { doc, restore } = installAgentGlobals();
+    try {
+      const { renderAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+      renderAgentLibrary([], null);
+      assert.equal(doc.getElementById('agent-library-list').children.length, 1);
+      assert.equal(doc.getElementById('agent-library-list').children[0].textContent, 'No agents yet.');
+    } finally {
+      restore();
+    }
+  }
+
+  {
+    const { doc, restore } = installAgentGlobals();
+    try {
+      const { renderAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+      renderAgentLibrary([
+        { id: 'alpha', name: '<b>Alpha</b>', description: '<img src=x onerror=alert(1)>' },
+      ], 'alpha');
+
+      const item = doc.getElementById('agent-library-list').children[0];
+      const top = item.children[0];
+      const nameWrap = top.children[0];
+      const name = nameWrap.children[0];
+      const desc = nameWrap.children[1];
+
+      assert.equal(name.textContent, '<b>Alpha</b>');
+      assert.equal(name.children.length, 0);
+      assert.equal(desc.textContent, '<img src=x onerror=alert(1)>');
+      assert.equal(desc.children.length, 0);
+      assert.equal(top.children[1].textContent, 'Active');
+    } finally {
+      restore();
+    }
   }
 });
 
@@ -160,6 +217,13 @@ test('agent-builder.js renders an agent and reads back the edited draft', async 
     assert.equal(doc.getElementById('agent-builder-mode').textContent, 'Edit existing agent details.');
     assert.equal(doc.getElementById('agent-name').value, 'Agent One');
     assert.equal(doc.getElementById('agent-starter-prompts').value, 'First prompt\nSecond prompt');
+
+    renderAgentBuilder();
+    assert.equal(doc.getElementById('agent-builder-form').dataset.agentId, '');
+    assert.equal(doc.getElementById('agent-builder-title').textContent, 'Create Agent');
+    assert.equal(doc.getElementById('agent-builder-mode').textContent, 'Create a fresh agent profile.');
+    assert.equal(doc.getElementById('agent-name').value, '');
+    assert.equal(doc.getElementById('agent-preferred-model-id').placeholder, 'Optional');
 
     doc.getElementById('agent-name').value = '  Renamed Agent  ';
     doc.getElementById('agent-description').value = '  Updated description  ';
@@ -237,6 +301,23 @@ test('features/agents.js wires import, save, duplicate, set-active, delete, and 
     assert.equal(doc.getElementById('agent-select').children.length, 2);
     assert.equal(state.S.activeAgentId, alpha.id);
 
+    doc.getElementById('agent-library-new-btn').click();
+    assert.equal(doc.getElementById('agent-library-modal').classList.contains('hidden'), false);
+    assert.equal(doc.getElementById('agent-builder-title').textContent, 'Create Agent');
+    doc.getElementById('agent-builder-cancel-btn').click();
+    assert.equal(doc.getElementById('agent-library-modal').classList.contains('hidden'), true);
+
+    const sameActiveButton = armAction(latestActionButton(alpha.id, 'set-active'));
+    doc.dispatchEvent({ type: 'click', target: sameActiveButton });
+    assert.equal(state.S.activeAgentId, alpha.id);
+    assert.equal(doc.getElementById('agent-library-modal').classList.contains('hidden'), false);
+    doc.getElementById('agent-library-close-btn').click();
+
+    const editButton = armAction(latestActionButton(beta.id, 'edit'));
+    doc.dispatchEvent({ type: 'click', target: editButton });
+    assert.equal(doc.getElementById('agent-builder-title').textContent, 'Edit Agent');
+    doc.getElementById('agent-library-close-btn').click();
+
     doc.getElementById('agent-builder-form').dataset.agentId = '';
     doc.getElementById('agent-name').value = 'Gamma';
     doc.getElementById('agent-description').value = 'Created from the builder';
@@ -282,7 +363,73 @@ test('features/agents.js wires import, save, duplicate, set-active, delete, and 
     assert.equal(state.S.activeAgent.name, 'Imported Agent');
     assert.equal(doc.getElementById('agent-builder-title').textContent, 'Edit Agent');
 
+    const beforeCount = storage.loadAgents().length;
+    doc.getElementById('agent-builder-form').dataset.agentId = '';
+    doc.getElementById('agent-name').value = '   ';
+    doc.getElementById('agent-description').value = '';
+    doc.getElementById('agent-icon').value = '';
+    doc.getElementById('agent-system-prompt').value = '';
+    doc.getElementById('agent-opening-message').value = '';
+    doc.getElementById('agent-starter-prompts').value = '';
+    doc.getElementById('agent-preferred-model-id').value = '';
+    doc.getElementById('agent-temperature').value = '';
+    doc.getElementById('agent-max-tokens').value = '';
+    doc.getElementById('agent-builder-form').dispatchEvent({
+      type: 'submit',
+      preventDefault() {},
+    });
+    assert.equal(storage.loadAgents().length, beforeCount);
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Invalid agent:/);
+
+    const missingExportButton = armAction(Object.assign(new MockElement('button'), {
+      dataset: { agentAction: 'export', agentId: 'missing' },
+    }));
+    doc.dispatchEvent({ type: 'click', target: missingExportButton });
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Agent not found/);
+
+    importInput.files = [{
+      async text() {
+        return '{';
+      },
+    }];
+    importInput.dispatchEvent({ type: 'change', target: importInput });
+    await Promise.resolve();
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Expected property name/);
+
     assert.equal(beta.name, 'Beta');
+  } finally {
+    restore();
+  }
+});
+
+test('features/agents.js reports not-found errors for invalid actions', async () => {
+  const { doc, restore } = installAgentGlobals();
+  try {
+    await seedAgents();
+    const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
+    const armAction = btn => {
+      const orig = btn.closest.bind(btn);
+      btn.closest = selector => (selector === '[data-agent-action]' ? btn : orig(selector));
+      return btn;
+    };
+
+    refreshAgentUi();
+
+    const fakeAction = (kind, id) => armAction(Object.assign(new MockElement('button'), {
+      dataset: { agentAction: kind, agentId: id },
+    }));
+
+    doc.dispatchEvent({ type: 'click', target: fakeAction('duplicate', 'missing') });
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Agent not found/);
+
+    doc.dispatchEvent({ type: 'click', target: fakeAction('set-active', 'missing') });
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Agent not found/);
+
+    doc.dispatchEvent({ type: 'click', target: fakeAction('edit', 'missing') });
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Agent not found/);
+
+    doc.dispatchEvent({ type: 'click', target: fakeAction('export', 'missing') });
+    assert.match(doc.getElementById('toasts').children.at(-1).innerHTML, /Agent not found/);
   } finally {
     restore();
   }
