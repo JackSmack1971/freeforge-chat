@@ -44,9 +44,10 @@ test('streamCompletion calls onError with network message on non-abort pre-conne
 
 // ── streamCompletion HTTP error branches ─────────────────────────────────────
 
-test('streamCompletion calls showInvalidBanner and onError on HTTP 401', async () => {
+test('api.js no longer imports the UI layer for streamCompletion HTTP 401 handling', async () => {
   const src = await read('freeforge/src/api.js');
-  assert.match(src, /res\.status === 401[\s\S]*?showInvalidBanner\(\)[\s\S]*?onError\('Invalid API key/);
+  assert.doesNotMatch(src, /from '\.\/ui\/screen\.js'/);
+  assert.match(src, /res\.status === 401[\s\S]*?onError\('Invalid API key/);
 });
 
 test('streamCompletion calls onError on HTTP 429 with rate-limit message', async () => {

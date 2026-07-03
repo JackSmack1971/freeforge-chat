@@ -1103,3 +1103,50 @@ test('chat.js keeps the active stream state when a stale abort callback resolves
     restore();
   }
 });
+
+test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => `<p>${text}</p>` },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async url => {
+      if (url.endsWith('/chat/completions')) {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({ error: { message: 'nope' } }),
+        };
+      }
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage } = await importFresh('freeforge/src/features/chat.js');
+
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+    await sendMessage('hello');
+
+    assert.equal(doc.getElementById('invalid-banner').classList.contains('hidden'), false);
+    assert.equal(doc.getElementById('sr-alert').textContent.includes('Invalid API key'), true);
+  } finally {
+    restore();
+  }
+});

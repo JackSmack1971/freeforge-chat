@@ -64,6 +64,10 @@ export function renderStreamIcons(active) {
   $('send-btn').setAttribute('aria-label', active ? 'Stop generating' : 'Send message');
 }
 
+export function setStreamMode(active) {
+  renderStreamIcons(active);
+}
+
 function syncMessageVisibility() {
   const list = $('msgs-list');
   const empty = $('empty-state');
