@@ -3,6 +3,7 @@ import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
+import { showInvalidBanner } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
 const INLINE_EDIT_UNDO_MS = 6000;
@@ -166,6 +167,7 @@ export async function sendMessage(text) {
     },
     onError(errMsg) {
       $('thinking').classList.add('hidden');
+      if (errMsg.includes('Invalid API key')) showInvalidBanner();
       S.messages = S.messages.filter(m => m.id !== asstId);
       S.streaming = false;
       S.abort = null;
