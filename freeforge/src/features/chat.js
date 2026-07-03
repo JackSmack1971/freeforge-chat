@@ -2,7 +2,7 @@ import { buildRequestContext } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
-import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
+import { appendNewMessages, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
 const INLINE_EDIT_UNDO_MS = 6000;
@@ -106,7 +106,8 @@ export async function sendMessage(text) {
   const asstMsg = { id: asstId, role: 'assistant', content: '', streaming: true };
   S.messages.push(asstMsg);
 
-  setStreamMode(true);
+  S.streaming = true;
+  renderStreamIcons(true);
   setLiveRegion('sr-alert', '');
   setLiveRegion('sr-status', 'Assistant is responding…');
   appendNewMessages();
@@ -163,8 +164,8 @@ export async function sendMessage(text) {
       asstMsg.streaming = false;
       S.streaming = false;
       S.abort = null;
-      clearActiveRequestState();
-      setStreamMode(false);
+      S.streamTarget = null;
+      renderStreamIcons(false);
       setLiveRegion('sr-status', 'Response complete');
       if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
       if (!replaceMessage(asstMsg, true)) renderAllMessages();
@@ -178,8 +179,8 @@ export async function sendMessage(text) {
       S.messages = S.messages.filter(m => m.id !== asstId);
       S.streaming = false;
       S.abort = null;
-      clearActiveRequestState();
-      setStreamMode(false);
+      S.streamTarget = null;
+      renderStreamIcons(false);
       setLiveRegion('sr-status', '');
       setLiveRegion('sr-alert', errMsg);
       toast(errMsg, 'error', 6000);
@@ -246,7 +247,7 @@ export function newChat() {
   S.ctxToastFired = false;
   S.lastAssistantResponse = '';
   syncConversationAgent();
-  setStreamMode(false);
+  renderStreamIcons(false);
   $('thinking').classList.add('hidden');
   LS.set('ff_msgs', []);
   renderAllMessages();
