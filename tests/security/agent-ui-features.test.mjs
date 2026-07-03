@@ -296,7 +296,12 @@ test('features/agents.js wires import, save, duplicate, set-active, delete, and 
       return `blob:${objectUrls.length}`;
     };
 
-    await importFresh('freeforge/src/features/agents.js');
+    const { initAgents } = await importFresh('freeforge/src/features/agents.js');
+    assert.equal(doc.getElementById('agent-library-close-btn').listeners.get('click'), undefined);
+    assert.equal(doc.getElementById('agent-builder-form').listeners.get('submit'), undefined);
+    initAgents();
+    assert.equal(doc.getElementById('agent-library-close-btn').listeners.get('click').length, 1);
+    assert.equal(doc.getElementById('agent-builder-form').listeners.get('submit').length, 2);
 
     assert.equal(doc.getElementById('agent-select').children.length, 2);
     assert.equal(state.S.activeAgentId, alpha.id);

@@ -1,6 +1,6 @@
 import { loadAgents } from './agent-storage.js';
-import { refreshAgentUi } from './features/agents.js';
-import { clearActiveRequestState, newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
+import { initAgents, refreshAgentUi } from './features/agents.js';
+import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, initPalette, openPalette } from './features/palette.js';
@@ -155,11 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (action.startsWith('inline-edit-undo:')) {
       const token = action.slice('inline-edit-undo:'.length);
-      clearActiveRequestState();
       if (S.abort) { S.abort.abort(); S.abort = null; }
-      S.streaming = false;
-      S.streamTarget = null;
-      setStreamMode(false);
       restoreInlineEditUndo(token);
     }
   });
@@ -235,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // command palette
   initPalette();
+  initAgents();
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       const active = document.activeElement;

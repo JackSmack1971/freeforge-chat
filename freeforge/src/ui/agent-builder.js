@@ -85,4 +85,6 @@ export function closeAgentBuilder() {
   modal.classList.add('hidden');
 }
 
-getForm()?.addEventListener('submit', e => e.preventDefault());
+export function initAgentBuilder() {
+  getForm()?.addEventListener('submit', e => e.preventDefault());
+}

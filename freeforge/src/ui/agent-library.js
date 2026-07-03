@@ -122,5 +122,7 @@ export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAg
   }
 }
 
-document.getElementById(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
-document.getElementById(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
+export function initAgentLibrary() {
+  document.getElementById(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
+  document.getElementById(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
+}
