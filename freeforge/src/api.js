@@ -1,5 +1,3 @@
-import { showInvalidBanner } from './ui/screen.js';
-
 export async function fetchFreeModels(key) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -85,7 +83,7 @@ export async function streamCompletion(request, ...legacyArgs) {
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
     try { const j = await res.json(); msg = j.error?.message || msg; } catch {}
-    if (res.status === 401) { showInvalidBanner(); onError('Invalid API key — update it in Settings.'); }
+    if (res.status === 401) onError('Invalid API key — update it in Settings.');
     else if (res.status === 429) onError('Rate limited — try again in a moment.');
     else if (res.status === 400) onError(`Bad request: ${msg}`);
     else if (res.status === 413) onError('Context too long — start a new chat.');
