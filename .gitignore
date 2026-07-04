@@ -1,5 +1,14 @@
 # Development framework artifacts — not app code
-.claude/
+!.claude/
+.claude/*
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/validators/
+.claude/hooks/validators/*
+!.claude/hooks/validators/*.js
+!.claude/hooks/workflow/
+.claude/hooks/workflow/*
+!.claude/hooks/workflow/*.js
 .codex/
 .planning/codebase/
 .repository-hygiene/
