@@ -43,7 +43,7 @@ async function init() {
 
   const savedMsgs = LS.get('ff_msgs');
   if (Array.isArray(savedMsgs)) {
-    S.messages = savedMsgs.filter(m => m && !m.streaming);
+    S.messages = savedMsgs.filter(m => m && typeof m === 'object' && !m.streaming);
   }
 
   const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
