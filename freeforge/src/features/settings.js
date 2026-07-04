@@ -1,11 +1,17 @@
 import { fetchFreeModels } from '../api.js';
 import { $, LS, S, clearStoredKey, maskKey, setStoredKey } from '../state.js';
+import { createFocusTrap } from '../ui/focus-trap.js';
 import { hideInvalidBanner, showScreen } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 import { populateModelsFromState } from './models.js';
 
 const CLEAR_CONFIRM_MS = 3000;
-let previousFocus = null;
+let focusTrap = null;
+
+function getFocusTrap() {
+  if (!focusTrap) focusTrap = createFocusTrap($('settings-modal'));
+  return focusTrap;
+}
 
 function resetClearButton(btn) {
   if (btn._confirmTimer) {
@@ -31,12 +37,6 @@ function executeClearKey() {
   showScreen('onboarding');
 }
 
-function getFocusableInModal() {
-  return [...$('settings-modal').querySelectorAll(
-    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )].filter(el => el.offsetParent !== null);
-}
-
 export function clearKeyError() {
   const err = $('settings-key-error');
   err.textContent = '';
@@ -51,24 +51,7 @@ function showKeyError(msg) {
   $('settings-new-key').setAttribute('aria-invalid', 'true');
 }
 
-function trapFocus(e) {
-  if (e.key !== 'Tab') return;
-  const focusable = getFocusableInModal();
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault();
-    first.focus();
-  }
-}
-
 export function openSettings() {
-  previousFocus = document.activeElement;
   $('settings-key-display').textContent = maskKey(S.apiKey);
   $('settings-new-key').value = '';
   clearKeyError();
@@ -77,8 +60,7 @@ export function openSettings() {
   modal.classList.remove('hidden');
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
-  modal.addEventListener('keydown', trapFocus);
-  const [first] = getFocusableInModal();
+  const first = getFocusTrap().open();
   if (first) first.focus();
 }
 
@@ -89,9 +71,7 @@ export function closeSettings() {
   modal.classList.add('hidden');
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
-  modal.removeEventListener('keydown', trapFocus);
-  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
-  previousFocus = null;
+  getFocusTrap().close();
 }
 
 export async function updateKey() {

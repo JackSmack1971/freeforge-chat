@@ -26,6 +26,8 @@ tests/
     runtime-ui-features.test.mjs  settings modal, onboarding, copy/regen UI
 ```
 
+Do not add top-level `tests/*.test.mjs` files outside `tests/security/` unless this file is updated to document a new canonical location.
+
 ## How to Run
 
 ```bash

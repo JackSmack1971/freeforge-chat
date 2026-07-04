@@ -1,51 +1,33 @@
-import { S } from '../state.js';
+import { $, S } from '../state.js';
+import { createFocusTrap } from './focus-trap.js';
 
 const MODAL_ID = 'agent-library-modal';
 const BACKDROP_ID = 'agent-library-backdrop';
 const CLOSE_ID = 'agent-library-close-btn';
 const LIST_ID = 'agent-library-list';
 
-let previousFocus = null;
+let focusTrap = null;
 
 function getModal() {
-  return document.getElementById(MODAL_ID);
+  return $(MODAL_ID);
 }
 
 function getList() {
-  return document.getElementById(LIST_ID);
+  return $(LIST_ID);
 }
 
-function getFocusable() {
-  const modal = getModal();
-  if (!modal) return [];
-  return [...modal.querySelectorAll(
-    'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )];
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') return;
-  const focusable = getFocusable();
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault();
-    first.focus();
-  }
+function getFocusTrap() {
+  if (!focusTrap) focusTrap = createFocusTrap(getModal());
+  return focusTrap;
 }
 
 export function openAgentLibrary() {
   const modal = getModal();
   if (!modal) return;
-  previousFocus = document.activeElement;
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
-  modal.addEventListener('keydown', trapFocus);
-  document.getElementById(CLOSE_ID)?.focus();
+  getFocusTrap().open();
+  $(CLOSE_ID)?.focus();
 }
 
 export function closeAgentLibrary() {
@@ -53,9 +35,7 @@ export function closeAgentLibrary() {
   if (!modal) return;
   modal.classList.add('hidden');
   modal.setAttribute('aria-hidden', 'true');
-  modal.removeEventListener('keydown', trapFocus);
-  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
-  previousFocus = null;
+  getFocusTrap().close();
 }
 
 export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAgentId) {
@@ -122,5 +102,7 @@ export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAg
   }
 }
 
-document.getElementById(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
-document.getElementById(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
+export function initAgentLibrary() {
+  $(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
+  $(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
+}
