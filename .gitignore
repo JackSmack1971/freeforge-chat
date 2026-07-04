@@ -1,14 +1,24 @@
 # Development framework artifacts — not app code
-.claude/
+!.claude/
+.claude/*
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/validators/
+.claude/hooks/validators/*
+!.claude/hooks/validators/*.js
+!.claude/hooks/workflow/
+.claude/hooks/workflow/*
+!.claude/hooks/workflow/*.js
 .codex/
 .planning/codebase/
 .repository-hygiene/
 .session-feedback/
+.repository-hygiene/
+pending_rules/
 coverage/
-docs/
 .tmp/
 README-SWARM.md
-managed-settings.example.json
+managed-settings.json
 CODEBASE_AUDIT_REPORT.md
 
 # OS
