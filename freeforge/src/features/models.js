@@ -50,14 +50,14 @@ export async function loadModels(key) {
     const validSaved = saved && models.find(m => m.id === saved);
     if (validSaved) {
       selectModel(sel, saved);
-      return;
+      return 'ok';
     }
 
     const preferred = getPreferredAgentModelId();
     const validPreferred = preferred && models.find(m => m.id === preferred);
     if (validPreferred) {
       selectModel(sel, preferred);
-      return;
+      return 'ok';
     }
 
     const pick = models[0]?.id;

@@ -16,6 +16,7 @@ function resetState(S) {
   S.apiKey = null;
   S.models = [];
   S.selectedModel = null;
+  S.activeRequestId = null;
   S.messages = [];
   S.streaming = false;
   S.abort = null;
