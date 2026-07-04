@@ -1,4 +1,4 @@
-import { S } from '../state.js';
+import { $, S } from '../state.js';
 import { toast } from './toast.js';
 
 export function renderCtxPill() {
