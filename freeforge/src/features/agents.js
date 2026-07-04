@@ -94,8 +94,6 @@ export function initAgents() {
     e.preventDefault();
     saveFromBuilder();
   });
-
-  refreshAgentUi();
 }
 
 function openBuilder(agent = null) {
