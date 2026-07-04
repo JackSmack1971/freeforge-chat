@@ -91,3 +91,17 @@ test('saveAgent returns null when storage quota prevents persistence', () => {
   assert.equal(saved, null);
   assert.equal(loadAgents().length, 0);
 });
+
+test('loadAgents skips malformed stored entries instead of throwing', () => {
+  installStorage({
+    local: {
+      ff_agents_v1: JSON.stringify([
+        { name: 'Good Agent', systemPrompt: 'Keep going.' },
+        { name: '', systemPrompt: '' },
+      ]),
+    },
+  });
+
+  assert.equal(loadAgents().length, 1);
+  assert.equal(loadAgents()[0].name, 'Good Agent');
+});

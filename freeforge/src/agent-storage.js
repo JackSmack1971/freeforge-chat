@@ -30,7 +30,9 @@ function writeStoredAgents(agents, activeAgentId) {
 function normalizeAgentList(rawAgents) {
   const agents = [];
   for (const raw of Array.isArray(rawAgents) ? rawAgents : []) {
-    agents.push(normalizeAgent(raw));
+    try {
+      agents.push(normalizeAgent(raw));
+    } catch {}
   }
   return agents;
 }
