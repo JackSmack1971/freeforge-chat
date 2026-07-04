@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const active = document.activeElement;
       const isInInput = active instanceof HTMLInputElement
         || active instanceof HTMLTextAreaElement;
-      const paletteOpen = !document.getElementById('cmd-palette')?.classList.contains('hidden');
+      const paletteOpen = !$('cmd-palette')?.classList.contains('hidden');
       if (!isInInput || paletteOpen) {
         e.preventDefault();
         paletteOpen ? closePalette() : openPalette();

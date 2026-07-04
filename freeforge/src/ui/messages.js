@@ -16,7 +16,7 @@ function getStarterPrompts() {
 }
 
 function renderStarterPrompts() {
-  const host = document.getElementById('starter-prompts');
+  const host = $('starter-prompts');
   if (!host) return;
   host.textContent = '';
   for (const prompt of getStarterPrompts()) {
