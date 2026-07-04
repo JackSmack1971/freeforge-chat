@@ -61,6 +61,6 @@ test('buildRequestContext trims older turns once the request budget is reached',
 
 test('streamCompletion accepts a request object', async () => {
   const source = await read('freeforge/src/api.js');
-  assert.match(source, /export async function streamCompletion\(\{ messages, modelId, apiKey, parameters = \{\}, onToken, onDone, onError, signal \}\)/);
+  assert.match(source, /export async function streamCompletion\(\{\s*messages,\s*modelId,\s*apiKey,\s*parameters = \{\},\s*onToken = \(\) => \{\},\s*onDone = \(\) => \{\},\s*onError = \(\) => \{\},\s*signal,\s*\} = \{\}\)/s);
 });
 

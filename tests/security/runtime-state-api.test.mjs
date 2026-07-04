@@ -240,7 +240,10 @@ test('api.js falls back to the status-based message when error JSON omits a mess
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {},
@@ -279,23 +282,21 @@ test('api.js streams SSE content, uses usage totals, and ignores malformed lines
     const tokens = [];
     let doneArgs = null;
     let err = null;
-    await streamCompletion(
-      [{ role: 'user', content: 'hi' }],
-      'model',
-      'key',
-      {
-        signal: new AbortController().signal,
-        onToken(delta, full) {
-          tokens.push([delta, full]);
-        },
-        onDone(rawPayload, full) {
-          doneArgs = { rawPayload, full };
-        },
-        onError(msg) {
-          err = msg;
-        },
-      }
-    );
+    await streamCompletion({
+      messages: [{ role: 'user', content: 'hi' }],
+      modelId: 'model',
+      apiKey: 'key',
+      signal: new AbortController().signal,
+      onToken(delta, full) {
+        tokens.push([delta, full]);
+      },
+      onDone(rawPayload, full) {
+        doneArgs = { rawPayload, full };
+      },
+      onError(msg) {
+        err = msg;
+      },
+    });
 
     assert.deepEqual(tokens, [['Hel', 'Hel'], ['lo', 'Hello']]);
     assert.equal(doneArgs.full, 'Hello');
@@ -331,7 +332,10 @@ test('api.js keeps running when stream cancel also fails after a read error', as
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {
@@ -376,7 +380,10 @@ test('api.js returns accumulated content when the stream aborts mid-read', async
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let doneArgs = null;
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone(rawPayload, full) {
@@ -408,7 +415,10 @@ test('api.js maps pre-connection AbortError and network failures correctly', asy
       throw err;
     };
     let doneArgs = null;
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone(rawPayload, full) {
@@ -424,7 +434,10 @@ test('api.js maps pre-connection AbortError and network failures correctly', asy
       throw new Error('offline');
     };
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {
@@ -454,7 +467,10 @@ test('api.js maps generic streamCompletion HTTP failures to the fallback error p
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {
@@ -484,7 +500,10 @@ test('api.js falls back to the status-based message when streamCompletion error 
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {},
@@ -512,7 +531,10 @@ test('api.js falls back to the status-based message when streamCompletion error 
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {},
@@ -542,7 +564,10 @@ test('api.js falls back to the status-based message when streamCompletion error 
   try {
     const { streamCompletion } = await importFresh('freeforge/src/api.js');
     let errMsg = '';
-    await streamCompletion([], 'model', 'key', {
+    await streamCompletion({
+      messages: [],
+      modelId: 'model',
+      apiKey: 'key',
       signal: new AbortController().signal,
       onToken() {},
       onDone() {},
@@ -574,7 +599,10 @@ test('api.js reports streamCompletion 401 and 429 errors even when the body is e
         json: async () => ({}),
       });
       let errMsg = '';
-      await streamCompletion([], 'model', 'key', {
+      await streamCompletion({
+        messages: [],
+        modelId: 'model',
+        apiKey: 'key',
         signal: new AbortController().signal,
         onToken() {},
         onDone() {},

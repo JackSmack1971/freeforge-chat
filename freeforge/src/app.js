@@ -1,14 +1,14 @@
 import { loadAgents } from './agent-storage.js';
-import { refreshAgentUi } from './features/agents.js';
+import { initAgents, refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
-import { closePalette, openPalette } from './features/palette.js';
+import { closePalette, initPalette, openPalette } from './features/palette.js';
 import { clearKey, clearKeyError as clearSettingsKeyError, closeSettings, openSettings, updateKey } from './features/settings.js';
 import { $, LS, S, clearStoredKey, getStoredKey, recordError, snapshotAgent } from './state.js';
 import { closeAgentLibrary, openAgentLibrary } from './ui/agent-library.js';
 import { renderCtxPill } from './ui/ctx-pill.js';
-import { cancelInlineEdit, renderAllMessages, scrollBottom, startInlineEdit } from './ui/messages.js';
+import { cancelInlineEdit, renderAllMessages, scrollBottom, setStreamMode, startInlineEdit } from './ui/messages.js';
 import { hideInvalidBanner, showScreen } from './ui/screen.js';
 import { toast } from './ui/toast.js';
 
@@ -230,12 +230,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // command palette
+  initPalette();
+  initAgents();
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       const active = document.activeElement;
       const isInInput = active instanceof HTMLInputElement
         || active instanceof HTMLTextAreaElement;
-      const paletteOpen = !document.getElementById('cmd-palette')?.classList.contains('hidden');
+      const paletteOpen = !$('cmd-palette')?.classList.contains('hidden');
       if (!isInInput || paletteOpen) {
         e.preventDefault();
         paletteOpen ? closePalette() : openPalette();

@@ -1,10 +1,11 @@
-const MODAL_ID = 'agent-library-modal';
+import { $ } from '../state.js';
+
 const TITLE_ID = 'agent-builder-title';
 const MODE_ID = 'agent-builder-mode';
 const FORM_ID = 'agent-builder-form';
 
 function getField(id) {
-  return document.getElementById(id);
+  return $(id);
 }
 
 function getValue(id) {
@@ -72,7 +73,7 @@ export function readAgentBuilderDraft() {
 }
 
 export function openAgentBuilder(agent = null) {
-  const modal = document.getElementById(MODAL_ID);
+  const modal = $('agent-library-modal');
   if (!modal) return;
   renderAgentBuilder(agent);
   modal.classList.remove('hidden');
@@ -80,9 +81,11 @@ export function openAgentBuilder(agent = null) {
 }
 
 export function closeAgentBuilder() {
-  const modal = document.getElementById(MODAL_ID);
+  const modal = $('agent-library-modal');
   if (!modal) return;
   modal.classList.add('hidden');
 }
 
-getForm()?.addEventListener('submit', e => e.preventDefault());
+export function initAgentBuilder() {
+  getForm()?.addEventListener('submit', e => e.preventDefault());
+}
