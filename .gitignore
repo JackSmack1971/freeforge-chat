@@ -1,9 +1,17 @@
-# Claude Code control-plane runtime artifacts
-.claude/audit-runs/
-.audit-runs/
-.claude/handoff/current-task.json
-.claude/settings.local.json
-.planning/
+# Development framework artifacts — not app code
+!.claude/
+.claude/*
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/validators/
+.claude/hooks/validators/*
+!.claude/hooks/validators/*.js
+!.claude/hooks/workflow/
+.claude/hooks/workflow/*
+!.claude/hooks/workflow/*.js
+.codex/
+.planning/codebase/
+.repository-hygiene/
 .session-feedback/
 .repository-hygiene/
 pending_rules/

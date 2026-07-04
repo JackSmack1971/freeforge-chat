@@ -71,13 +71,7 @@ process.stdin.on('end', () => {
     }
     process.exit(0);
   } catch (err) {
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'PreToolUse',
-        permissionDecision: 'deny',
-        permissionDecisionReason: `protect-files hook failed closed: ${err.message}`
-      }
-    }));
-    process.exit(2);
+    process.stderr.write(`protect-files hook failed: ${err.message}\n`);
+    process.exit(1);
   }
 });

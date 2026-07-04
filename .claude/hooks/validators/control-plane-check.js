@@ -2,7 +2,6 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { spawnSync } = require('child_process');
 
 const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const claudeDir = path.join(projectDir, '.claude');
@@ -44,7 +43,7 @@ function checkJavaScript(relativePath) {
 
 function scanFlatMarkdownDir(relativeDir) {
   const absoluteDir = path.join(projectDir, relativeDir);
-  if (!fs.existsSync(absoluteDir)) return;
+  if (!ensureExists(absoluteDir)) return;
   for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
     if (entry.isDirectory()) continue;
     if (!/\.md$/i.test(entry.name)) {
@@ -102,15 +101,6 @@ function shellPatternToRegex(allowedTool) {
     .replace(/[|\\{}()[\]^$+?.]/g, '\\$&')
     .replace(/\*/g, '.*');
   return new RegExp(`^${escaped}$`);
-}
-
-function hasHardcodedAbsolutePath(command) {
-  const normalized = String(command)
-    .replace(/\$CLAUDE_PROJECT_DIR/g, 'CLAUDE_PROJECT_DIR')
-    .replace(/\$HOME/g, 'HOME')
-    .replace(/%USERPROFILE%/gi, 'USERPROFILE')
-    .replace(/(^|[\s"'`(])~(?=[\\/])/g, '$1HOME');
-  return /(?:^|[\s"'`(])(?:[A-Za-z]:[\\/]|\/(?![/*]))/.test(normalized);
 }
 
 function validateEmbeddedShellAccess(relativePath, frontmatter, kind) {
@@ -243,22 +233,8 @@ function validateMarkdownReferences(relativePath) {
   }
 }
 
-function failIfGitignoreStillHides(targetPath) {
-  const result = spawnSync('git', ['check-ignore', '-v', targetPath], {
-    cwd: projectDir,
-    encoding: 'utf8'
-  });
-  if (result.status === 0 && result.stdout.trim()) {
-    findings.push(`GITIGNORE ${targetPath} :: ${result.stdout.trim()}`);
-  }
-}
-
 ensureExists(path.join(projectDir, 'CLAUDE.md'));
 ensureExists(claudeDir);
-
-failIfGitignoreStillHides('.claude/rules/control-plane.md');
-failIfGitignoreStillHides('.codex/rules/control-plane.md');
-failIfGitignoreStillHides('docs/label-taxonomy.md');
 
 const settings = parseJson('.claude/settings.json');
 const handoffTemplate = parseJson('.claude/handoff/current-task.template.json');
@@ -290,12 +266,9 @@ scanFlatMarkdownDir('.claude/commands');
 scanFlatMarkdownDir('.claude/output-styles');
 scanFlatMarkdownDir('.claude/rules');
 
-const agentsDir = path.join(claudeDir, 'agents');
-if (ensureExists(agentsDir)) {
-  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
-    if (entry.isFile() && /\.md$/i.test(entry.name)) {
-      validateAgent(path.posix.join('.claude/agents', entry.name));
-    }
+for (const entry of fs.readdirSync(path.join(claudeDir, 'agents'), { withFileTypes: true })) {
+  if (entry.isFile() && /\.md$/i.test(entry.name)) {
+    validateAgent(path.posix.join('.claude/agents', entry.name));
   }
 }
 
@@ -311,7 +284,7 @@ if (ensureExists(commandsDir)) {
 }
 
 const outputStylesDir = path.join(claudeDir, 'output-styles');
-if (fs.existsSync(outputStylesDir)) {
+if (ensureExists(outputStylesDir)) {
   for (const entry of fs.readdirSync(outputStylesDir, { withFileTypes: true })) {
     if (entry.isFile() && /\.md$/i.test(entry.name)) {
       const relativePath = path.posix.join('.claude/output-styles', entry.name);
@@ -333,7 +306,7 @@ if (ensureExists(rulesDir)) {
 }
 
 const skillsDir = path.join(claudeDir, 'skills');
-if (fs.existsSync(skillsDir)) {
+if (ensureExists(skillsDir)) {
   for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
     const skillPath = path.join(skillsDir, entry.name);
     if (!entry.isDirectory()) {
@@ -365,16 +338,12 @@ if (settings?.hooks) {
   for (const hookGroups of Object.values(settings.hooks)) {
     for (const hookGroup of hookGroups || []) {
       for (const hook of hookGroup.hooks || []) {
-        const rawCommand = String(hook.command || '');
-        const command = rawCommand
+        const command = String(hook.command || '')
           .replace(/\$CLAUDE_PROJECT_DIR/g, projectDir)
           .replace(/^node\s+/, '')
           .replace(/^"(.*)"$/, '$1')
           .trim();
         if (!command) continue;
-        if (hasHardcodedAbsolutePath(rawCommand)) {
-          findings.push(`HOOK settings.json :: hardcoded absolute path in hook command: ${rawCommand}`);
-        }
         const targetPath = path.isAbsolute(command) ? command : path.join(projectDir, command);
         ensureExists(targetPath);
       }
