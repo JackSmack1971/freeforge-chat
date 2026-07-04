@@ -12,6 +12,38 @@ function makeSseBody(chunks) {
   });
 }
 
+function makeAbortableSseBody(signal, chunks) {
+  const encoder = new TextEncoder();
+  return {
+    getReader() {
+      let idx = 0;
+      return {
+        async read() {
+          if (idx < chunks.length) {
+            return { done: false, value: encoder.encode(chunks[idx++]) };
+          }
+          return new Promise((resolve, reject) => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            if (signal.aborted) {
+              reject(err);
+              return;
+            }
+            signal.addEventListener('abort', () => reject(err), { once: true });
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+}
+
+async function settle(turns = 3) {
+  for (let i = 0; i < turns; i += 1) await Promise.resolve();
+}
+
 function resetState(S) {
   S.apiKey = null;
   S.models = [];
@@ -19,6 +51,7 @@ function resetState(S) {
   S.messages = [];
   S.streaming = false;
   S.abort = null;
+  S.activeRequestId = null;
   S.streamTarget = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
@@ -156,7 +189,8 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
       { id: 'alpha-model', context_length: 1000 },
       { id: 'beta-model', name: 'Beta', context_length: 1000 },
     ];
-    const { openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
@@ -203,7 +237,8 @@ test('palette.js no-ops safely when required DOM nodes are missing', async () =>
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = null;
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.getElementById = id => (id === 'cmd-list' ? null : originalGet(id));
     doc.activeElement = doc.getElementById('settings-btn');
@@ -242,7 +277,8 @@ test('palette.js action buttons execute their handlers', async () => {
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = [{ id: 'alpha', name: 'Alpha' }];
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     S.messages = [
       { id: 'u1', role: 'user', content: 'hello' },
@@ -360,16 +396,16 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
   try {
     const state = await importShared('freeforge/src/state.js');
     resetState(state.S);
-    const { scrollBottom, setStreamMode, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+    const { scrollBottom, renderStreamIcons, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
     state.S.messages = [];
 
     appendNewMessages();
     scrollBottom(false);
     assert.equal(doc.getElementById('msgs-area').scrollToArgs.behavior, 'instant');
 
-    setStreamMode(true);
+    renderStreamIcons(true);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Stop generating');
-    setStreamMode(false);
+    renderStreamIcons(false);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Send message');
 
     renderAllMessages();
@@ -994,6 +1030,84 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
   }
 });
 
+test('chat.js keeps the active stream state when a stale abort callback resolves after newChat()', async () => {
+  const doc = makeBaseDom();
+  let callCount = 0;
+  let secondAbort = null;
+  let secondRequestId = null;
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => (text.includes('```') ? '<pre><code class="language-js">console.log(1)</code></pre>' : `<p>${text}</p>`) },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async (url, opts = {}) => {
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      if (url.endsWith('/chat/completions')) {
+        callCount += 1;
+        const signal = opts.signal;
+        const body = callCount === 1
+          ? makeAbortableSseBody(signal, [])
+          : makeAbortableSseBody(signal, [
+            'data: {"choices":[{"delta":{"content":"Second"}}]}\n',
+          ]);
+        return {
+          ok: true,
+          status: 200,
+          body,
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage, newChat } = await importFresh('freeforge/src/features/chat.js');
+
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+
+    const firstSend = sendMessage('First message');
+    await settle(1);
+    newChat();
+    const secondSend = sendMessage('Second message');
+    await settle(1);
+
+    secondRequestId = state.S.activeRequestId;
+    secondAbort = state.S.abort;
+    assert.ok(secondRequestId);
+    assert.ok(secondAbort);
+
+    await firstSend;
+
+    assert.equal(state.S.streaming, true);
+    assert.equal(state.S.abort, secondAbort);
+    assert.equal(state.S.activeRequestId, secondRequestId);
+    assert.equal(state.S.messages.at(-1)?.streaming, true);
+    assert.equal(doc.getElementById('sr-status').textContent, 'Assistant is responding…');
+
+    secondAbort.abort();
+    await secondSend;
+    await settle(2);
+
+    assert.equal(state.S.streaming, false);
+    assert.equal(state.S.abort, null);
+  } finally {
+    restore();
+  }
+});
 test('agent-library.js opens, traps focus, and restores focus on close', async () => {
   const doc = makeBaseDom();
   const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
@@ -1044,6 +1158,52 @@ test('agent-library.js opens, traps focus, and restores focus on close', async (
 
     closeAgentLibrary();
     assert.equal(doc.activeElement.id, 'settings-btn');
+  } finally {
+    restore();
+  }
+});
+test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => `<p>${text}</p>` },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async url => {
+      if (url.endsWith('/chat/completions')) {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({ error: { message: 'nope' } }),
+        };
+      }
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage } = await importFresh('freeforge/src/features/chat.js');
+
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+    await sendMessage('hello');
+
+    assert.equal(doc.getElementById('invalid-banner').classList.contains('hidden'), false);
+    assert.equal(doc.getElementById('sr-alert').textContent.includes('Invalid API key'), true);
   } finally {
     restore();
   }

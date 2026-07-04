@@ -108,6 +108,7 @@ test('features/agents.js refreshes the library and builder from stored agents', 
 
     const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
     assert.equal(typeof refreshAgentUi, 'function');
+    refreshAgentUi();
 
     assert.equal(S.activeAgentId, first.id);
     assert.equal(doc.getElementById('agent-select').children.length, 2);
