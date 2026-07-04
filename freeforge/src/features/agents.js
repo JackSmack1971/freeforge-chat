@@ -65,12 +65,12 @@ export { refreshAgentUi };
 export function initAgents() {
   initAgentLibrary();
   initAgentBuilder();
-  document.getElementById(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
-  document.getElementById(IMPORT_BTN_ID)?.addEventListener('click', () => document.getElementById(IMPORT_INPUT_ID)?.click());
-  document.getElementById(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
-  document.getElementById(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
+  $(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
+  $(IMPORT_BTN_ID)?.addEventListener('click', () => $(IMPORT_INPUT_ID)?.click());
+  $(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
+  $(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
 
-  document.getElementById(IMPORT_INPUT_ID)?.addEventListener('change', e => {
+  $(IMPORT_INPUT_ID)?.addEventListener('change', e => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -90,7 +90,7 @@ export function initAgents() {
     else if (kind === 'export') exportById(id);
   });
 
-  document.getElementById(FORM_ID)?.addEventListener('submit', e => {
+  $(FORM_ID)?.addEventListener('submit', e => {
     e.preventDefault();
     saveFromBuilder();
   });
@@ -101,7 +101,7 @@ export function initAgents() {
 function openBuilder(agent = null) {
   openAgentLibrary();
   renderAgentBuilder(agent);
-  document.getElementById(FORM_ID)?.querySelector('input, textarea')?.focus();
+  $(FORM_ID)?.querySelector('input, textarea')?.focus();
 }
 
 function downloadJson(name, json) {

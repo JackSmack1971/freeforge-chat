@@ -1,9 +1,11 @@
+import { $ } from '../state.js';
+
 const TITLE_ID = 'agent-builder-title';
 const MODE_ID = 'agent-builder-mode';
 const FORM_ID = 'agent-builder-form';
 
 function getField(id) {
-  return document.getElementById(id);
+  return $(id);
 }
 
 function getValue(id) {
@@ -68,6 +70,20 @@ export function readAgentBuilderDraft() {
       maxTokens: getValue('agent-max-tokens'),
     },
   };
+}
+
+export function openAgentBuilder(agent = null) {
+  const modal = $('agent-library-modal');
+  if (!modal) return;
+  renderAgentBuilder(agent);
+  modal.classList.remove('hidden');
+  getField('agent-name')?.focus();
+}
+
+export function closeAgentBuilder() {
+  const modal = $('agent-library-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
 }
 
 export function initAgentBuilder() {
