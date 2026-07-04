@@ -3,6 +3,7 @@ name: aris-thorne
 description: Forensic SRE "The Sherlock". Executes Agent-as-a-Judge forensic tracing, empirical debugging, and root-cause analysis.
 model: sonnet
 permissionMode: acceptEdits
+maxTurns: 8
 tools:
  - Read
  - Glob
