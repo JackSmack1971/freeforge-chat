@@ -82,6 +82,63 @@ function truncateConversationFromUserMessage(messageId) {
   return token;
 }
 
+function seedUserAndAssistantMessages(trimmedText) {
+  const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
+  S.lastAssistantResponse = '';
+  S.messages.push({ id: uid(), role: 'user', content: trimmedText });
+  if (isFirst) {
+    S.messages.push({ id: uid(), role: 'notice', content: "You're chatting with a free OpenRouter model. Speed and quality may vary." });
+  }
+  const asstId = uid();
+  const asstMsg = { id: asstId, role: 'assistant', content: '', streaming: true };
+  S.messages.push(asstMsg);
+  return { asstId, asstMsg };
+}
+
+function handleStreamDone(rawPayload, full, asstMsg) {
+  let parsed;
+  try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
+  const exactTokens = parsed?.usage?.total_tokens ?? null;
+  if (exactTokens !== null) {
+    S.contextTokens = exactTokens;
+    S.usageIsExact = true;
+  } else {
+    const totalChars = S.messages.filter(m => m.role === 'user' || m.role === 'assistant').reduce((sum, m) => sum + (m.content?.length ?? 0), 0);
+    S.contextTokens = Math.ceil(totalChars / 4);
+    S.usageIsExact = false;
+  }
+  if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
+
+  $('thinking').classList.add('hidden');
+  asstMsg.content = full || asstMsg.content;
+  S.lastAssistantResponse = asstMsg.content;
+  asstMsg.streaming = false;
+  S.streaming = false;
+  S.abort = null;
+  S.streamTarget = null;
+  renderStreamIcons(false);
+  setLiveRegion('sr-status', 'Response complete');
+  if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
+  if (!replaceMessage(asstMsg, true)) renderAllMessages();
+  renderCtxPill();
+  scrollBottom();
+  return exactTokens;
+}
+
+function handleStreamError(errMsg, asstId) {
+  $('thinking').classList.add('hidden');
+  if (errMsg.includes('Invalid API key')) showInvalidBanner();
+  S.messages = S.messages.filter(m => m.id !== asstId);
+  S.streaming = false;
+  S.abort = null;
+  S.streamTarget = null;
+  renderStreamIcons(false);
+  setLiveRegion('sr-status', '');
+  setLiveRegion('sr-alert', errMsg);
+  toast(errMsg, 'error', 6000);
+  renderAllMessages();
+}
+
 export async function sendMessage(text) {
   const validation = validateSendText(text);
   if (!validation.ok) {
@@ -94,18 +151,7 @@ export async function sendMessage(text) {
     newChat();
   }
 
-  const isFirst = S.messages.filter(m => m.role === 'user').length === 0;
-  S.lastAssistantResponse = '';
-
-  S.messages.push({ id: uid(), role: 'user', content: trimmedText });
-
-  if (isFirst) {
-    S.messages.push({ id: uid(), role: 'notice', content: "You're chatting with a free OpenRouter model. Speed and quality may vary." });
-  }
-
-  const asstId = uid();
-  const asstMsg = { id: asstId, role: 'assistant', content: '', streaming: true };
-  S.messages.push(asstMsg);
+  const { asstId, asstMsg } = seedUserAndAssistantMessages(trimmedText);
 
   S.streaming = true;
   renderStreamIcons(true);
@@ -146,47 +192,11 @@ export async function sendMessage(text) {
     },
     onDone(rawPayload, full) {
       if (S.activeRequestId !== requestId) return;
-      let parsed;
-      try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
-      const exactTokens = parsed?.usage?.total_tokens ?? null;
-      if (exactTokens !== null) {
-        S.contextTokens = exactTokens;
-        S.usageIsExact = true;
-      } else {
-        const totalChars = S.messages.filter(m => m.role === 'user' || m.role === 'assistant').reduce((sum, m) => sum + (m.content?.length ?? 0), 0);
-        S.contextTokens = Math.ceil(totalChars / 4);
-        S.usageIsExact = false;
-      }
-      if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
-
-      $('thinking').classList.add('hidden');
-      asstMsg.content = full || asstMsg.content;
-      S.lastAssistantResponse = asstMsg.content;
-      asstMsg.streaming = false;
-      S.streaming = false;
-      S.abort = null;
-      S.streamTarget = null;
-      renderStreamIcons(false);
-      setLiveRegion('sr-status', 'Response complete');
-      if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
-      if (!replaceMessage(asstMsg, true)) renderAllMessages();
-      renderCtxPill();
-      scrollBottom();
-      return exactTokens;
+      return handleStreamDone(rawPayload, full, asstMsg);
     },
     onError(errMsg) {
       if (S.activeRequestId !== requestId) return;
-      $('thinking').classList.add('hidden');
-      if (errMsg.includes('Invalid API key')) showInvalidBanner();
-      S.messages = S.messages.filter(m => m.id !== asstId);
-      S.streaming = false;
-      S.abort = null;
-      S.streamTarget = null;
-      renderStreamIcons(false);
-      setLiveRegion('sr-status', '');
-      setLiveRegion('sr-alert', errMsg);
-      toast(errMsg, 'error', 6000);
-      renderAllMessages();
+      handleStreamError(errMsg, asstId);
     },
   });
 }
