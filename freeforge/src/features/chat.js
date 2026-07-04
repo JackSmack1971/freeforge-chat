@@ -193,6 +193,20 @@ export async function sendMessage(text) {
     },
     onDone(rawPayload, full) {
       if (S.abort !== ctrl) return;
+      if (ctrl.signal.aborted && !full) {
+        $('thinking').classList.add('hidden');
+        S.messages = S.messages.filter(m => m.id !== asstId);
+        S.streaming = false;
+        S.abort = null;
+        S.streamTarget = null;
+        renderStreamIcons(false);
+        setLiveRegion('sr-status', '');
+        if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
+        renderCtxPill();
+        renderAllMessages();
+        scrollBottom();
+        return null;
+      }
       let parsed;
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
