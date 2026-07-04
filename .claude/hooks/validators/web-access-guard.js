@@ -79,7 +79,13 @@ process.stdin.on('end', () => {
 
     process.exit(0);
   } catch (err) {
-    process.stderr.write(`web-access-guard hook failed: ${err.message}\n`);
-    process.exit(1);
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason: `web-access-guard hook failed closed: ${err.message}`
+      }
+    }));
+    process.exit(2);
   }
 });
