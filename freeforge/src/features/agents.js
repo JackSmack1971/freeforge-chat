@@ -104,6 +104,11 @@ function openBuilder(agent = null) {
   $(FORM_ID)?.querySelector('input, textarea')?.focus();
 }
 
+function safeFileNamePart(name, fallback) {
+  const text = String(name ?? '').trim().replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/[. ]+$/g, '');
+  return text || fallback;
+}
+
 function downloadJson(name, json) {
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -120,7 +125,7 @@ function exportActiveAgent() {
   if (!S.activeAgentId) { toast('No active agent to export', 'warning'); return; }
   const blob = exportAgent(S.activeAgentId);
   if (!blob) { toast('Agent not found', 'error'); return; }
-  downloadJson(`${S.activeAgent?.name || S.activeAgentId}.json`, blob);
+  downloadJson(`${safeFileNamePart(S.activeAgent?.name || S.activeAgentId, S.activeAgentId || 'agent')}.json`, blob);
   toast('Agent exported', 'success');
 }
 
@@ -248,6 +253,6 @@ function exportById(id) {
     return;
   }
   const agent = getAgent(id);
-  downloadJson(`${agent?.name || id}.json`, blob);
+  downloadJson(`${safeFileNamePart(agent?.name || id, id || 'agent')}.json`, blob);
   toast('Agent exported', 'success');
 }
