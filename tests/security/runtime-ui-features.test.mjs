@@ -1108,7 +1108,6 @@ test('chat.js keeps the active stream state when a stale abort callback resolves
     restore();
   }
 });
-
 test('agent-library.js opens, traps focus, and restores focus on close', async () => {
   const doc = makeBaseDom();
   const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
