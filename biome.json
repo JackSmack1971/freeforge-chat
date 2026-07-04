@@ -3,7 +3,8 @@
   "files": {
     "include": [
       "freeforge/src/**/*.js",
-      "tests/security/**/*.mjs"
+      "tests/security/**/*.mjs",
+      "tests/helpers/**/*.mjs"
     ]
   },
   "formatter": {
