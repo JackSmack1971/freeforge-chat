@@ -24,6 +24,7 @@ npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
 ## Pull Requests
 
 - Target `main`.
+- Keep ownership rules in the root `CODEOWNERS` file; `.github/CODEOWNERS` is not used.
 - Ensure `npm --prefix freeforge test` and `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security` pass before opening a PR.
 - Keep the diff small and traceable to the issue it addresses.
 
