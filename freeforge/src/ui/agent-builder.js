@@ -1,4 +1,5 @@
 import { $ } from '../state.js';
+import { closeAgentLibrary, openAgentLibrary } from './agent-library.js';
 
 const TITLE_ID = 'agent-builder-title';
 const MODE_ID = 'agent-builder-mode';
@@ -73,17 +74,13 @@ export function readAgentBuilderDraft() {
 }
 
 export function openAgentBuilder(agent = null) {
-  const modal = $('agent-library-modal');
-  if (!modal) return;
+  openAgentLibrary();
   renderAgentBuilder(agent);
-  modal.classList.remove('hidden');
   getField('agent-name')?.focus();
 }
 
 export function closeAgentBuilder() {
-  const modal = $('agent-library-modal');
-  if (!modal) return;
-  modal.classList.add('hidden');
+  closeAgentLibrary();
 }
 
 export function initAgentBuilder() {
