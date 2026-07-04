@@ -1,5 +1,6 @@
 # Claude Code control-plane runtime artifacts
 .claude/audit-runs/
+.audit-runs/
 .claude/handoff/current-task.json
 .claude/settings.local.json
 .planning/
