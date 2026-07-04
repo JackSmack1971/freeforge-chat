@@ -1,14 +1,28 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import test from 'node:test';
 
-test('palette trigger tracks expanded state across open and close', async () => {
-  const html = await readFile(path.resolve('freeforge/index.html'), 'utf8');
+import { importFresh, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
-  assert.match(html, /<button[^>]*id="palette-trigger-btn"[^>]*aria-expanded="false"/);
-  assert.match(html, /id="palette-trigger-btn"[^>]*aria-label="Open command palette"[^>]*aria-expanded="false"/);
-  const js = await readFile(path.resolve('freeforge/src/features/palette.js'), 'utf8');
-  assert.match(js, /setAttribute\('aria-expanded', 'true'\)/);
-  assert.match(js, /setAttribute\('aria-expanded', 'false'\)/);
+test('palette trigger tracks expanded state across open and close', async () => {
+  const doc = makeBaseDom();
+  doc.getElementById('palette-trigger-btn').setAttribute('aria-expanded', 'false');
+  const restore = installGlobals({
+    document: doc,
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+
+    openPalette();
+    assert.equal(doc.getElementById('palette-trigger-btn').getAttribute('aria-expanded'), 'true');
+    assert.equal(doc.getElementById('cmd-palette').classList.contains('hidden'), false);
+
+    closePalette();
+    assert.equal(doc.getElementById('palette-trigger-btn').getAttribute('aria-expanded'), 'false');
+    assert.equal(doc.getElementById('cmd-palette').classList.contains('hidden'), true);
+  } finally {
+    restore();
+  }
 });
