@@ -111,7 +111,8 @@ export async function sendMessage(text) {
 
   const convoAgent = S.conversationAgent || snapshotAgent(S.activeAgent);
   if (!S.conversationAgent && convoAgent) syncConversationAgent();
-  const request = buildRequestContext(S.messages.filter(m => m.id !== asstId), convoAgent);
+  const selectedModel = S.models.find(m => m.id === S.selectedModel);
+  const request = buildRequestContext(S.messages.filter(m => m.id !== asstId), convoAgent, selectedModel?.context_length);
 
   let firstToken = true;
   const ctrl = new AbortController();
