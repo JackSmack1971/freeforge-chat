@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MemoryStorage, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
+import { MemoryStorage, MockElement, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 function makeSseBody(chunks) {
   return new ReadableStream({
@@ -12,6 +12,38 @@ function makeSseBody(chunks) {
   });
 }
 
+function makeAbortableSseBody(signal, chunks) {
+  const encoder = new TextEncoder();
+  return {
+    getReader() {
+      let idx = 0;
+      return {
+        async read() {
+          if (idx < chunks.length) {
+            return { done: false, value: encoder.encode(chunks[idx++]) };
+          }
+          return new Promise((resolve, reject) => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            if (signal.aborted) {
+              reject(err);
+              return;
+            }
+            signal.addEventListener('abort', () => reject(err), { once: true });
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+}
+
+async function settle(turns = 3) {
+  for (let i = 0; i < turns; i += 1) await Promise.resolve();
+}
+
 function resetState(S) {
   S.apiKey = null;
   S.models = [];
@@ -19,6 +51,7 @@ function resetState(S) {
   S.messages = [];
   S.streaming = false;
   S.abort = null;
+  S.activeRequestId = null;
   S.streamTarget = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
@@ -179,12 +212,13 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
     assert.equal(doc.getElementById('cmd-list').children.length, 0);
     assert.equal(doc.getElementById('cmd-search').getAttribute('aria-activedescendant'), '');
 
-    doc.activeElement = doc.getElementById('cmd-search');
+    doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
     doc.getElementById('cmd-palette').dispatchEvent({ type: 'keydown', key: 'Escape' });
     assert.equal(doc.getElementById('cmd-palette').classList.contains('hidden'), true);
 
     closePalette();
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }
@@ -362,16 +396,16 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
   try {
     const state = await importShared('freeforge/src/state.js');
     resetState(state.S);
-    const { scrollBottom, setStreamMode, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+    const { scrollBottom, renderStreamIcons, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
     state.S.messages = [];
 
     appendNewMessages();
     scrollBottom(false);
     assert.equal(doc.getElementById('msgs-area').scrollToArgs.behavior, 'instant');
 
-    setStreamMode(true);
+    renderStreamIcons(true);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Stop generating');
-    setStreamMode(false);
+    renderStreamIcons(false);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Send message');
 
     renderAllMessages();
@@ -726,6 +760,9 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     modal.dispatchEvent({ type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } });
     modal.dispatchEvent({ type: 'keydown', key: 'Escape' });
     modal.children = savedChildren;
+    closeSettings();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+    openSettings();
 
     clearKeyError();
     assert.equal(doc.getElementById('settings-key-error').textContent, '');
@@ -784,6 +821,7 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
 
     closeSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }

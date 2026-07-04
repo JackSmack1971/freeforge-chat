@@ -6,7 +6,7 @@ Use the smallest safe change that satisfies the objective. Prefer reading existi
 
 ## Default Commands
 
-- Lint: `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security`
+- Lint: `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers`
 - Test: `npm --prefix freeforge test`
 - Build: no build step — static files are served as-is.
 
@@ -29,9 +29,17 @@ Every completed implementation must include:
 - Raw final pass/fail status.
 - Known limitations or follow-up work.
 
+## Handoff Conventions
+
+- Canonical persisted handoff state lives in `.claude/handoff/current-task.json`, written through `/handoff` and resumed through `/resume-handoff`.
+- `.claude/agents/lead-engineer.md` may describe supplemental Markdown coordination briefs, but those briefs are not the source of truth for persisted task state.
+- Do not treat the retired `.handoffs/` path as authoritative unless a later repo rule explicitly redefines it.
+
 <!-- GSD:project-start source:PROJECT.md -->
 
 ## Project
+
+Repository-specific guidance for agent personas lives in this file. If `.claude/agents/lead-engineer.md` references paths this repo does not have, it must defer to this file and the nearest `AGENTS.md` files instead of applying desktop-ai-client-only directives verbatim.
 
 **FreeForge — Portfolio Quality Pass**
 
@@ -193,12 +201,22 @@ FreeForge is a single-page browser application with a small module graph. The en
 |-----------|----------------|------|
 | app.js | DOM event wiring, init flow, screen routing | `freeforge/src/app.js` |
 | state.js | Singleton state object `S`, localStorage wrapper `LS`, DOM helper `$`, utilities | `freeforge/src/state.js` |
+| agent-schema.js | Agent persona schema validation and normalization | `freeforge/src/agent-schema.js` |
+| agent-storage.js | Agent persona persistence helpers | `freeforge/src/agent-storage.js` |
+| agent-runtime.js | Agent-aware request context assembly | `freeforge/src/agent-runtime.js` |
 | api.js | OpenRouter REST calls: model list fetch and SSE streaming | `freeforge/src/api.js` |
 | features/chat.js | sendMessage, regenerate, newChat — full message lifecycle | `freeforge/src/features/chat.js` |
+| features/agents.js | Agent CRUD, import/export, duplicate, and active-agent wiring | `freeforge/src/features/agents.js` |
 | features/models.js | Fetch and populate free-model dropdown; preference logic | `freeforge/src/features/models.js` |
 | features/onboarding.js | API key validation and initial connection | `freeforge/src/features/onboarding.js` |
+| features/palette.js | Command palette actions, filtering, and keyboard shortcuts | `freeforge/src/features/palette.js` |
+| features/export.js | Conversation export actions | `freeforge/src/features/export.js` |
 | features/settings.js | Key update, clear, settings modal open/close | `freeforge/src/features/settings.js` |
+| ui/agent-builder.js | Agent editor modal rendering and draft capture | `freeforge/src/ui/agent-builder.js` |
+| ui/agent-library.js | Agent library modal rendering and selection | `freeforge/src/ui/agent-library.js` |
 | ui/messages.js | Full message list render, streaming DOM updates, copy/regen buttons | `freeforge/src/ui/messages.js` |
+| ui/ctx-pill.js | Context-usage pill rendering and thresholds | `freeforge/src/ui/ctx-pill.js` |
+| ui/focus-trap.js | Shared modal focus-trap helper | `freeforge/src/ui/focus-trap.js` |
 | ui/screen.js | Screen visibility switching (onboarding vs chat), invalid-API-key banner | `freeforge/src/ui/screen.js` |
 | ui/toast.js | Ephemeral notification display | `freeforge/src/ui/toast.js` |
 | markdown.js | Markdown-to-HTML rendering for assistant messages | `freeforge/src/markdown.js` |
@@ -211,15 +229,16 @@ FreeForge is a single-page browser application with a small module graph. The en
 
 ## Layers
 
-- **State layer** (`freeforge/src/state.js`) — `S` singleton, `LS` localStorage wrapper, `$` DOM id helper, pure utilities. Depends on nothing; used by every module.
+- **State layer** (`freeforge/src/state.js`, `freeforge/src/agent-schema.js`, `freeforge/src/agent-storage.js`) — `S` singleton, `LS` localStorage wrapper, `$` DOM id helper, pure utilities, and agent schema/persistence helpers. Depends on nothing; used by every module.
 - **API layer** (`freeforge/src/api.js`) — all network I/O with OpenRouter. Contains `fetchFreeModels`, `streamCompletion`. Depends on `state.js`.
-- **Feature layer** (`freeforge/src/features/`) — business logic per domain. Depends on `state.js`, `api.js`, `ui/`.
+- **Feature layer** (`freeforge/src/features/`, `freeforge/src/agent-runtime.js`) — business logic per domain plus agent request assembly. Depends on `state.js`, `api.js`, `ui/`, and the agent support modules.
 - **UI layer** (`freeforge/src/ui/`) — DOM manipulation and rendering. Depends on `state.js`, `markdown.js`.
 
 ## Architectural Constraints
 
 - **No build step:** ES modules loaded natively; no bundler, no transpiler.
 - **Global state:** `S` in `state.js` is a module-level singleton. All mutations are synchronous except during streaming.
+- **Agent subsystem routing:** `agent-schema.js` and `agent-storage.js` stay on the state/support side; `agent-runtime.js` stays feature-facing and is called from `features/chat.js` and `features/agents.js`, never from UI modules.
 
 ## Error Handling
 
