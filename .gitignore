@@ -1,14 +1,16 @@
-# Development framework artifacts — not app code
-.claude/
-.codex/
-.planning/codebase/
-.repository-hygiene/
+# Claude Code control-plane runtime artifacts
+.claude/audit-runs/
+.audit-runs/
+.claude/handoff/current-task.json
+.claude/settings.local.json
+.planning/
 .session-feedback/
+.repository-hygiene/
+pending_rules/
 coverage/
-docs/
 .tmp/
 README-SWARM.md
-managed-settings.example.json
+managed-settings.json
 CODEBASE_AUDIT_REPORT.md
 
 # OS

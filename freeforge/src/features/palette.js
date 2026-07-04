@@ -1,6 +1,7 @@
-import { S } from '../state.js';
+import { $, S } from '../state.js';
 import { renderAgentBuilder } from '../ui/agent-builder.js';
 import { openAgentLibrary } from '../ui/agent-library.js';
+import { createFocusTrap } from '../ui/focus-trap.js';
 import { refreshAgentUi } from './agents.js';
 import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
@@ -16,7 +17,13 @@ const BASE_ACTIONS = [
 
 let activeIndex = 0;
 let filteredActions = [];
-let previousFocus = null;
+let focusTrap = null;
+
+function getFocusTrap() {
+  const palette = $('cmd-palette');
+  if (!focusTrap) focusTrap = createFocusTrap(palette);
+  return focusTrap;
+}
 
 function buildActions() {
   const agentActions = [
@@ -48,33 +55,12 @@ function buildActions() {
   return [...BASE_ACTIONS, ...agentActions, ...switchActions, ...modelActions];
 }
 
-function getFocusableInPalette() {
-  return [...document.getElementById('cmd-palette-inner')?.querySelectorAll(
-    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  ) ?? []];
-}
-
-function trapFocus(e) {
-  if (e.key !== 'Tab') return;
-  const focusable = getFocusableInPalette();
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault();
-    first.focus();
-  }
-}
-
 function render(query = '') {
   filteredActions = buildActions().filter(a =>
     a.label.toLowerCase().includes(query.toLowerCase())
   );
   activeIndex = Math.min(activeIndex, Math.max(filteredActions.length - 1, 0));
-  const list = document.getElementById('cmd-list');
+  const list = $('cmd-list');
   if (!list) return;
   list.innerHTML = '';
   filteredActions.forEach((a, i) => {
@@ -92,49 +78,46 @@ function render(query = '') {
     li.addEventListener('click', () => a.action());
     list.appendChild(li);
   });
-  const srch = document.getElementById('cmd-search');
+  const srch = $('cmd-search');
   if (srch) srch.setAttribute('aria-activedescendant', filteredActions.length ? `cmd-item-${activeIndex}` : '');
 }
 
 export function openPalette() {
   activeIndex = 0;
-  previousFocus = document.activeElement;
-  const palette = document.getElementById('cmd-palette');
-  const input = document.getElementById('cmd-search');
+  const palette = $('cmd-palette');
+  const input = $('cmd-search');
   if (!palette || !input) return;
   palette.classList.remove('hidden');
-  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
+  $('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
   input.value = '';
   render('');
+  getFocusTrap().open();
   input.focus();
-  palette.addEventListener('keydown', trapFocus);
 }
 
 export function closePalette() {
-  const palette = document.getElementById('cmd-palette');
+  const palette = $('cmd-palette');
   palette?.classList.add('hidden');
-  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
-  palette?.removeEventListener('keydown', trapFocus);
-  if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
-  previousFocus = null;
+  $('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
+  getFocusTrap().close();
 }
 
 export function initPalette() {
-  document.getElementById('cmd-search')?.addEventListener('input', e => {
+  $('cmd-search')?.addEventListener('input', e => {
     activeIndex = 0;
     render(e.target.value);
   });
 
-  document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
+  $('cmd-palette')?.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closePalette(); return; }
     if (e.key === 'ArrowDown') {
       activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
-      render(document.getElementById('cmd-search')?.value ?? '');
+      render($('cmd-search')?.value ?? '');
       e.preventDefault();
     }
     if (e.key === 'ArrowUp') {
       activeIndex = Math.max(activeIndex - 1, 0);
-      render(document.getElementById('cmd-search')?.value ?? '');
+      render($('cmd-search')?.value ?? '');
       e.preventDefault();
     }
     if (e.key === 'Enter' && filteredActions[activeIndex]) {
@@ -142,6 +125,6 @@ export function initPalette() {
     }
   });
 
-  document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
-  document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+  $('cmd-backdrop')?.addEventListener('click', closePalette);
+  $('palette-trigger-btn')?.addEventListener('click', openPalette);
 }

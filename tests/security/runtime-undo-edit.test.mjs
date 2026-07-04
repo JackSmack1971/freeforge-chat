@@ -84,6 +84,7 @@ function resetState(S) {
   S.messages = [];
   S.streaming = false;
   S.abort = null;
+  S.activeRequestId = null;
   S.streamTarget = null;
   S.inlineEditId = null;
   S.inlineEditUndo = null;

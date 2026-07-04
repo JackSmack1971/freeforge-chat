@@ -22,41 +22,16 @@ export async function fetchFreeModels(key) {
   }
 }
 
-// export async function streamCompletion({ messages, modelId, apiKey, parameters = {}, onToken, onDone, onError, signal })
-export async function streamCompletion(request, ...legacyArgs) {
-  let messages;
-  let modelId;
-  let apiKey;
-  let parameters = {};
-  let onToken;
-  let onDone;
-  let onError;
-  let signal;
-
-  if (Array.isArray(request)) {
-    messages = request;
-    modelId = legacyArgs[0];
-    apiKey = legacyArgs[1];
-    const opts = legacyArgs[2] || {};
-    onToken = opts.onToken;
-    onDone = opts.onDone;
-    onError = opts.onError;
-    signal = opts.signal;
-  } else {
-    ({
-      messages,
-      modelId,
-      apiKey,
-      parameters = {},
-      onToken,
-      onDone,
-      onError,
-      signal,
-    } = request || {});
-  }
-  onToken ||= () => {};
-  onDone ||= () => {};
-  onError ||= () => {};
+export async function streamCompletion({
+  messages,
+  modelId,
+  apiKey,
+  parameters = {},
+  onToken = () => {},
+  onDone = () => {},
+  onError = () => {},
+  signal,
+} = {}) {
   let res;
   try {
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {

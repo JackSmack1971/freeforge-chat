@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MemoryStorage, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
+import { MemoryStorage, MockElement, importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 function makeSseBody(chunks) {
   return new ReadableStream({
@@ -12,6 +12,38 @@ function makeSseBody(chunks) {
   });
 }
 
+function makeAbortableSseBody(signal, chunks) {
+  const encoder = new TextEncoder();
+  return {
+    getReader() {
+      let idx = 0;
+      return {
+        async read() {
+          if (idx < chunks.length) {
+            return { done: false, value: encoder.encode(chunks[idx++]) };
+          }
+          return new Promise((resolve, reject) => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            if (signal.aborted) {
+              reject(err);
+              return;
+            }
+            signal.addEventListener('abort', () => reject(err), { once: true });
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+}
+
+async function settle(turns = 3) {
+  for (let i = 0; i < turns; i += 1) await Promise.resolve();
+}
+
 function resetState(S) {
   S.apiKey = null;
   S.models = [];
@@ -19,6 +51,7 @@ function resetState(S) {
   S.messages = [];
   S.streaming = false;
   S.abort = null;
+  S.activeRequestId = null;
   S.streamTarget = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
@@ -179,12 +212,13 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
     assert.equal(doc.getElementById('cmd-list').children.length, 0);
     assert.equal(doc.getElementById('cmd-search').getAttribute('aria-activedescendant'), '');
 
-    doc.activeElement = doc.getElementById('cmd-search');
+    doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
     doc.getElementById('cmd-palette').dispatchEvent({ type: 'keydown', key: 'Escape' });
     assert.equal(doc.getElementById('cmd-palette').classList.contains('hidden'), true);
 
     closePalette();
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }
@@ -362,16 +396,16 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
   try {
     const state = await importShared('freeforge/src/state.js');
     resetState(state.S);
-    const { scrollBottom, setStreamMode, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+    const { scrollBottom, renderStreamIcons, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
     state.S.messages = [];
 
     appendNewMessages();
     scrollBottom(false);
     assert.equal(doc.getElementById('msgs-area').scrollToArgs.behavior, 'instant');
 
-    setStreamMode(true);
+    renderStreamIcons(true);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Stop generating');
-    setStreamMode(false);
+    renderStreamIcons(false);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Send message');
 
     renderAllMessages();
@@ -726,6 +760,9 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     modal.dispatchEvent({ type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } });
     modal.dispatchEvent({ type: 'keydown', key: 'Escape' });
     modal.children = savedChildren;
+    closeSettings();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+    openSettings();
 
     clearKeyError();
     assert.equal(doc.getElementById('settings-key-error').textContent, '');
@@ -784,6 +821,7 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
 
     closeSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'settings-btn');
   } finally {
     restore();
   }
@@ -992,6 +1030,138 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
   }
 });
 
+test('chat.js keeps the active stream state when a stale abort callback resolves after newChat()', async () => {
+  const doc = makeBaseDom();
+  let callCount = 0;
+  let secondAbort = null;
+  let secondRequestId = null;
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => (text.includes('```') ? '<pre><code class="language-js">console.log(1)</code></pre>' : `<p>${text}</p>`) },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async (url, opts = {}) => {
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      if (url.endsWith('/chat/completions')) {
+        callCount += 1;
+        const signal = opts.signal;
+        const body = callCount === 1
+          ? makeAbortableSseBody(signal, [])
+          : makeAbortableSseBody(signal, [
+            'data: {"choices":[{"delta":{"content":"Second"}}]}\n',
+          ]);
+        return {
+          ok: true,
+          status: 200,
+          body,
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage, newChat } = await importFresh('freeforge/src/features/chat.js');
+
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+
+    const firstSend = sendMessage('First message');
+    await settle(1);
+    newChat();
+    const secondSend = sendMessage('Second message');
+    await settle(1);
+
+    secondRequestId = state.S.activeRequestId;
+    secondAbort = state.S.abort;
+    assert.ok(secondRequestId);
+    assert.ok(secondAbort);
+
+    await firstSend;
+
+    assert.equal(state.S.streaming, true);
+    assert.equal(state.S.abort, secondAbort);
+    assert.equal(state.S.activeRequestId, secondRequestId);
+    assert.equal(state.S.messages.at(-1)?.streaming, true);
+    assert.equal(doc.getElementById('sr-status').textContent, 'Assistant is responding…');
+
+    secondAbort.abort();
+    await secondSend;
+    await settle(2);
+
+    assert.equal(state.S.streaming, false);
+    assert.equal(state.S.abort, null);
+  } finally {
+    restore();
+  }
+});
+test('agent-library.js opens, traps focus, and restores focus on close', async () => {
+  const doc = makeBaseDom();
+  const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
+  const backdrop = doc.register(new MockElement('div', { id: 'agent-library-backdrop' }));
+  const closeBtn = doc.register(new MockElement('button', { id: 'agent-library-close-btn' }));
+  const extraBtn = doc.register(new MockElement('button', { id: 'agent-library-extra-btn' }));
+  const list = doc.register(new MockElement('div', { id: 'agent-library-list' }));
+  modal.appendChild(closeBtn);
+  modal.appendChild(extraBtn);
+  modal.appendChild(list);
+  modal.appendChild(backdrop);
+
+  const restore = installGlobals({
+    document: doc,
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { S } = await importShared('freeforge/src/state.js');
+    resetState(S);
+    S.agents = [{
+      id: 'alpha',
+      name: 'Alpha',
+      description: 'Primary agent',
+      icon: null,
+      instructions: { systemPrompt: 'Prompt', openingMessage: '', starterPrompts: [] },
+      model: {},
+    }];
+    S.activeAgentId = 'alpha';
+
+    const { openAgentLibrary, closeAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+
+    doc.activeElement = doc.getElementById('settings-btn');
+    openAgentLibrary();
+    assert.equal(doc.activeElement.id, 'agent-library-close-btn');
+
+    const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    assert.ok(focusables.length >= 2);
+    doc.activeElement = focusables[0];
+    const backwards = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(backwards);
+    assert.equal(backwards.prevented, true);
+    doc.activeElement = focusables.at(-1);
+    const forwards = { type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(forwards);
+    assert.equal(forwards.prevented, true);
+
+    closeAgentLibrary();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+  } finally {
+    restore();
+  }
+});
 test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({
