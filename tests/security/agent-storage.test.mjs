@@ -10,6 +10,7 @@ import {
   saveAgent,
   setActiveAgent,
 } from '../../freeforge/src/agent-storage.js';
+import { importFresh, importShared, installGlobals, makeBaseDom, makeClipboard } from '../helpers/mock-dom.mjs';
 
 class MemoryStorage {
   constructor(seed = {}, { throwOnSet = false } = {}) {
