@@ -1,3 +1,5 @@
+import { closeAgentLibrary, openAgentLibrary } from './agent-library.js';
+
 const TITLE_ID = 'agent-builder-title';
 const MODE_ID = 'agent-builder-mode';
 const FORM_ID = 'agent-builder-form';
@@ -68,6 +70,16 @@ export function readAgentBuilderDraft() {
       maxTokens: getValue('agent-max-tokens'),
     },
   };
+}
+
+export function openAgentBuilder(agent = null) {
+  openAgentLibrary();
+  renderAgentBuilder(agent);
+  getField('agent-name')?.focus();
+}
+
+export function closeAgentBuilder() {
+  closeAgentLibrary();
 }
 
 export function initAgentBuilder() {
