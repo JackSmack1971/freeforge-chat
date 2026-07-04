@@ -256,5 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettings();
   });
 
-  init();
+  init().catch(err => {
+    recordError({
+      type: 'init',
+      msg: err?.message || String(err),
+    });
+    showScreen('onboarding');
+    toast('App initialization failed', 'error');
+  });
 });

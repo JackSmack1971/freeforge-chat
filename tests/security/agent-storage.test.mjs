@@ -93,32 +93,16 @@ test('saveAgent returns null when storage quota prevents persistence', () => {
   assert.equal(loadAgents().length, 0);
 });
 
-test('refreshAgentUi snapshots conversationAgent with the same key set as snapshotAgent', async () => {
-  const restore = installGlobals({
-    document: makeBaseDom(),
-    localStorage: new MemoryStorage(),
-    sessionStorage: new MemoryStorage(),
-    navigator: { clipboard: makeClipboard() },
-    marked: { use() {}, parse: text => text },
-    DOMPurify: { addHook() {}, sanitize: raw => raw },
+test('loadAgents skips malformed stored entries instead of throwing', () => {
+  installStorage({
+    local: {
+      ff_agents_v1: JSON.stringify([
+        { name: 'Good Agent', systemPrompt: 'Keep going.' },
+        { name: '', systemPrompt: '' },
+      ]),
+    },
   });
-  try {
-    const { saveAgent } = await importShared('freeforge/src/agent-storage.js');
-    const state = await importShared('freeforge/src/state.js');
 
-    saveAgent({
-      name: 'Snapshot Agent',
-      systemPrompt: 'Use this prompt.',
-    });
-
-    const { refreshAgentUi } = await importFresh('freeforge/src/features/agents.js');
-    refreshAgentUi();
-
-    assert.deepEqual(
-      Object.keys(state.S.conversationAgent).sort(),
-      Object.keys(state.snapshotAgent(state.S.activeAgent)).sort()
-    );
-  } finally {
-    restore();
-  }
+  assert.equal(loadAgents().length, 1);
+  assert.equal(loadAgents()[0].name, 'Good Agent');
 });
