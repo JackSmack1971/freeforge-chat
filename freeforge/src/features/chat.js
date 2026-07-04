@@ -126,6 +126,7 @@ export async function sendMessage(text) {
     parameters: request.parameters,
     signal: ctrl.signal,
     onToken(_delta, full) {
+      if (S.abort !== ctrl) return;
       if (firstToken) {
         firstToken = false;
         $('thinking').classList.add('hidden');
@@ -137,6 +138,7 @@ export async function sendMessage(text) {
       scrollBottom(false);
     },
     onDone(rawPayload, full) {
+      if (S.abort !== ctrl) return;
       let parsed;
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
@@ -166,6 +168,7 @@ export async function sendMessage(text) {
       return exactTokens;
     },
     onError(errMsg) {
+      if (S.abort !== ctrl) return;
       $('thinking').classList.add('hidden');
       if (errMsg.includes('Invalid API key')) showInvalidBanner();
       S.messages = S.messages.filter(m => m.id !== asstId);
