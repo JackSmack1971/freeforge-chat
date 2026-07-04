@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
-import { buildRequestMessages } from '../../freeforge/src/agent-runtime.js';
+import { buildRequestContext, buildRequestMessages } from '../../freeforge/src/agent-runtime.js';
 
 async function read(relPath) {
   return readFile(path.resolve(relPath), 'utf8');
@@ -40,8 +40,27 @@ test('buildRequestMessages preserves standard chat behavior when no agent is sel
   ]);
 });
 
+test('buildRequestContext trims older turns once the request budget is reached', () => {
+  const messages = Array.from({ length: 12 }, (_, i) => ({
+    role: i % 2 === 0 ? 'user' : 'assistant',
+    content: `${i}:${'x'.repeat(400)}`
+  }));
+
+  const request = buildRequestContext(messages, {
+    instructions: {
+      systemPrompt: 'You are a concise assistant.'
+    }
+  }, 1000);
+
+  assert.equal(request.messages[0].role, 'system');
+  assert.equal(request.messages.at(-1).content.startsWith('11:'), true);
+  assert.equal(request.messages.some(message => message.content.startsWith('0:')), false);
+  assert.equal(request.messages.length < messages.length + 1, true);
+  assert.equal(JSON.stringify(request.messages).length < JSON.stringify([{ role: 'system', content: 'You are a concise assistant.' }, ...messages]).length, true);
+});
+
 test('streamCompletion accepts a request object', async () => {
   const source = await read('freeforge/src/api.js');
-  assert.match(source, /export async function streamCompletion\(\{ messages, modelId, apiKey, parameters = \{\}, onToken, onDone, onError, signal \}\)/);
+  assert.match(source, /export async function streamCompletion\(\{\s*messages,\s*modelId,\s*apiKey,\s*parameters = \{\},\s*onToken = \(\) => \{\},\s*onDone = \(\) => \{\},\s*onError = \(\) => \{\},\s*signal,\s*\} = \{\}\)/s);
 });
 

@@ -16,6 +16,7 @@ function resetState(S) {
   S.apiKey = null;
   S.models = [];
   S.selectedModel = null;
+  S.activeRequestId = null;
   S.messages = [];
   S.streaming = false;
   S.abort = null;
@@ -97,6 +98,54 @@ test('app.js returns to onboarding when a saved key has no free models', async (
     assert.equal(doc.getElementById('screen-chat').classList.contains('active'), false);
     assert.equal(state.getStoredKey(), null);
     assert.equal(doc.getElementById('ob-key-error').textContent, 'No free models found for this key');
+  } finally {
+    restore();
+  }
+});
+
+test('app.js keeps booting when stored agent data is malformed', async () => {
+  const doc = makeBaseDom();
+  const win = makeWindow();
+  const restore = installGlobals({
+    document: doc,
+    window: win,
+    localStorage: new MemoryStorage({
+      ff_agents_v1: JSON.stringify([
+        { name: 'Valid Agent', systemPrompt: 'Stay precise.' },
+        { name: '', systemPrompt: '' },
+      ]),
+    }),
+    sessionStorage: new MemoryStorage({ ff_key: 'sk-or-v1-saved' }),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    HTMLInputElement: MockInputElement,
+    HTMLTextAreaElement: MockTextAreaElement,
+    fetch: async url => {
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', context_length: 1000, pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    await importFresh('freeforge/src/app.js');
+    doc.dispatchEvent({ type: 'DOMContentLoaded' });
+    await new Promise(r => setTimeout(r, 0));
+
+    assert.equal(doc.getElementById('screen-chat').classList.contains('active'), true);
+    assert.equal(state.S.agents.length, 1);
+    assert.equal(state.S.agents[0].name, 'Valid Agent');
   } finally {
     restore();
   }

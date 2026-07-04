@@ -13,11 +13,12 @@
 .planning/codebase/
 .repository-hygiene/
 .session-feedback/
+.repository-hygiene/
+pending_rules/
 coverage/
-docs/
 .tmp/
 README-SWARM.md
-managed-settings.example.json
+managed-settings.json
 CODEBASE_AUDIT_REPORT.md
 
 # OS
