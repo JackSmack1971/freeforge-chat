@@ -180,7 +180,7 @@ export async function sendMessage(text) {
     parameters: request.parameters,
     signal: ctrl.signal,
     onToken(_delta, full) {
-      if (S.activeRequestId !== requestId) return;
+      if (S.abort !== ctrl) return;
       if (firstToken) {
         firstToken = false;
         $('thinking').classList.add('hidden');
@@ -192,10 +192,37 @@ export async function sendMessage(text) {
       scrollBottom(false);
     },
     onDone(rawPayload, full) {
-      if (S.activeRequestId !== requestId) return;
-      return handleStreamDone(rawPayload, full, asstMsg);
+      if (S.abort !== ctrl) return;
+      let parsed;
+      try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
+      const exactTokens = parsed?.usage?.total_tokens ?? null;
+      if (exactTokens !== null) {
+        S.contextTokens = exactTokens;
+        S.usageIsExact = true;
+      } else {
+        const totalChars = S.messages.filter(m => m.role === 'user' || m.role === 'assistant').reduce((sum, m) => sum + (m.content?.length ?? 0), 0);
+        S.contextTokens = Math.ceil(totalChars / 4);
+        S.usageIsExact = false;
+      }
+      if (!Number.isFinite(S.contextTokens) || S.contextTokens < 0) S.contextTokens = 0;
+
+      $('thinking').classList.add('hidden');
+      asstMsg.content = full || asstMsg.content;
+      S.lastAssistantResponse = asstMsg.content;
+      asstMsg.streaming = false;
+      S.streaming = false;
+      S.abort = null;
+      S.streamTarget = null;
+      setStreamMode(false);
+      setLiveRegion('sr-status', 'Response complete');
+      if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
+      if (!replaceMessage(asstMsg, true)) renderAllMessages();
+      renderCtxPill();
+      scrollBottom();
+      return exactTokens;
     },
     onError(errMsg) {
+      if (S.abort !== ctrl) return;
       $('thinking').classList.add('hidden');
       if (errMsg.includes('Invalid API key')) showInvalidBanner();
       S.messages = S.messages.filter(m => m.id !== asstId);

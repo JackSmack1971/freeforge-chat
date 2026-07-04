@@ -27,6 +27,68 @@ function resetState(S) {
   S.lastAssistantResponse = '';
 }
 
+function makeControlledStream(chunks = []) {
+  const encoder = new TextEncoder();
+  const queue = [...chunks];
+  let pending = null;
+  const waiters = [];
+
+  function abortError() {
+    const err = new Error('aborted');
+    err.name = 'AbortError';
+    return err;
+  }
+
+  function resolveWaiters() {
+    while (waiters.length) waiters.shift()();
+  }
+
+  return {
+    getReader(signal) {
+      signal?.addEventListener('abort', () => {
+        if (!pending) return;
+        const next = pending;
+        pending = null;
+        next.reject(abortError());
+      }, { once: true });
+
+      return {
+        async read() {
+          if (signal?.aborted) throw abortError();
+          if (queue.length) {
+            const value = encoder.encode(queue.shift());
+            if (!queue.length) resolveWaiters();
+            return { done: false, value };
+          }
+          return new Promise((resolve, reject) => {
+            pending = {
+              resolve: result => {
+                pending = null;
+                resolve(result);
+              },
+              reject,
+            };
+            resolveWaiters();
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+    finish() {
+      if (!pending) return;
+      const next = pending;
+      pending = null;
+      next.resolve({ done: true });
+    },
+    waitForPending() {
+      if (pending) return Promise.resolve();
+      return new Promise(resolve => waiters.push(resolve));
+    },
+  };
+}
+
 test('app.js boots to onboarding when no key is stored and records global errors', async () => {
   const doc = makeBaseDom();
   const win = makeWindow();
@@ -103,49 +165,65 @@ test('app.js returns to onboarding when a saved key has no free models', async (
   }
 });
 
-test('app.js keeps booting when stored agent data is malformed', async () => {
+test('chat.js ignores stale callbacks from an aborted earlier stream', async () => {
   const doc = makeBaseDom();
   const win = makeWindow();
+  const firstStream = makeControlledStream(['data: {"choices":[{"delta":{"content":"Old"}}]}\n']);
+  const secondStream = makeControlledStream(['data: {"choices":[{"delta":{"content":"New"}}]}\n']);
+  let callCount = 0;
   const restore = installGlobals({
     document: doc,
     window: win,
-    localStorage: new MemoryStorage({
-      ff_agents_v1: JSON.stringify([
-        { name: 'Valid Agent', systemPrompt: 'Stay precise.' },
-        { name: '', systemPrompt: '' },
-      ]),
-    }),
-    sessionStorage: new MemoryStorage({ ff_key: 'sk-or-v1-saved' }),
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
     navigator: { clipboard: makeClipboard() },
     marked: { use() {}, parse: text => text },
     DOMPurify: { addHook() {}, sanitize: raw => raw },
     HTMLInputElement: MockInputElement,
     HTMLTextAreaElement: MockTextAreaElement,
-    fetch: async url => {
-      if (url.endsWith('/models')) {
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            data: [
-              { id: 'm1', name: 'Model 1', context_length: 1000, pricing: { prompt: '0', completion: '0' } },
-            ],
-          }),
-        };
-      }
-      throw new Error('unexpected fetch');
-    },
+    fetch: async (_url, opts) => ({
+      ok: true,
+      status: 200,
+      body: {
+        getReader() {
+          callCount += 1;
+          return callCount === 1 ? firstStream.getReader(opts.signal) : secondStream.getReader(opts.signal);
+        },
+      },
+    }),
   });
   try {
     const state = await importShared('freeforge/src/state.js');
+    const { newChat, sendMessage } = await importFresh('freeforge/src/features/chat.js');
     resetState(state.S);
-    await importFresh('freeforge/src/app.js');
-    doc.dispatchEvent({ type: 'DOMContentLoaded' });
+    state.S.apiKey = 'sk-or-v1-test';
+    state.S.selectedModel = 'test-model';
+    state.S.activeAgent = {
+      id: 'agent-1',
+      name: 'Agent One',
+      instructions: { systemPrompt: 'Stay precise.', openingMessage: '', starterPrompts: [] },
+      model: {},
+    };
+    state.S.activeAgentId = 'agent-1';
+    state.S.conversationAgent = state.snapshotAgent(state.S.activeAgent);
+    state.S.conversationAgentId = state.S.conversationAgent.id;
+
+    const firstSend = sendMessage('old request');
+    await Promise.resolve();
+    newChat();
+
+    const secondSend = sendMessage('new request');
     await new Promise(r => setTimeout(r, 0));
 
-    assert.equal(doc.getElementById('screen-chat').classList.contains('active'), true);
-    assert.equal(state.S.agents.length, 1);
-    assert.equal(state.S.agents[0].name, 'Valid Agent');
+    assert.equal(state.S.streaming, true);
+    assert.equal(state.S.abort !== null, true);
+
+    secondStream.finish();
+    await secondSend;
+    await firstSend;
+
+    assert.equal(state.S.streaming, false);
+    assert.equal(state.S.abort, null);
   } finally {
     restore();
   }

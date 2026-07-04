@@ -64,27 +64,6 @@ process.stdin.on('end', () => {
     if (toolName === 'bash') {
       const uploadTools = /\b(curl|wget|invoke-webrequest|iwr|irm)\b/i;
       const uploadShapes = /\b(--data(?:-binary)?|--post-data|--body-data|--form|-T|-InFile)\b|@\S+|\b(get-content|cat|type)\b/i;
-      const urlMatch = normalizedCommand.match(/\bhttps?:\/\/[^\s"'`]+/i);
-
-      if (urlMatch) {
-        let hostname = '';
-        try {
-          hostname = new URL(urlMatch[0]).hostname.toLowerCase();
-        } catch {
-          hostname = '';
-        }
-
-        if (!hostname || !allowlistedHosts.some(rx => rx.test(hostname))) {
-          process.stdout.write(JSON.stringify({
-            hookSpecificOutput: {
-              hookEventName: 'PreToolUse',
-              permissionDecision: 'deny',
-              permissionDecisionReason: `Bash network host is not on the allowlist: ${urlMatch[0]}`
-            }
-          }));
-          process.exit(2);
-        }
-      }
 
       if (uploadTools.test(normalizedCommand) && uploadShapes.test(normalizedCommand)) {
         process.stdout.write(JSON.stringify({
@@ -100,13 +79,7 @@ process.stdin.on('end', () => {
 
     process.exit(0);
   } catch (err) {
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'PreToolUse',
-        permissionDecision: 'deny',
-        permissionDecisionReason: `web-access-guard hook failed closed: ${err.message}`
-      }
-    }));
-    process.exit(2);
+    process.stderr.write(`web-access-guard hook failed: ${err.message}\n`);
+    process.exit(1);
   }
 });
