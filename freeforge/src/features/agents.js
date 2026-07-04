@@ -94,6 +94,8 @@ export function initAgents() {
     e.preventDefault();
     saveFromBuilder();
   });
+
+  refreshAgentUi();
 }
 
 function openBuilder(agent = null) {
@@ -103,7 +105,7 @@ function openBuilder(agent = null) {
 }
 
 function safeFileNamePart(name, fallback) {
-  const text = String(name ?? '').trim().replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/[. ]+$/g, '');
+  const text = String(name ?? '').trim().replace(/[\\/:*?"<>|]+/g, '-').replace(/[. ]+$/g, '');
   return text || fallback;
 }
 
