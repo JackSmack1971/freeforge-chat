@@ -175,6 +175,7 @@ test('app.js ignores malformed saved messages during startup hydration', async (
       ff_msgs: JSON.stringify([
         null,
         'oops',
+        [],
         { role: 'assistant', content: 'typing', streaming: true },
         { role: 'user', content: 'saved' },
       ]),
