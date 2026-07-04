@@ -347,6 +347,7 @@ test('palette.js action buttons execute their handlers', async () => {
     openPalette();
     doc.getElementById('cmd-list').children[1].click();
     await Promise.resolve();
+    await Promise.resolve();
     assert.ok(doc.getElementById('toasts').children.length > 0);
 
     S.messages = [
@@ -491,6 +492,7 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
     copyBtn.click();
     codeCopyBtn.click();
     await Promise.resolve();
+    await Promise.resolve();
     assert.deepEqual(clipboard.calls, ['```js\nx\n```', 'console.log(1)']);
     assert.ok(timeouts.length >= 1);
     timeouts[0].fn();
@@ -510,6 +512,42 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
     assert.equal(noLang.querySelector('.lang-label'), null);
     assert.ok(noLang.querySelector('.copy-code-btn'));
     globalThis.marked.parse = originalParse;
+  } finally {
+    restore();
+  }
+});
+
+test('messages.js copy actions fall back cleanly when the clipboard API is missing', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    navigator: {},
+    marked: {
+      use() {},
+      parse(text) {
+        return `<pre><code class="language-js">${text}</code></pre>`;
+      },
+    },
+    DOMPurify: {
+      addHook() {},
+      sanitize(raw) {
+        return raw;
+      },
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+
+    const message = { id: 'a1', role: 'assistant', content: '```js\nx\n```', streaming: false };
+    const rich = buildMsgEl(message, true);
+    const copyBtn = rich.querySelector('.copy-btn');
+    const codeCopyBtn = rich.querySelector('.copy-code-btn');
+
+    assert.doesNotThrow(() => copyBtn.click());
+    assert.doesNotThrow(() => codeCopyBtn.click());
+    assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('clipboard unavailable'), true);
   } finally {
     restore();
   }
@@ -1110,6 +1148,7 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
 
     state.S.messages = [{ role: 'assistant', content: 'copy me' }];
     copyLastResponse();
+    await Promise.resolve();
     await Promise.resolve();
     assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Copied'), true);
 
