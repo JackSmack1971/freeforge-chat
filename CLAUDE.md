@@ -6,7 +6,7 @@ Use the smallest safe change that satisfies the objective. Prefer reading existi
 
 ## Default Commands
 
-- Lint: `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security`
+- Lint: `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers`
 - Test: `npm --prefix freeforge test`
 - Build: no build step — static files are served as-is.
 
