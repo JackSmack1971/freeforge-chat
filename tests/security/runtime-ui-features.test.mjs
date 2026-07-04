@@ -59,6 +59,59 @@ function resetState(S) {
   S.lastAssistantResponse = '';
 }
 
+function addAgentDom(doc) {
+  const ids = [
+    ['agent-select', 'select'],
+    ['agent-library-modal', 'div'],
+    ['agent-library-backdrop', 'div'],
+    ['agent-library-close-btn', 'button'],
+    ['agent-library-list', 'div'],
+    ['agent-library-new-btn', 'button'],
+    ['agent-library-import-btn', 'button'],
+    ['agent-library-export-btn', 'button'],
+    ['agent-library-import-input', 'input'],
+    ['agent-builder-title', 'h2'],
+    ['agent-builder-mode', 'p'],
+    ['agent-builder-form', 'form'],
+    ['agent-builder-cancel-btn', 'button'],
+    ['agent-builder-save-btn', 'button'],
+    ['agent-name', 'input'],
+    ['agent-description', 'textarea'],
+    ['agent-icon', 'input'],
+    ['agent-system-prompt', 'textarea'],
+    ['agent-opening-message', 'textarea'],
+    ['agent-starter-prompts', 'textarea'],
+    ['agent-preferred-model-id', 'input'],
+    ['agent-temperature', 'input'],
+    ['agent-max-tokens', 'input'],
+  ];
+
+  for (const [id, tag] of ids) {
+    const el = tag === 'input'
+      ? new MockElement('input', { id })
+      : tag === 'textarea'
+        ? new MockElement('textarea', { id })
+        : new MockElement(tag, { id });
+    doc.register(el);
+  }
+
+  const modal = doc.getElementById('agent-library-modal');
+  modal.appendChild(doc.getElementById('agent-library-close-btn'));
+  modal.appendChild(doc.getElementById('agent-library-list'));
+  modal.appendChild(doc.getElementById('agent-library-backdrop'));
+
+  const form = doc.getElementById('agent-builder-form');
+  form.appendChild(doc.getElementById('agent-name'));
+  form.appendChild(doc.getElementById('agent-description'));
+  form.appendChild(doc.getElementById('agent-icon'));
+  form.appendChild(doc.getElementById('agent-system-prompt'));
+  form.appendChild(doc.getElementById('agent-opening-message'));
+  form.appendChild(doc.getElementById('agent-starter-prompts'));
+  form.appendChild(doc.getElementById('agent-preferred-model-id'));
+  form.appendChild(doc.getElementById('agent-temperature'));
+  form.appendChild(doc.getElementById('agent-max-tokens'));
+}
+
 test('markdown.js sanitizes links and falls back when DOMPurify is unavailable or parsing fails', async () => {
   const doc = makeBaseDom();
   let lastDiv = null;
@@ -507,6 +560,54 @@ test('export.js exports only when there is conversation content', async () => {
     assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Conversation exported'), true);
     assert.equal(urls[0] instanceof Blob, true);
     assert.match(createdAnchor.download, /^freeforge-chat-\d{4}-\d{2}-\d{2}\.md$/);
+  } finally {
+    restore();
+  }
+});
+
+test('agents.js sanitizes export filenames for path characters', async () => {
+  const doc = makeBaseDom();
+  addAgentDom(doc);
+  doc.body = new MockElement('body');
+  let createdAnchor = null;
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    URL: {
+      createObjectURL() {
+        return 'blob:freeforge-agent';
+      },
+      revokeObjectURL() {},
+    },
+    Blob,
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    const { saveAgent, setActiveAgent } = await importShared('freeforge/src/agent-storage.js');
+    state.S.messages = [];
+    const saved = saveAgent({
+      name: 'Research/QA:1',
+      systemPrompt: 'Use this prompt.',
+    });
+    setActiveAgent(saved.id);
+
+    const originalCreate = doc.createElement.bind(doc);
+    doc.createElement = tag => {
+      const el = originalCreate(tag);
+      if (tag === 'a') createdAnchor = el;
+      return el;
+    };
+
+    const { initAgents } = await importFresh('freeforge/src/features/agents.js');
+    initAgents();
+    doc.getElementById('agent-library-export-btn').click();
+
+    assert.equal(createdAnchor.download, 'Research-QA-1.json');
+    assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Agent exported'), true);
   } finally {
     restore();
   }
