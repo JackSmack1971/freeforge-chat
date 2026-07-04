@@ -1,32 +1,11 @@
 #!/usr/bin/env node
 let input = '';
-function extractBashWriteTargets(command) {
-  const targets = [];
-  const patterns = [
-    /(?:^|[\s;|&])(?:\d+?>|>>|>\|)\s*(?:"([^"]+)"|'([^']+)'|([^\s;|&]+))/g,
-    /(?:^|[\s;|&])tee(?:\s+-a)?\s+(?:"([^"]+)"|'([^']+)'|([^\s;|&]+))/g
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of command.matchAll(pattern)) {
-      const target = match[1] || match[2] || match[3] || '';
-      if (target) {
-        targets.push(target.replace(/[)"'`]+$/g, ''));
-      }
-    }
-  }
-
-  return targets;
-}
-
 process.stdin.on('data', chunk => input += chunk);
 process.stdin.on('end', () => {
   try {
     const payload = JSON.parse(input || '{}');
     const cmd = String(payload.tool_input?.command || payload.toolInput?.command || '');
     const normalized = cmd.replace(/\s+/g, ' ').trim();
-    const bashWriteTargets = extractBashWriteTargets(normalized);
-    const writeTargetText = bashWriteTargets.length ? bashWriteTargets.join(' ') : normalized;
 
     const deny = [
       /\brm\s+-rf\s+(\/|~|\*|\.\.)/i,
@@ -82,9 +61,9 @@ process.stdin.on('end', () => {
       }
     }
 
-    if (bashWriteTargets.length || writesProtectedFiles.test(normalized)) {
+    if (writesProtectedFiles.test(normalized)) {
       for (const pattern of hardProtectedPaths) {
-        if (pattern.test(writeTargetText)) {
+        if (pattern.test(normalized)) {
           process.stdout.write(JSON.stringify({
             hookSpecificOutput: {
               hookEventName: 'PreToolUse',
@@ -97,7 +76,7 @@ process.stdin.on('end', () => {
       }
 
       for (const pattern of approvalProtectedPaths) {
-        if (pattern.test(writeTargetText)) {
+        if (pattern.test(normalized)) {
           process.stdout.write(JSON.stringify({
             hookSpecificOutput: {
               hookEventName: 'PreToolUse',

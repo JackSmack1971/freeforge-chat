@@ -2,7 +2,7 @@ import { buildRequestContext } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
-import { appendNewMessages, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
+import { appendNewMessages, renderAllMessages, replaceMessage, scrollBottom, setStreamMode } from '../ui/messages.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
@@ -196,8 +196,17 @@ export async function sendMessage(text) {
       return handleStreamDone(rawPayload, full, asstMsg);
     },
     onError(errMsg) {
-      if (S.activeRequestId !== requestId) return;
-      handleStreamError(errMsg, asstId);
+      $('thinking').classList.add('hidden');
+      if (errMsg.includes('Invalid API key')) showInvalidBanner();
+      S.messages = S.messages.filter(m => m.id !== asstId);
+      S.streaming = false;
+      S.abort = null;
+      S.streamTarget = null;
+      setStreamMode(false);
+      setLiveRegion('sr-status', '');
+      setLiveRegion('sr-alert', errMsg);
+      toast(errMsg, 'error', 6000);
+      renderAllMessages();
     },
   });
 }
