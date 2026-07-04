@@ -1,4 +1,4 @@
-import { S } from '../state.js';
+import { $, S } from '../state.js';
 import { createFocusTrap } from './focus-trap.js';
 
 const MODAL_ID = 'agent-library-modal';
@@ -9,11 +9,11 @@ const LIST_ID = 'agent-library-list';
 let focusTrap = null;
 
 function getModal() {
-  return document.getElementById(MODAL_ID);
+  return $(MODAL_ID);
 }
 
 function getList() {
-  return document.getElementById(LIST_ID);
+  return $(LIST_ID);
 }
 
 function getFocusTrap() {
@@ -27,7 +27,7 @@ export function openAgentLibrary() {
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
   getFocusTrap().open();
-  document.getElementById(CLOSE_ID)?.focus();
+  $(CLOSE_ID)?.focus();
 }
 
 export function closeAgentLibrary() {
@@ -103,6 +103,6 @@ export function renderAgentLibrary(agents = S.agents, activeAgentId = S.activeAg
 }
 
 export function initAgentLibrary() {
-  document.getElementById(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
-  document.getElementById(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
+  $(BACKDROP_ID)?.addEventListener('click', closeAgentLibrary);
+  $(CLOSE_ID)?.addEventListener('click', closeAgentLibrary);
 }

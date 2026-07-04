@@ -2,7 +2,7 @@ import { S } from '../state.js';
 import { toast } from './toast.js';
 
 export function renderCtxPill() {
-  const pill = document.getElementById('ctx-pill');
+  const pill = $('ctx-pill');
   if (!pill) return;
   const model = S.models.find(m => m.id === S.selectedModel) ?? {};
   const ceiling = model.context_length ?? 8192;
