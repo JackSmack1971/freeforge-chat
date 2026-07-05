@@ -2,7 +2,7 @@ import { buildRequestContext } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
-import { appendNewMessages, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
+import { appendNewMessages, copyToClipboard, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
@@ -193,6 +193,20 @@ export async function sendMessage(text) {
     },
     onDone(rawPayload, full) {
       if (S.abort !== ctrl) return;
+      if (ctrl.signal.aborted && !full) {
+        $('thinking').classList.add('hidden');
+        S.messages = S.messages.filter(m => m.id !== asstId);
+        S.streaming = false;
+        S.abort = null;
+        S.streamTarget = null;
+        renderStreamIcons(false);
+        setLiveRegion('sr-status', '');
+        if (!LS.set('ff_msgs', S.messages)) toast('Storage quota exceeded — conversation history may not persist after reload', 'warning', 8000);
+        renderCtxPill();
+        renderAllMessages();
+        scrollBottom();
+        return null;
+      }
       let parsed;
       try { parsed = JSON.parse(rawPayload); } catch { parsed = {}; }
       const exactTokens = parsed?.usage?.total_tokens ?? null;
@@ -278,9 +292,9 @@ export function copyLastResponse() {
     toast('No response to copy yet', 'info');
     return;
   }
-  navigator.clipboard.writeText(msg.content)
-    .then(() => toast('Copied', 'success'))
-    .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
+  copyToClipboard(msg.content).then(ok => {
+    if (ok) toast('Copied', 'success');
+  });
 }
 
 export function newChat() {
