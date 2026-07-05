@@ -1,5 +1,5 @@
-import { loadAgents } from './agent-storage.js';
 import { normalizeAgent } from './agent-schema.js';
+import { loadAgents } from './agent-storage.js';
 import { refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
