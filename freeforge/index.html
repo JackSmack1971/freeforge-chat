@@ -266,7 +266,7 @@
           <input id="settings-new-key" type="password" placeholder="sk-or-v1-…" autocomplete="new-password" aria-describedby="settings-key-error" aria-invalid="false"
                  class="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
         </form>
-        <p id="settings-key-error" class="mt-1.5 text-xs text-red-400 hidden"></p>
+        <p id="settings-key-error" aria-live="assertive" aria-atomic="true" class="mt-1.5 text-xs text-red-400 hidden"></p>
       </div>
       <button id="settings-update-btn" class="gradient-btn w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all">
         Update Key

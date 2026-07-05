@@ -13,6 +13,15 @@ function getFocusTrap() {
   return focusTrap;
 }
 
+function setLiveRegion(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text;
+}
+
+function announceStatus(text) {
+  setLiveRegion('sr-status', text);
+}
+
 function resetClearButton(btn) {
   if (btn._confirmTimer) {
     clearTimeout(btn._confirmTimer);
@@ -46,6 +55,7 @@ export function clearKeyError() {
 
 function showKeyError(msg) {
   const err = $('settings-key-error');
+  announceStatus('');
   err.textContent = msg;
   err.classList.remove('hidden');
   $('settings-new-key').setAttribute('aria-invalid', 'true');
@@ -88,6 +98,7 @@ export async function updateKey() {
   const btn = $('settings-update-btn');
   btn.textContent = 'Validating…';
   btn.disabled = true;
+  announceStatus('Validating key…');
   try {
     const models = await fetchFreeModels(key);
     if (!models.length) {
@@ -102,6 +113,7 @@ export async function updateKey() {
     clearKeyError();
     hideInvalidBanner();
     populateModelsFromState();
+    announceStatus('Key updated.');
     closeSettings();
     toast('API key updated!', 'success');
   } catch (e) {
@@ -116,6 +128,7 @@ export function clearKey() {
   const btn = $('settings-clear-btn');
   if (btn.dataset.confirm === 'pending') {
     resetClearButton(btn);
+    announceStatus('Key cleared.');
     executeClearKey();
     return;
   }
@@ -123,5 +136,6 @@ export function clearKey() {
   btn.dataset.confirm = 'pending';
   btn.textContent = 'Click again to confirm';
   btn.classList.add('bg-red-600', 'text-white');
+  announceStatus('Press Clear Key again to confirm.');
   btn._confirmTimer = setTimeout(() => resetClearButton(btn), CLEAR_CONFIRM_MS);
 }
