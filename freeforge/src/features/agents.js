@@ -1,7 +1,7 @@
 import { deleteAgent, exportAgent, getAgent, importAgent, loadAgents, saveAgent } from '../agent-storage.js';
-import { $, LS, S } from '../state.js';
-import { readAgentBuilderDraft, renderAgentBuilder } from '../ui/agent-builder.js';
-import { closeAgentLibrary, openAgentLibrary, renderAgentLibrary } from '../ui/agent-library.js';
+import { $, LS, S, snapshotAgent } from '../state.js';
+import { initAgentBuilder, readAgentBuilderDraft, renderAgentBuilder } from '../ui/agent-builder.js';
+import { closeAgentLibrary, initAgentLibrary, openAgentLibrary, renderAgentLibrary } from '../ui/agent-library.js';
 import { toast } from '../ui/toast.js';
 import { setActiveAgent } from './chat.js';
 
@@ -31,7 +31,7 @@ function refreshAgentState() {
   S.activeAgent = S.agents.find(agent => agent.id === activeId) || S.agents[0] || null;
   S.activeAgentId = S.activeAgent?.id ?? null;
   if (!S.messages.length) {
-    S.conversationAgent = S.activeAgent ? { ...S.activeAgent, icon: S.activeAgent.icon ? { ...S.activeAgent.icon } : null, instructions: { ...S.activeAgent.instructions, starterPrompts: [...(S.activeAgent.instructions?.starterPrompts || [])] }, model: { ...S.activeAgent.model } } : null;
+    S.conversationAgent = snapshotAgent(S.activeAgent);
     S.conversationAgentId = S.conversationAgent?.id ?? null;
   }
 }
@@ -73,7 +73,7 @@ export { refreshAgentUi };
 function openBuilder(agent = null) {
   openAgentLibrary();
   renderAgentBuilder(agent);
-  document.getElementById(FORM_ID)?.querySelector('input, textarea')?.focus();
+  $(FORM_ID)?.querySelector('input, textarea')?.focus();
 }
 
 function downloadJson(name, json) {
@@ -222,38 +222,38 @@ function exportById(id) {
   toast('Agent exported', 'success');
 }
 
-document.getElementById(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
-document.getElementById(IMPORT_BTN_ID)?.addEventListener('click', () => document.getElementById(IMPORT_INPUT_ID)?.click());
-document.getElementById(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
-document.getElementById(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
-
-document.getElementById(IMPORT_INPUT_ID)?.addEventListener('change', e => {
-  const file = e.target.files?.[0];
-  e.target.value = '';
-  if (!file) return;
-  file.text().then(importFromText).catch(() => toast('Import failed', 'error'));
-});
-
-document.addEventListener('click', e => {
-  const action = e.target.closest('[data-agent-action]');
-  if (!action) return;
-  const id = action.dataset.agentId;
-  const kind = action.dataset.agentAction;
-  if (!id || !kind) return;
-  if (kind === 'set-active') setActiveById(id);
-  else if (kind === 'edit') editById(id);
-  else if (kind === 'duplicate') duplicateById(id);
-  else if (kind === 'delete') deleteById(id);
-  else if (kind === 'export') exportById(id);
-});
-
-document.getElementById(FORM_ID)?.addEventListener('submit', e => {
-  e.preventDefault();
-  saveFromBuilder();
-});
-
 export function initAgents() {
+  initAgentLibrary();
+  initAgentBuilder();
+  $(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
+  $(IMPORT_BTN_ID)?.addEventListener('click', () => $(IMPORT_INPUT_ID)?.click());
+  $(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
+  $(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
+
+  $(IMPORT_INPUT_ID)?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    file.text().then(importFromText).catch(() => toast('Import failed', 'error'));
+  });
+
+  document.addEventListener('click', e => {
+    const action = e.target.closest('[data-agent-action]');
+    if (!action) return;
+    const id = action.dataset.agentId;
+    const kind = action.dataset.agentAction;
+    if (!id || !kind) return;
+    if (kind === 'set-active') setActiveById(id);
+    else if (kind === 'edit') editById(id);
+    else if (kind === 'duplicate') duplicateById(id);
+    else if (kind === 'delete') deleteById(id);
+    else if (kind === 'export') exportById(id);
+  });
+
+  $(FORM_ID)?.addEventListener('submit', e => {
+    e.preventDefault();
+    saveFromBuilder();
+  });
+
   refreshAgentUi();
 }
-
-initAgents();

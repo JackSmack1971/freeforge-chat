@@ -1,4 +1,4 @@
-import { S } from '../state.js';
+import { $, S } from '../state.js';
 import { renderAgentBuilder } from '../ui/agent-builder.js';
 import { openAgentLibrary } from '../ui/agent-library.js';
 import { createFocusTrap } from '../ui/focus-trap.js';
@@ -20,7 +20,7 @@ let filteredActions = [];
 let focusTrap = null;
 
 function getFocusTrap() {
-  const palette = document.getElementById('cmd-palette');
+  const palette = $('cmd-palette');
   if (!focusTrap) focusTrap = createFocusTrap(palette);
   return focusTrap;
 }
@@ -60,7 +60,7 @@ function render(query = '') {
     a.label.toLowerCase().includes(query.toLowerCase())
   );
   activeIndex = Math.min(activeIndex, Math.max(filteredActions.length - 1, 0));
-  const list = document.getElementById('cmd-list');
+  const list = $('cmd-list');
   if (!list) return;
   list.innerHTML = '';
   filteredActions.forEach((a, i) => {
@@ -78,17 +78,17 @@ function render(query = '') {
     li.addEventListener('click', () => a.action());
     list.appendChild(li);
   });
-  const srch = document.getElementById('cmd-search');
+  const srch = $('cmd-search');
   if (srch) srch.setAttribute('aria-activedescendant', filteredActions.length ? `cmd-item-${activeIndex}` : '');
 }
 
 export function openPalette() {
   activeIndex = 0;
-  const palette = document.getElementById('cmd-palette');
-  const input = document.getElementById('cmd-search');
+  const palette = $('cmd-palette');
+  const input = $('cmd-search');
   if (!palette || !input) return;
   palette.classList.remove('hidden');
-  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
+  $('palette-trigger-btn')?.setAttribute('aria-expanded', 'true');
   input.value = '';
   render('');
   getFocusTrap().open();
@@ -96,33 +96,35 @@ export function openPalette() {
 }
 
 export function closePalette() {
-  const palette = document.getElementById('cmd-palette');
+  const palette = $('cmd-palette');
   palette?.classList.add('hidden');
-  document.getElementById('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
+  $('palette-trigger-btn')?.setAttribute('aria-expanded', 'false');
   getFocusTrap().close();
 }
 
-document.getElementById('cmd-search')?.addEventListener('input', e => {
-  activeIndex = 0;
-  render(e.target.value);
-});
+export function initPalette() {
+  $('cmd-search')?.addEventListener('input', e => {
+    activeIndex = 0;
+    render(e.target.value);
+  });
 
-document.getElementById('cmd-palette')?.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePalette(); return; }
-  if (e.key === 'ArrowDown') {
-    activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'ArrowUp') {
-    activeIndex = Math.max(activeIndex - 1, 0);
-    render(document.getElementById('cmd-search')?.value ?? '');
-    e.preventDefault();
-  }
-  if (e.key === 'Enter' && filteredActions[activeIndex]) {
-    filteredActions[activeIndex].action();
-  }
-});
+  $('cmd-palette')?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePalette(); return; }
+    if (e.key === 'ArrowDown') {
+      activeIndex = Math.min(activeIndex + 1, Math.max(filteredActions.length - 1, 0));
+      render($('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'ArrowUp') {
+      activeIndex = Math.max(activeIndex - 1, 0);
+      render($('cmd-search')?.value ?? '');
+      e.preventDefault();
+    }
+    if (e.key === 'Enter' && filteredActions[activeIndex]) {
+      filteredActions[activeIndex].action();
+    }
+  });
 
-document.getElementById('cmd-backdrop')?.addEventListener('click', closePalette);
-document.getElementById('palette-trigger-btn')?.addEventListener('click', openPalette);
+  $('cmd-backdrop')?.addEventListener('click', closePalette);
+  $('palette-trigger-btn')?.addEventListener('click', openPalette);
+}

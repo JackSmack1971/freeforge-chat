@@ -95,10 +95,11 @@ function matchesSimpleSelector(node, selector) {
 
 function parseAttributes(node, attrText) {
   const attrRe = /([a-zA-Z0-9:-]+)(?:="([^"]*)")?/g;
-  let m;
-  while ((m = attrRe.exec(attrText))) {
+  let m = attrRe.exec(attrText);
+  while (m) {
     const [, name, value = ''] = m;
     node.setAttribute(name, value);
+    m = attrRe.exec(attrText);
   }
 }
 
