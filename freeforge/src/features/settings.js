@@ -54,14 +54,15 @@ function showKeyError(msg) {
 export function openSettings() {
   $('settings-key-display').textContent = maskKey(S.apiKey);
   $('settings-new-key').value = '';
+  announceStatus('');
   clearKeyError();
   resetClearButton($('settings-clear-btn'));
   const modal = $('settings-modal');
   modal.classList.remove('hidden');
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
-  const first = getFocusTrap().open();
-  if (first) first.focus();
+  getFocusTrap().open();
+  $('settings-new-key').focus();
 }
 
 export function closeSettings() {
