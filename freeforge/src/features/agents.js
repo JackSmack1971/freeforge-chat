@@ -13,6 +13,14 @@ const EXPORT_BTN_ID = 'agent-library-export-btn';
 const CANCEL_BTN_ID = 'agent-builder-cancel-btn';
 const SELECT_ID = 'agent-select';
 
+function sanitizeFilename(name) {
+  return String(name || 'agent')
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/-+/g, '-');
+}
+
 function getFormAgentId() {
   return $(FORM_ID)?.dataset.agentId || '';
 }
@@ -62,51 +70,10 @@ function refreshAgentUi() {
 
 export { refreshAgentUi };
 
-export function initAgents() {
-  initAgentLibrary();
-  initAgentBuilder();
-  $(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
-  $(IMPORT_BTN_ID)?.addEventListener('click', () => $(IMPORT_INPUT_ID)?.click());
-  $(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
-  $(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
-
-  $(IMPORT_INPUT_ID)?.addEventListener('change', e => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    file.text().then(importFromText).catch(() => toast('Import failed', 'error'));
-  });
-
-  document.addEventListener('click', e => {
-    const action = e.target.closest('[data-agent-action]');
-    if (!action) return;
-    const id = action.dataset.agentId;
-    const kind = action.dataset.agentAction;
-    if (!id || !kind) return;
-    if (kind === 'set-active') setActiveById(id);
-    else if (kind === 'edit') editById(id);
-    else if (kind === 'duplicate') duplicateById(id);
-    else if (kind === 'delete') deleteById(id);
-    else if (kind === 'export') exportById(id);
-  });
-
-  $(FORM_ID)?.addEventListener('submit', e => {
-    e.preventDefault();
-    saveFromBuilder();
-  });
-
-  refreshAgentUi();
-}
-
 function openBuilder(agent = null) {
   openAgentLibrary();
   renderAgentBuilder(agent);
   $(FORM_ID)?.querySelector('input, textarea')?.focus();
-}
-
-function safeFileNamePart(name, fallback) {
-  const text = String(name ?? '').trim().replace(/[\\/:*?"<>|]+/g, '-').replace(/[. ]+$/g, '');
-  return text || fallback;
 }
 
 function downloadJson(name, json) {
@@ -114,18 +81,16 @@ function downloadJson(name, json) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
+  a.download = `${sanitizeFilename(name)}.json`;
   a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function exportActiveAgent() {
   if (!S.activeAgentId) { toast('No active agent to export', 'warning'); return; }
   const blob = exportAgent(S.activeAgentId);
   if (!blob) { toast('Agent not found', 'error'); return; }
-  downloadJson(`${safeFileNamePart(S.activeAgent?.name || S.activeAgentId, S.activeAgentId || 'agent')}.json`, blob);
+  downloadJson(S.activeAgent?.name || S.activeAgentId, blob);
   toast('Agent exported', 'success');
 }
 
@@ -253,6 +218,42 @@ function exportById(id) {
     return;
   }
   const agent = getAgent(id);
-  downloadJson(`${safeFileNamePart(agent?.name || id, id || 'agent')}.json`, blob);
+  downloadJson(agent?.name || id, blob);
   toast('Agent exported', 'success');
+}
+
+export function initAgents() {
+  initAgentLibrary();
+  initAgentBuilder();
+  $(NEW_BTN_ID)?.addEventListener('click', () => openBuilder(null));
+  $(IMPORT_BTN_ID)?.addEventListener('click', () => $(IMPORT_INPUT_ID)?.click());
+  $(EXPORT_BTN_ID)?.addEventListener('click', exportActiveAgent);
+  $(CANCEL_BTN_ID)?.addEventListener('click', closeAgentLibrary);
+
+  $(IMPORT_INPUT_ID)?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    file.text().then(importFromText).catch(() => toast('Import failed', 'error'));
+  });
+
+  document.addEventListener('click', e => {
+    const action = e.target.closest('[data-agent-action]');
+    if (!action) return;
+    const id = action.dataset.agentId;
+    const kind = action.dataset.agentAction;
+    if (!id || !kind) return;
+    if (kind === 'set-active') setActiveById(id);
+    else if (kind === 'edit') editById(id);
+    else if (kind === 'duplicate') duplicateById(id);
+    else if (kind === 'delete') deleteById(id);
+    else if (kind === 'export') exportById(id);
+  });
+
+  $(FORM_ID)?.addEventListener('submit', e => {
+    e.preventDefault();
+    saveFromBuilder();
+  });
+
+  refreshAgentUi();
 }

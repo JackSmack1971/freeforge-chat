@@ -444,6 +444,7 @@ export function makeBaseDom() {
     ['cmd-backdrop', 'div'],
     ['palette-trigger-btn', 'button'],
     ['cmd-list', 'div'],
+    ['agent-library-export-btn', 'button'],
     ['ob-key-input', 'input'],
     ['ob-save-btn', 'button'],
     ['ob-eye-show', 'span'],

@@ -1225,6 +1225,61 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
   }
 });
 
+test('agent-library.js opens, traps focus, and restores focus on close', async () => {
+  const doc = makeBaseDom();
+  const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
+  const backdrop = doc.register(new MockElement('div', { id: 'agent-library-backdrop' }));
+  const closeBtn = doc.register(new MockElement('button', { id: 'agent-library-close-btn' }));
+  const extraBtn = doc.register(new MockElement('button', { id: 'agent-library-extra-btn' }));
+  const list = doc.register(new MockElement('div', { id: 'agent-library-list' }));
+  modal.appendChild(closeBtn);
+  modal.appendChild(extraBtn);
+  modal.appendChild(list);
+  modal.appendChild(backdrop);
+
+  const restore = installGlobals({
+    document: doc,
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { S } = await importShared('freeforge/src/state.js');
+    resetState(S);
+    S.agents = [{
+      id: 'alpha',
+      name: 'Alpha',
+      description: 'Primary agent',
+      icon: null,
+      instructions: { systemPrompt: 'Prompt', openingMessage: '', starterPrompts: [] },
+      model: {},
+    }];
+    S.activeAgentId = 'alpha';
+
+    const { openAgentLibrary, closeAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+
+    doc.activeElement = doc.getElementById('settings-btn');
+    openAgentLibrary();
+    assert.equal(doc.activeElement.id, 'agent-library-close-btn');
+
+    const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    assert.ok(focusables.length >= 2);
+    doc.activeElement = focusables[0];
+    const backwards = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(backwards);
+    assert.equal(backwards.prevented, true);
+    doc.activeElement = focusables.at(-1);
+    const forwards = { type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(forwards);
+    assert.equal(forwards.prevented, true);
+
+    closeAgentLibrary();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+  } finally {
+    restore();
+  }
+});
+
 test('chat.js removes the placeholder when a stream aborts before the first token', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({

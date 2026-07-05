@@ -13,6 +13,6 @@ export function exportConversation() {
   a.href = url;
   a.download = `freeforge-chat-${new Date().toISOString().slice(0, 10)}.md`;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
   toast('Conversation exported', 'success');
 }
