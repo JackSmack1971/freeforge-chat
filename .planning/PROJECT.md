@@ -12,33 +12,34 @@ Open a single HTML file, connect a key, and chat without installing a stack or e
 
 ### Active
 
-- [ ] Settings key management stays in the existing modal and remains keyboard accessible.
-- [ ] Key validation, clear confirmation, and success/error feedback stay legible without exposing the raw key.
-- [ ] Existing session-scoped key storage and local chat storage behavior remain unchanged.
+- [ ] Conversation history stays browser-local, capped, and safe to restore.
+- [ ] The history drawer remains keyboard accessible and requires explicit confirmation before replacing unsent text.
+- [ ] Starting a new chat preserves a restorable snapshot of the current thread.
 
 ### Out of Scope
 
-- New preferences system — the app only needs the current settings modal.
-- Server-side key storage — the app is browser-only.
-- Cross-tab sync or background settings management — not required for this workflow.
+- Cloud sync or cross-device history.
+- Search, tagging, pinning, or bulk deletion of archived chats.
+- Server-side history or analytics capture.
 
 ## Context
 
 - The app is shipped as static files under `freeforge/`.
-- Settings is the gatekeeper for updating or clearing the OpenRouter API key.
-- The modal already has a shared focus trap and clear/update flows.
+- Chat history already stays local to the browser.
+- The history drawer should reuse the existing dialog and focus patterns.
+- The settings modal baseline is already complete and stable.
 
 ## Constraints
 
-- **Security**: Never expose the raw API key in logs, toasts, analytics, or stored content.
+- **Security**: Never expose raw conversation content in logs, toasts, analytics, or stored content.
 - **Platform**: Keep the app buildless and browser-native.
-- **Storage**: Preserve the current session-scoped key and local message storage behavior.
+- **Storage**: Preserve the current session-scoped key and local message storage behavior while adding a capped local archive.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Keep settings as the single key-management surface | Minimizes UI surface area and preserves the current workflow | Pending |
+| Keep history browser-local and capped | Minimizes risk and avoids a backend history system | Pending |
 
 ---
 *Last updated: 2026-07-05 after import bootstrap*

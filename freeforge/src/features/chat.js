@@ -5,6 +5,7 @@ import { renderCtxPill } from '../ui/ctx-pill.js';
 import { appendNewMessages, copyToClipboard, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
+import { archiveCurrentThread } from './history.js';
 
 const INLINE_EDIT_UNDO_MS = 6000;
 const ACTIVE_AGENT_KEY = 'ff_active_agent_id';
@@ -298,6 +299,7 @@ export function copyLastResponse() {
 }
 
 export function newChat() {
+  archiveCurrentThread();
   clearActiveRequestState();
   if (S.abort) { S.abort.abort(); S.abort = null; }
   clearInlineEditUndo();

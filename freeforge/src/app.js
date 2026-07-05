@@ -1,6 +1,8 @@
+import { normalizeAgent } from './agent-schema.js';
 import { loadAgents } from './agent-storage.js';
 import { initAgents, refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
+import { closeHistoryDrawer, initHistoryDrawer, openHistoryDrawer } from './features/history.js';
 import { loadModels } from './features/models.js';
 import { hideObError, showObError, validateAndConnect } from './features/onboarding.js';
 import { closePalette, initPalette, openPalette } from './features/palette.js';
@@ -151,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     openAgentLibrary();
     refreshAgentUi();
   });
+  $('history-btn')?.addEventListener('click', openHistoryDrawer);
 
   // new chat
   $('new-chat-btn').addEventListener('click', newChat);
@@ -263,8 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key !== 'Escape') return;
     closeAgentLibrary();
     closeSettings();
+    closeHistoryDrawer();
   });
 
+  initHistoryDrawer();
   init().catch(err => {
     recordError({
       type: 'init',

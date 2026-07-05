@@ -339,6 +339,65 @@ test('chat.js ignores stale callbacks from an aborted earlier stream', async () 
   }
 });
 
+test('chat.js archives the current thread on New Chat and keeps the archive capped', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async url => {
+      if (url.endsWith('/chat/completions')) {
+        return {
+          ok: true,
+          status: 200,
+          body: makeSseBody([
+            'data: {"choices":[{"delta":{"content":"Reply"}}]}\n',
+            'data: [DONE]\n',
+          ]),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    const { newChat, sendMessage } = await importFresh('freeforge/src/features/chat.js');
+    resetState(state.S);
+    state.S.apiKey = 'key';
+    state.S.selectedModel = 'm1';
+    state.S.activeAgent = {
+      id: 'agent-1',
+      name: 'Agent One',
+      instructions: { systemPrompt: 'Stay precise.', openingMessage: '', starterPrompts: [] },
+      model: {},
+    };
+    state.S.activeAgentId = 'agent-1';
+    state.S.conversationAgent = state.snapshotAgent(state.S.activeAgent);
+    state.S.conversationAgentId = state.S.conversationAgent.id;
+
+    for (let i = 1; i <= 11; i += 1) {
+      state.S.messages = [{ id: `u${i}`, role: 'user', content: `Thread ${i}` }];
+      newChat();
+      const history = JSON.parse(globalThis.localStorage.getItem('ff_history'));
+      assert.equal(history[0].messages[0].content, `Thread ${i}`);
+      assert.equal(state.S.messages.length, 0);
+    }
+
+    const history = JSON.parse(globalThis.localStorage.getItem('ff_history'));
+    assert.equal(history.length, 10);
+    assert.equal(history[0].messages[0].content, 'Thread 11');
+    assert.equal(history.at(-1).messages[0].content, 'Thread 2');
+
+    await sendMessage('No archive');
+    assert.equal(JSON.parse(globalThis.localStorage.getItem('ff_history')).length, 10);
+  } finally {
+    restore();
+  }
+});
+
 test('app.js wires the chat screen, settings, and command palette listeners', async () => {
   const doc = makeBaseDom();
   const win = makeWindow();

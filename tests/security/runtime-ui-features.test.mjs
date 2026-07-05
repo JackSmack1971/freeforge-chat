@@ -1315,6 +1315,145 @@ test('agent-library.js opens, traps focus, and restores focus on close', async (
   }
 });
 
+test('history.js renders an empty drawer state when no archives exist', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { initHistoryDrawer, openHistoryDrawer, closeHistoryDrawer } = await importFresh('freeforge/src/features/history.js');
+
+    initHistoryDrawer();
+    doc.activeElement = doc.getElementById('history-btn');
+    openHistoryDrawer();
+
+    assert.equal(doc.getElementById('history-drawer').classList.contains('open'), true);
+    assert.equal(doc.getElementById('history-empty-state').classList.contains('hidden'), false);
+    assert.equal(doc.getElementById('history-list').classList.contains('hidden'), true);
+    assert.equal(doc.activeElement.id, 'history-close-btn');
+
+    closeHistoryDrawer();
+    assert.equal(doc.activeElement.id, 'history-btn');
+  } finally {
+    restore();
+  }
+});
+
+test('history.js restores archived threads and only gates replace when drafts exist', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage({
+      ff_history: JSON.stringify([
+        {
+          id: 'hist-2',
+          savedAt: '2026-07-05T12:00:00.000Z',
+          messages: [
+            { id: 'u2', role: 'user', content: 'Newest archived thread' },
+            { id: 'a2', role: 'assistant', content: 'Reply 2' },
+          ],
+          selectedModel: 'model-new',
+          conversationAgent: {
+            id: 'agent-new',
+            name: 'Agent New',
+            instructions: { systemPrompt: 'Prompt new.', openingMessage: '', starterPrompts: [] },
+            model: {},
+          },
+          contextTokens: 42,
+          usageIsExact: true,
+          lastAssistantResponse: 'Reply 2',
+        },
+        {
+          id: 'hist-1',
+          savedAt: '2026-07-05T11:00:00.000Z',
+          messages: [
+            { id: 'u1', role: 'user', content: 'Older archived thread' },
+            { id: 'a1', role: 'assistant', content: 'Reply 1' },
+          ],
+          selectedModel: 'model-old',
+          conversationAgent: {
+            id: 'agent-old',
+            name: 'Agent Old',
+            instructions: { systemPrompt: 'Prompt old.', openingMessage: '', starterPrompts: [] },
+            model: {},
+          },
+          contextTokens: 21,
+          usageIsExact: false,
+          lastAssistantResponse: 'Reply 1',
+        },
+      ]),
+    }),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    state.S.activeAgent = {
+      id: 'active-agent',
+      name: 'Active Agent',
+      instructions: { systemPrompt: 'Active prompt.', openingMessage: '', starterPrompts: [] },
+      model: {},
+    };
+    state.S.activeAgentId = 'active-agent';
+    state.S.conversationAgent = state.snapshotAgent(state.S.activeAgent);
+    state.S.conversationAgentId = state.S.conversationAgent.id;
+
+    const { initHistoryDrawer, openHistoryDrawer } = await importFresh('freeforge/src/features/history.js');
+
+    initHistoryDrawer();
+    doc.activeElement = doc.getElementById('history-btn');
+    openHistoryDrawer();
+
+    const restoreButtons = doc.getElementById('history-list').querySelectorAll('button');
+    assert.equal(restoreButtons.length, 2);
+    assert.equal(restoreButtons[0].dataset.historyId, 'hist-2');
+
+    doc.getElementById('msg-input').value = '';
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: restoreButtons[0] });
+
+    assert.equal(doc.getElementById('history-drawer').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'history-btn');
+    assert.equal(state.S.messages[0].content, 'Newest archived thread');
+    assert.equal(state.S.selectedModel, 'model-new');
+    assert.equal(state.S.conversationAgentId, 'agent-new');
+    assert.equal(state.S.contextTokens, 42);
+    assert.equal(state.S.usageIsExact, true);
+
+    doc.getElementById('msg-input').value = 'draft text';
+    openHistoryDrawer();
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: doc.getElementById('history-list').querySelectorAll('button')[1] });
+    assert.equal(doc.getElementById('history-replace-confirm').classList.contains('hidden'), false);
+    assert.equal(state.S.messages[0].content, 'Newest archived thread');
+
+    doc.getElementById('history-replace-cancel-btn').click();
+    assert.equal(doc.getElementById('history-replace-confirm').classList.contains('hidden'), true);
+    assert.equal(doc.getElementById('msg-input').value, 'draft text');
+
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: doc.getElementById('history-list').querySelectorAll('button')[1] });
+    doc.getElementById('history-replace-btn').click();
+    assert.equal(doc.getElementById('history-drawer').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'history-btn');
+    assert.equal(state.S.messages[0].content, 'Older archived thread');
+    assert.equal(state.S.selectedModel, 'model-old');
+    assert.equal(state.S.conversationAgentId, 'agent-old');
+    assert.equal(state.S.contextTokens, 21);
+    assert.equal(state.S.usageIsExact, false);
+    assert.equal(doc.getElementById('msg-input').value, '');
+  } finally {
+    restore();
+  }
+});
+
 test('chat.js removes the placeholder when a stream aborts before the first token', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({

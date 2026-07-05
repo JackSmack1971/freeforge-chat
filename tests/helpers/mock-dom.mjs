@@ -86,10 +86,12 @@ function matchesSimpleSelector(node, selector) {
   if (selector === 'form') return node.tagName === 'FORM';
   if (selector === '[data-action="new-chat"]') return node.dataset.action === 'new-chat';
   if (selector === '[data-id]') return Boolean(node.dataset.id);
+  if (selector === '[data-history-action]') return Boolean(node.dataset.historyAction);
   if (selector === '[tabindex]') return node.attributes.has('tabindex');
   if (selector === '.screen') return node.classList.contains('screen');
   if (/^\[data-id="(.+)"\]$/.test(selector)) return node.dataset.id === selector.match(/^\[data-id="(.+)"\]$/)[1];
   if (/^\[data-action="(.+)"\]$/.test(selector)) return node.dataset.action === selector.match(/^\[data-action="(.+)"\]$/)[1];
+  if (/^\[data-history-action="(.+)"\]$/.test(selector)) return node.dataset.historyAction === selector.match(/^\[data-history-action="(.+)"\]$/)[1];
   return false;
 }
 
@@ -260,6 +262,8 @@ export class MockElement extends MockEventTarget {
       if (selector === 'form' && node.tagName === 'FORM') return node;
       if (selector.startsWith('.') && node.classList.contains(selector.slice(1))) return node;
       if (selector.startsWith('[data-action="') && node.dataset.action === selector.match(/^\[data-action="(.+)"\]$/)?.[1]) return node;
+      if (selector === '[data-history-action]' && node.dataset.historyAction) return node;
+      if (selector.startsWith('[data-history-action="') && node.dataset.historyAction === selector.match(/^\[data-history-action="(.+)"\]$/)?.[1]) return node;
       node = node.parentNode;
     }
     return null;
@@ -271,11 +275,19 @@ export class MockElement extends MockEventTarget {
 
   querySelectorAll(selector) {
     if (selector === 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') {
-      return this.children.filter(el => {
-        if (el.classList.contains('hidden')) return false;
-        if (el.disabled) return false;
-        return ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) || el.attributes.has('tabindex');
-      });
+      const found = [];
+      const visit = node => {
+        for (const child of node.children ?? []) {
+          if (child.classList.contains('hidden')) continue;
+          if (child.disabled) continue;
+          if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(child.tagName) || child.attributes.has('tabindex')) {
+            found.push(child);
+          }
+          if (Array.isArray(child.children) && child.children.length) visit(child);
+        }
+      };
+      visit(this);
+      return found;
     }
     const selectors = selector.split(',').map(s => s.trim()).filter(Boolean);
     const found = [];
@@ -347,6 +359,7 @@ export class MockDocument extends MockEventTarget {
 
   _visit(node, fn) {
     if (fn(node)) return node;
+    if (!Array.isArray(node.children)) return null;
     for (const child of node.children) {
       const hit = this._visit(child, fn);
       if (hit) return hit;
@@ -456,6 +469,16 @@ export function makeBaseDom() {
     ['screen-onboarding', 'div'],
     ['screen-chat', 'div'],
     ['settings-extra-input', 'input'],
+    ['history-drawer', 'div'],
+    ['history-backdrop', 'div'],
+    ['history-close-btn', 'button'],
+    ['history-list', 'div'],
+    ['history-empty-state', 'div'],
+    ['history-replace-confirm', 'div'],
+    ['history-replace-note', 'p'],
+    ['history-replace-btn', 'button'],
+    ['history-replace-cancel-btn', 'button'],
+    ['history-btn', 'button'],
   ];
   for (const [id, tag] of taggedIds) {
     const el = tag === 'input'
@@ -473,6 +496,14 @@ export function makeBaseDom() {
   doc.getElementById('settings-modal').appendChild(doc.getElementById('settings-new-key'));
   const extraInput = doc.register(new MockElement('input', { id: 'settings-extra-input' }));
   doc.getElementById('settings-modal').appendChild(extraInput);
+  doc.getElementById('history-drawer').appendChild(doc.getElementById('history-backdrop'));
+  doc.getElementById('history-drawer').appendChild(doc.getElementById('history-close-btn'));
+  doc.getElementById('history-drawer').appendChild(doc.getElementById('history-empty-state'));
+  doc.getElementById('history-drawer').appendChild(doc.getElementById('history-list'));
+  doc.getElementById('history-drawer').appendChild(doc.getElementById('history-replace-confirm'));
+  doc.getElementById('history-replace-confirm').appendChild(doc.getElementById('history-replace-note'));
+  doc.getElementById('history-replace-confirm').appendChild(doc.getElementById('history-replace-cancel-btn'));
+  doc.getElementById('history-replace-confirm').appendChild(doc.getElementById('history-replace-btn'));
   doc.getElementById('cmd-palette').appendChild(doc.getElementById('cmd-search'));
   doc.getElementById('cmd-palette').appendChild(doc.getElementById('cmd-list'));
   doc.getElementById('cmd-palette').appendChild(doc.getElementById('cmd-backdrop'));
@@ -483,6 +514,8 @@ export function makeBaseDom() {
   doc.getElementById('cmd-palette').classList.add('hidden');
   doc.getElementById('invalid-banner').classList.add('hidden');
   doc.getElementById('thinking').classList.add('hidden');
+  doc.getElementById('history-drawer').classList.add('hidden');
+  doc.getElementById('history-replace-confirm').classList.add('hidden');
   doc.getElementById('ob-key-input').type = 'password';
   const obForm = doc.register(new MockElement('form'));
   obForm.appendChild(doc.getElementById('ob-key-input'));

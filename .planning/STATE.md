@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 1
-current_phase_name: Accessible Settings Key Management
-status: completed
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-07-05T15:51:29.615Z"
+current_phase: 02
+current_phase_name: Conversation History Drawer
+status: planned
+stopped_at: Phase 2 plan finalized
+last_updated: "2026-07-05T17:23:02.118Z"
 last_activity: 2026-07-05
-last_activity_desc: Completed 01-01-PLAN.md
+last_activity_desc: Phase 02 complete
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 
@@ -24,22 +24,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-05)
 
 **Core value:** Open a single HTML file, connect a key, and chat without installing a stack or exposing secrets outside the browser session.
-**Current focus:** Accessible Settings Key Management
+**Current focus:** Conversation History Drawer
 
 ## Current Position
 
-Phase: 1 of 1 (Accessible Settings Key Management)
-Plan: 1 of 1 in current phase
-Status: complete
-Last activity: 2026-07-05 — Completed 01-01-PLAN.md
+Phase: 02 of 2 (Conversation History Drawer)
+Plan: Not started
+Status: planned
+Last activity: 2026-07-05 — Phase 02 complete
 
-Progress: [██████████] 100%
+Progress: [█████-----] 50%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 2
 - Average duration: -
 - Total execution time: 0h
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 1 | 1 | 45m |
+| 02 | 1 | - | - |
 
 ## Accumulated Context
 
@@ -56,6 +57,8 @@ Progress: [██████████] 100%
 - [Phase 01]: Use the existing shared focus trap and focus the settings key field explicitly on open.
 - [Phase 01]: Announce settings state through the existing `sr-status` live region and make the inline error assertive.
 - [Phase 01]: Keep the raw API key out of all announcements and toast strings.
+- [Phase 02]: Keep conversation history browser-local, capped, and safe to restore only with explicit replace confirmation.
+- [Phase 02]: Reuse the existing modal and focus patterns for the drawer instead of adding a new UI framework.
 
 ### Issues
 
@@ -108,7 +111,8 @@ None - plan executed exactly as written.
 ## Next Phase Readiness
 
 - The Settings modal is now keyboard-first and screen-reader friendly.
-- No blockers remain for this phase.
+- The conversation history drawer is now the active planning focus.
+- No blockers remain for the imported phase plan.
 
 ---
 *Phase: 01-accessible-settings-key-management*
@@ -132,6 +136,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-05T15:50:47.080Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: None
+Last session: 2026-07-05T12:53:39.9833833-04:00
+Stopped at: Phase 2 plan finalized
+Resume file: .planning/phases/02-conversation-history-drawer/02-CONTEXT.md

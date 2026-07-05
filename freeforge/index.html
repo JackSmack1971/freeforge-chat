@@ -161,6 +161,11 @@
         class="nav-icon-btn palette-trigger">
         ⌘
       </button>
+      <button id="history-btn" title="Conversation history" aria-label="Open conversation history" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m5-3a8 8 0 11-8-8"/>
+        </svg>
+      </button>
       <button id="settings-btn" title="Settings" aria-label="Settings" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -238,6 +243,38 @@
       <p class="text-center text-xs text-zinc-700 mt-2">Powered by OpenRouter free models • Key kept to this tab • Chat history stays local</p>
     </div>
   </div>
+</div>
+
+<!-- ========== HISTORY DRAWER ========== -->
+<div id="history-drawer" role="dialog" aria-modal="true" aria-labelledby="history-title" aria-hidden="true" class="fixed inset-y-0 right-0 z-40 hidden w-full max-w-md">
+  <div id="history-backdrop" class="absolute inset-0 modal-bg"></div>
+  <aside class="absolute inset-y-0 right-0 w-full max-w-md surface-card border-l border-zinc-800 p-5 shadow-2xl shadow-black/40">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <h2 id="history-title" class="text-lg font-semibold text-zinc-100">Conversation history</h2>
+        <p class="mt-1 text-xs text-zinc-500">Browser-local snapshots only.</p>
+      </div>
+      <button id="history-close-btn" aria-label="Close conversation history" class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="history-empty-state" class="mt-5 rounded-xl border border-dashed border-zinc-800 px-4 py-6 text-sm text-zinc-500">
+      No saved conversations yet.
+    </div>
+
+    <div id="history-list" class="mt-5 space-y-3 max-h-[calc(100vh-11rem)] overflow-y-auto pr-1"></div>
+
+    <div id="history-replace-confirm" class="hidden mt-5 rounded-xl border border-amber-900/50 bg-amber-950/30 p-4">
+      <p id="history-replace-note" class="text-sm text-amber-100"></p>
+      <div class="mt-3 flex items-center justify-end gap-2">
+        <button id="history-replace-cancel-btn" type="button" class="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors">Keep Draft</button>
+        <button id="history-replace-btn" type="button" class="rounded-lg border border-amber-400/40 bg-amber-500/20 px-3 py-2 text-xs font-semibold text-amber-100 hover:border-amber-300 hover:bg-amber-500/30 transition-colors">Replace Draft</button>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <!-- ========== SETTINGS MODAL ========== -->
