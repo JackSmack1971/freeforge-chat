@@ -40,6 +40,20 @@ test('buildRequestMessages preserves standard chat behavior when no agent is sel
   ]);
 });
 
+test('buildRequestMessages ignores malformed system prompts instead of throwing', () => {
+  const payload = buildRequestMessages([
+    { role: 'user', content: 'Hello' },
+  ], {
+    instructions: {
+      systemPrompt: { trim: 'not a function' },
+    },
+  });
+
+  assert.deepEqual(payload, [
+    { role: 'user', content: 'Hello' },
+  ]);
+});
+
 test('buildRequestContext trims older turns once the request budget is reached', () => {
   const messages = Array.from({ length: 12 }, (_, i) => ({
     role: i % 2 === 0 ? 'user' : 'assistant',

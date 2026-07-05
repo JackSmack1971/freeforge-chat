@@ -217,6 +217,64 @@ test('app.js ignores malformed saved messages during startup hydration', async (
   }
 });
 
+test('app.js falls back to the active agent when the stored conversation agent is invalid', async () => {
+  const doc = makeBaseDom();
+  const win = makeWindow();
+  const restore = installGlobals({
+    document: doc,
+    window: win,
+    localStorage: new MemoryStorage({
+      ff_msgs: JSON.stringify([{ role: 'user', content: 'saved' }]),
+      ff_conversation_agent: JSON.stringify({
+        id: 'stale-conversation-agent',
+        name: 'Stale',
+        instructions: { systemPrompt: '' },
+      }),
+    }),
+    sessionStorage: new MemoryStorage({ ff_key: 'sk-or-v1-saved' }),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    HTMLInputElement: MockInputElement,
+    HTMLTextAreaElement: MockTextAreaElement,
+    fetch: async url => {
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', context_length: 1000, pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    const { saveAgent } = await importShared('freeforge/src/agent-storage.js');
+    const active = saveAgent({
+      name: 'Active Agent',
+      systemPrompt: 'Use this prompt.',
+    });
+    state.S.apiKey = null;
+    resetState(state.S);
+    state.S.apiKey = null;
+    await importFresh('freeforge/src/app.js');
+    doc.dispatchEvent({ type: 'DOMContentLoaded' });
+    await new Promise(r => setTimeout(r, 0));
+
+    assert.equal(state.S.activeAgentId, active.id);
+    assert.equal(state.S.conversationAgentId, active.id);
+    assert.equal(state.S.conversationAgent.instructions.systemPrompt, 'Use this prompt.');
+    assert.equal(doc.getElementById('screen-chat').classList.contains('active'), true);
+  } finally {
+    restore();
+  }
+});
+
 test('chat.js ignores stale callbacks from an aborted earlier stream', async () => {
   const doc = makeBaseDom();
   const win = makeWindow();

@@ -47,7 +47,16 @@ async function init() {
   }
 
   const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
-  S.conversationAgent = savedConversationAgent ? snapshotAgent(savedConversationAgent) : snapshotAgent(S.activeAgent);
+  const conversationAgent = savedConversationAgent
+    ? (() => {
+        try {
+          return normalizeAgent(savedConversationAgent);
+        } catch {
+          return S.activeAgent;
+        }
+      })()
+    : S.activeAgent;
+  S.conversationAgent = snapshotAgent(conversationAgent);
   S.conversationAgentId = S.conversationAgent?.id ?? null;
 
   const modelLoad = await loadModels(savedKey);

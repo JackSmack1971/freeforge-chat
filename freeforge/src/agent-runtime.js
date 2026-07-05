@@ -9,7 +9,7 @@ function getRequestBudget(contextLength) {
 
 export function buildRequestMessages(messages, agent, contextLength = null) {
   const payload = [];
-  const systemPrompt = agent?.instructions?.systemPrompt?.trim();
+  const systemPrompt = typeof agent?.instructions?.systemPrompt === 'string' ? agent.instructions.systemPrompt.trim() : '';
   const budget = getRequestBudget(contextLength);
   let usedTokens = systemPrompt ? estimateTokens(systemPrompt) : 0;
   if (systemPrompt) {
