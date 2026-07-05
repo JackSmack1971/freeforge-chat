@@ -1,0 +1,871 @@
+{
+  "schema_version": "1.0",
+  "document_type": "ux_feature_contract",
+  "feature_id": "uxf-conversation-history-drawer",
+  "slug": "conversation-history-drawer",
+  "title": "Conversation History Drawer",
+  "status": "ready_for_implementation",
+  "generated_from": {
+    "project": "FreeForge Chat",
+    "requested_focus": "Identify a high-impact UX feature that helps users browse and restore prior local conversations without losing the current chat.",
+    "evidence": [
+      {
+        "id": "ev-01",
+        "type": "repository",
+        "source": "freeforge/src/features/chat.js",
+        "observation": "newChat() clears S.messages, writes an empty ff_msgs list, and resets the active chat shell to a blank state.",
+        "relevance": "Users currently lose the visible conversation when they start over, so a local archive would solve a real recovery problem."
+      },
+      {
+        "id": "ev-02",
+        "type": "repository",
+        "source": "freeforge/src/features/export.js",
+        "observation": "Conversation export exists, but it only downloads the current thread as a markdown file and does not offer in-app browsing or restoration.",
+        "relevance": "The repo already supports leaving the app with conversation content, but not returning to prior chats inside the product."
+      },
+      {
+        "id": "ev-03",
+        "type": "repository",
+        "source": "freeforge/src/state.js",
+        "observation": "The app already centralizes local and session storage helpers and keeps chat state in a single shared state object.",
+        "relevance": "A browser-local history archive can be added without introducing a backend or a new persistence subsystem."
+      },
+      {
+        "id": "ev-04",
+        "type": "repository",
+        "source": "freeforge/index.html",
+        "observation": "The UI already has modal patterns for settings and agent management, plus a command palette and focus-aware controls, but no entry point for browsing old chats.",
+        "relevance": "The drawer can reuse established dialog and focus patterns while filling a missing product surface."
+      },
+      {
+        "id": "ev-05",
+        "type": "repository",
+        "source": "README.md",
+        "observation": "The product documentation states that chat history stays local to the browser and that conversation export is available.",
+        "relevance": "A local history drawer matches the documented storage model and makes the existing local-only behavior more useful."
+      },
+      {
+        "id": "ev-06",
+        "type": "repository",
+        "source": "freeforge/src/features/chat.js and freeforge/index.html",
+        "observation": "The navigation exposes a single New Chat action, and the empty state assumes one active thread rather than a browsable conversation list.",
+        "relevance": "There is no in-app history browser today, so the feature is distinct from the current one-thread workflow."
+      }
+    ]
+  },
+  "decision": {
+    "selected_candidate_id": "cand-01",
+    "selection_rationale": "Conversation history is the clearest repeated-friction gap in the current single-thread chat flow, and a local drawer can solve it with a focused vertical slice that fits the app's existing browser-only storage model.",
+    "candidates": [
+      {
+        "id": "cand-01",
+        "title": "Conversation History Drawer",
+        "problem": "Users can lose valuable context when they start a new chat because the app has no in-product way to browse or restore prior conversations.",
+        "target_user": "People who run multiple chats in the same browser tab and need to revisit earlier answers or context",
+        "evidence_refs": [
+          "ev-01",
+          "ev-02",
+          "ev-03",
+          "ev-04",
+          "ev-05",
+          "ev-06"
+        ],
+        "measurable_outcome": "Increase successful restore actions from archived chats while reducing the need to export or retype prior context.",
+        "vertical_slice": "Capture the current conversation when the user starts a new chat, show the latest local threads in a slide-over drawer, and let the user restore one archived chat back into the main view.",
+        "duplication_check": "The app can export the active conversation and start a blank chat, but it does not offer an in-app archive or restore path for previous threads.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 4.5,
+          "frequency_or_reach": 4.0,
+          "ux_leverage": 4.5,
+          "strategic_fit": 4.5,
+          "evidence_confidence": 4.0,
+          "implementation_feasibility": 3.5,
+          "differentiation": 4.0
+        },
+        "risk_penalty": 4,
+        "total_score": 81.0,
+        "disposition": "selected"
+      },
+      {
+        "id": "cand-02",
+        "title": "Composer Draft Autosave",
+        "problem": "Users can lose an unsent prompt if they navigate away or start over before sending it.",
+        "target_user": "People composing long or interrupted prompts",
+        "evidence_refs": [
+          "ev-01",
+          "ev-03",
+          "ev-04"
+        ],
+        "measurable_outcome": "Reduce lost prompt drafts and retyping after navigation or accidental reset.",
+        "vertical_slice": "Persist the current composer text locally and restore it when the chat shell comes back into view.",
+        "duplication_check": "The app keeps sent messages locally, but it does not preserve the unsent composer draft.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 4.0,
+          "frequency_or_reach": 4.0,
+          "ux_leverage": 4.0,
+          "strategic_fit": 4.5,
+          "evidence_confidence": 3.5,
+          "implementation_feasibility": 4.0,
+          "differentiation": 3.5
+        },
+        "risk_penalty": 5,
+        "total_score": 75.0,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-03",
+        "title": "Search Current Conversation",
+        "problem": "Long chats are hard to revisit because users must visually scan the entire message log to find an earlier answer.",
+        "target_user": "Users working through long or technical conversations",
+        "evidence_refs": [
+          "ev-01",
+          "ev-04"
+        ],
+        "measurable_outcome": "Reduce time to find a prior answer inside the active chat.",
+        "vertical_slice": "Add a text search box that jumps to matching messages in the current thread and highlights the best match.",
+        "duplication_check": "The chat view has no in-thread search or jump-to-result behavior.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 3.5,
+          "frequency_or_reach": 3.5,
+          "ux_leverage": 3.5,
+          "strategic_fit": 3.5,
+          "evidence_confidence": 4.0,
+          "implementation_feasibility": 4.5,
+          "differentiation": 3.0
+        },
+        "risk_penalty": 4,
+        "total_score": 68.5,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-04",
+        "title": "Last Prompt Resend Shortcut",
+        "problem": "Users often want to repeat their last prompt with a small edit, but they must manually copy and re-enter it.",
+        "target_user": "Users iterating quickly on a question or instruction",
+        "evidence_refs": [
+          "ev-01",
+          "ev-04"
+        ],
+        "measurable_outcome": "Reduce the number of steps required to resubmit a recent prompt.",
+        "vertical_slice": "Add a shortcut and menu action that repopulates the composer with the previous user message for quick editing.",
+        "duplication_check": "The app can regenerate an answer from the last message, but it does not surface a user-facing resend shortcut in the composer.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 3.5,
+          "frequency_or_reach": 3.0,
+          "ux_leverage": 3.0,
+          "strategic_fit": 4.0,
+          "evidence_confidence": 3.5,
+          "implementation_feasibility": 4.5,
+          "differentiation": 2.5
+        },
+        "risk_penalty": 5,
+        "total_score": 64.0,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-05",
+        "title": "Model Context Hints",
+        "problem": "Users can lose track of how much context remains before a conversation needs to be reset.",
+        "target_user": "People having long model sessions",
+        "evidence_refs": [
+          "ev-01",
+          "ev-04",
+          "ev-05"
+        ],
+        "measurable_outcome": "Reduce surprise resets by making context pressure easier to notice earlier.",
+        "vertical_slice": "Show a clearer context indicator with an optional explain-this-state hint near the chat header.",
+        "duplication_check": "The app already has a context pill, so this is an explanation refinement rather than a new capability.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 3.0,
+          "frequency_or_reach": 3.0,
+          "ux_leverage": 3.5,
+          "strategic_fit": 3.5,
+          "evidence_confidence": 3.0,
+          "implementation_feasibility": 4.0,
+          "differentiation": 2.5
+        },
+        "risk_penalty": 4,
+        "total_score": 61.0,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-06",
+        "title": "Agent Starter Chips",
+        "problem": "Users starting a new chat with a custom agent may need a faster way to launch a first prompt that matches the agent's purpose.",
+        "target_user": "Users who rely on saved agents as starting points",
+        "evidence_refs": [
+          "ev-04",
+          "ev-06"
+        ],
+        "measurable_outcome": "Increase first-message sends from the empty state.",
+        "vertical_slice": "Show a small, agent-aware set of starter prompt chips in the empty state and fall back to the current defaults when none exist.",
+        "duplication_check": "The empty state already has starter prompts, but they are static and not tailored to the active agent.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 2.5,
+          "frequency_or_reach": 3.0,
+          "ux_leverage": 3.0,
+          "strategic_fit": 3.5,
+          "evidence_confidence": 3.0,
+          "implementation_feasibility": 4.5,
+          "differentiation": 2.5
+        },
+        "risk_penalty": 4,
+        "total_score": 57.5,
+        "disposition": "deferred"
+      }
+    ]
+  },
+  "problem": {
+    "statement": "When users start a new chat, the current conversation disappears from the main UI and there is no in-product way to browse or restore prior threads, so useful context is easy to lose even though the app already keeps chat history local to the browser.",
+    "affected_users": [
+      "People who run multiple conversations in one browser tab",
+      "Users who want to revisit prior answers or prompts",
+      "Users who prefer to keep working without exporting files"
+    ],
+    "jobs_to_be_done": [
+      "Reopen a previous conversation without reconstructing it manually",
+      "Move between current and earlier chats without leaving the app",
+      "Preserve useful context before starting a fresh thread"
+    ],
+    "current_friction": [
+      "newChat() clears the active thread from the visible chat shell",
+      "Export exists, but it takes the user out of the in-app flow instead of letting them restore the content",
+      "The main navigation exposes only a blank-thread action, not a way to browse archived chats"
+    ],
+    "evidence_refs": [
+      "ev-01",
+      "ev-02",
+      "ev-04",
+      "ev-05",
+      "ev-06"
+    ]
+  },
+  "outcomes": {
+    "user_value": "Users can recover prior chats in place instead of retyping or exporting them, which makes the app more useful for iterative work.",
+    "product_value": "The app gains continuity and session recovery without changing its browser-local storage model or introducing server-side history.",
+    "metrics": [
+      {
+        "id": "metric-01",
+        "name": "History restore success rate",
+        "kind": "primary",
+        "definition": "Successful restore actions divided by history drawer open actions.",
+        "baseline": "unknown",
+        "target": "Increase after rollout while keeping false restores low",
+        "instrumentation": "Emit conversation_history_drawer_opened and conversation_history_restored from freeforge/src/features/history.js; aggregate the ratio over the review window.",
+        "review_window": "4 weeks after rollout",
+        "guardrail": "Do not count restores that replace the wrong snapshot or drop unsent user input."
+      },
+      {
+        "id": "metric-02",
+        "name": "Time to reopen a prior thread",
+        "kind": "diagnostic",
+        "definition": "Median seconds from opening the history drawer to restoring a previous conversation.",
+        "baseline": "unknown",
+        "target": "Decrease or stay flat while restore success rises",
+        "instrumentation": "Use the same history drawer events plus a browser timing mark in the restore path.",
+        "review_window": "First 2 sprints after rollout",
+        "guardrail": "Do not reduce time by hiding confirmation when current text would be replaced."
+      },
+      {
+        "id": "metric-03",
+        "name": "Unintended overwrite incidents",
+        "kind": "guardrail",
+        "definition": "Count of verified cases where restoring history overwrote unsent composer text or the wrong archived chat.",
+        "baseline": "unknown",
+        "target": "Stay at zero",
+        "instrumentation": "QA notes, local error logs, and manual verification of restore confirmations.",
+        "review_window": "Continuous during rollout",
+        "guardrail": "Any confirmed increase is a rollback candidate."
+      }
+    ]
+  },
+  "scope": {
+    "mvp": "Capture recent local conversations before starting a new chat, show them in a slide-over history drawer, and restore one archived thread into the main chat shell.",
+    "in_scope": [
+      "Persist a capped list of local conversation snapshots",
+      "Show each snapshot with a short preview, timestamp, and model or agent metadata",
+      "Restore an archived conversation into the chat shell",
+      "Warn before replacing unsent composer text with a restored thread"
+    ],
+    "non_goals": [
+      "Cloud sync or cross-device history",
+      "Search, tagging, or pinning archived chats",
+      "Per-thread deletion or bulk history management",
+      "Redesigning export beyond the current download flow"
+    ],
+    "assumptions": [
+      "Local browser storage is sufficient for a capped archive of recent chats",
+      "The app can restore a snapshot into the current chat shell without a backend round trip",
+      "The existing modal and focus patterns are enough to support a drawer-style history surface"
+    ],
+    "constraints": [
+      "Keep conversation history browser-local and do not send message content to analytics",
+      "Cap retained snapshots so the drawer does not grow without bound",
+      "Preserve the current chat until the user explicitly confirms a restore that would replace unsent text",
+      "Keep restore behavior compatible with the active model and agent context"
+    ]
+  },
+  "ux_design": {
+    "entry_points": [
+      "New Chat button in the top navigation",
+      "History button added near the existing navigation actions"
+    ],
+    "primary_flow": [
+      {
+        "id": "flow-01",
+        "actor": "User",
+        "action": "Opens the history drawer from the chat shell.",
+        "system_response": "The drawer slides in with the most recent archived conversations listed first and the current thread clearly labeled.",
+        "success_condition": "The user can scan recent chats without losing the active conversation."
+      },
+      {
+        "id": "flow-02",
+        "actor": "User",
+        "action": "Selects an archived conversation to restore.",
+        "system_response": "The app warns if unsent composer text would be replaced, then swaps the main chat shell to the selected snapshot and closes the drawer on confirmation.",
+        "success_condition": "The restored conversation becomes the active thread with the right model and agent context."
+      },
+      {
+        "id": "flow-03",
+        "actor": "User",
+        "action": "Returns to the drawer later and picks a different thread.",
+        "system_response": "The app restores the second snapshot in the same way, keeping the browser-local archive intact.",
+        "success_condition": "The user can move between prior chats without exporting files or rebuilding context."
+      }
+    ],
+    "alternate_flows": [
+      {
+        "name": "Empty history",
+        "trigger": "No archived conversations exist yet.",
+        "steps": [
+          "Open the history drawer",
+          "Show an empty state with guidance to send a message first",
+          "Offer only close/dismiss controls"
+        ],
+        "resolution": "The user understands that there is nothing to restore yet."
+      },
+      {
+        "name": "Cancel restore",
+        "trigger": "The user backs out of a restore that would replace unsent text.",
+        "steps": [
+          "Show a clear replace warning",
+          "Allow cancel without changing the active thread",
+          "Keep the unsent text in the composer"
+        ],
+        "resolution": "No content is lost unless the user confirms the replacement."
+      }
+    ],
+    "states": [
+      {
+        "id": "state-00",
+        "type": "idle",
+        "applicable": true,
+        "trigger": "The drawer is closed and the current chat is active.",
+        "experience": "Show the normal chat shell with no archive overlay.",
+        "recovery": "No recovery is needed until the user opens history or starts a restore.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-01",
+        "type": "loading",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "History snapshots are read synchronously from browser storage, so the MVP does not need a remote loading state."
+      },
+      {
+        "id": "state-02",
+        "type": "success",
+        "applicable": true,
+        "trigger": "The user confirms a restore and the selected snapshot becomes the active thread.",
+        "experience": "Close the drawer, render the restored messages, and announce that the archived chat is active again.",
+        "recovery": "No recovery is needed unless the user wants to switch to a different archived thread.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-03",
+        "type": "empty",
+        "applicable": true,
+        "trigger": "No archived conversations exist yet.",
+        "experience": "Show a short explanation that history will appear after the user sends a chat.",
+        "recovery": "The user can close the drawer and start the first conversation.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-04",
+        "type": "error",
+        "applicable": true,
+        "trigger": "A stored snapshot cannot be read, the archive is corrupted, or browser storage fails while saving a history entry.",
+        "experience": "Show a readable error and keep the active chat usable even if the archive list is partially unavailable.",
+        "recovery": "The user can dismiss the error, continue chatting, and the app can fall back to the remaining readable snapshots.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-05",
+        "type": "permission",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "The MVP does not add a permission gate; archive access is local to the browser and does not depend on a separate permission model."
+      },
+      {
+        "id": "state-06",
+        "type": "authentication",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "Conversation history is browser-local and does not require a sign-in state or token refresh path."
+      },
+      {
+        "id": "state-07",
+        "type": "offline",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "The drawer reads local storage and does not need network connectivity to function."
+      },
+      {
+        "id": "state-08",
+        "type": "partial",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "Restoring a snapshot is atomic for the MVP; the app either swaps to the archived thread or leaves the current chat untouched."
+      },
+      {
+        "id": "state-09",
+        "type": "interrupted",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "The restore path does not rely on a long-lived remote request, so interruption only closes the drawer or browser without a resumable transfer."
+      },
+      {
+        "id": "state-10",
+        "type": "cancelled",
+        "applicable": true,
+        "trigger": "The user closes the drawer or backs out of the replace confirmation.",
+        "experience": "Dismiss the drawer and preserve the current chat and unsent composer text.",
+        "recovery": "The user can reopen history later and choose a different thread.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-11",
+        "type": "stale",
+        "applicable": true,
+        "trigger": "The current composer contains unsent text or the active chat has diverged from the archived snapshot the user wants to restore.",
+        "experience": "Warn that restoring will replace the current draft and show the age of the selected archive item.",
+        "recovery": "The user can cancel the restore or confirm the replacement and continue from the archived thread.",
+        "not_applicable_reason": ""
+      }
+    ],
+    "accessibility": [
+      {
+        "area": "Keyboard and focus",
+        "requirement": "Opening the drawer moves focus into the drawer, tab order stays predictable, Escape closes the surface, and focus returns to the opener after close or restore.",
+        "verification": "Use the keyboard only to open history, select a thread, cancel a replace warning, and close the drawer."
+      },
+      {
+        "area": "Announcements",
+        "requirement": "Empty state, restore success, replace warnings, and storage errors are announced through readable text or live regions rather than color alone.",
+        "verification": "Run the drawer flow with a screen reader and confirm the selected thread and state changes are spoken clearly."
+      },
+      {
+        "area": "Visual communication",
+        "requirement": "Each history item shows a short preview, timestamp, and metadata chip so the user can identify a thread without relying on hidden context.",
+        "verification": "Inspect the drawer in normal, high-contrast, and grayscale rendering."
+      },
+      {
+        "area": "Motion and touch",
+        "requirement": "Drawer animations respect reduced-motion preferences and interactive targets stay usable on narrow touch screens.",
+        "verification": "Enable reduced motion and test the drawer on a mobile-width viewport."
+      }
+    ],
+    "content_guidance": [
+      "Use the first user prompt as the item label and keep the preview short.",
+      "Show a simple timestamp and model or agent metadata for orientation.",
+      "If a restore would replace unsent text, say that explicitly before the confirmation action.",
+      "Do not surface raw message content in analytics or error copy beyond the intentionally visible preview."
+    ],
+    "user_controls": [
+      "Open and close the history drawer",
+      "Restore a selected archived conversation",
+      "Cancel a restore that would replace unsent text",
+      "Return to the current chat without changing the archive"
+    ]
+  },
+  "implementation": {
+    "architecture_fit": "Add a browser-local conversation archive alongside the existing single-thread chat state, reusing the current storage helpers and dialog/focus patterns instead of introducing a server-backed history system.",
+    "work_items": [
+      {
+        "id": "work-01",
+        "title": "Capture and store conversation snapshots",
+        "objective": "Persist a capped local archive whenever the user starts a new chat or completes a conversation turn that should be restorable later.",
+        "paths": [
+          {
+            "path": "freeforge/src/features/chat.js",
+            "operation": "modify",
+            "rationale": "Capture the current thread before newChat() clears it and keep the active chat state in sync with the archive."
+          },
+          {
+            "path": "freeforge/src/state.js",
+            "operation": "modify",
+            "rationale": "Add any small storage helpers or state fields needed for the local archive metadata."
+          },
+          {
+            "path": "freeforge/src/features/history.js",
+            "operation": "create",
+            "rationale": "Centralize archive snapshot, list, prune, and restore helpers for the drawer."
+          }
+        ],
+        "instructions": [
+          "Store only the data needed to recreate a conversation thread, including messages and the active model or agent context.",
+          "Cap the archive so it cannot grow without bound and prune the oldest entries first.",
+          "Keep the current chat visible until the archive write succeeds.",
+          "Do not change the existing message rendering or export behavior while wiring the archive."
+        ],
+        "dependencies": [],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "Starting a new chat preserves a restorable snapshot of the prior thread.",
+          "Reloading the page still shows the capped local archive.",
+          "The archive never stores more than the configured number of snapshots."
+        ]
+      },
+      {
+        "id": "work-02",
+        "title": "Build the history drawer surface",
+        "objective": "Give users a browsable slide-over list of archived conversations with an obvious entry point from the main navigation.",
+        "paths": [
+          {
+            "path": "freeforge/index.html",
+            "operation": "modify",
+            "rationale": "Add the drawer markup and the History entry point near the existing chat actions."
+          },
+          {
+            "path": "freeforge/src/features/history.js",
+            "operation": "create",
+            "rationale": "Render the archive list, empty state, and restore controls."
+          },
+          {
+            "path": "freeforge/src/app.js",
+            "operation": "modify",
+            "rationale": "Wire the new History trigger and drawer close behavior into the app bootstrap."
+          }
+        ],
+        "instructions": [
+          "Use the existing dialog and focus patterns so the drawer behaves consistently with the settings and agent surfaces.",
+          "Show the most recent archived thread first with a short preview and timestamp.",
+          "Include a clear empty state and an obvious close action.",
+          "Do not add search or per-thread deletion in the MVP."
+        ],
+        "dependencies": [
+          "work-01"
+        ],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "The drawer opens from the main navigation and lists archived threads.",
+          "The empty state is understandable when no history exists.",
+          "Keyboard users can enter and exit the drawer without losing their place."
+        ]
+      },
+      {
+        "id": "work-03",
+        "title": "Restore archived chats safely",
+        "objective": "Replace the current thread with a selected archived snapshot only after explicit user confirmation when unsent text would be lost.",
+        "paths": [
+          {
+            "path": "freeforge/src/features/chat.js",
+            "operation": "modify",
+            "rationale": "Apply the restored snapshot to the main chat shell and reset transient streaming or undo state."
+          },
+          {
+            "path": "freeforge/src/app.js",
+            "operation": "modify",
+            "rationale": "Wire the restore entry point, confirmation flow, and drawer close behavior into the app bootstrap."
+          }
+        ],
+        "instructions": [
+          "The drawer UI should already exist from work-02; this work only wires the restore path into the live chat shell.",
+          "Restore messages, context metadata, and the active model or agent context together.",
+          "If the composer contains unsent text, warn before replacing it and preserve the draft when the user cancels.",
+          "Return focus to the composer or the control that opened the drawer after a successful restore.",
+          "Keep restore behavior deterministic so repeated opens show the same archived snapshot ordering."
+        ],
+        "dependencies": [
+          "work-01",
+          "work-02"
+        ],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "Selecting an archived thread replaces the current chat with the correct snapshot.",
+          "Cancelling a replace warning preserves the current draft.",
+          "The drawer closes and focus is restored after a successful restore."
+        ]
+      },
+      {
+        "id": "work-04",
+        "title": "Lock down history behavior with tests",
+        "objective": "Prove archive creation, drawer browsing, safe restore, and accessibility behavior with browser-level coverage.",
+        "paths": [
+          {
+            "path": "tests/security/runtime-ui-features.test.mjs",
+            "operation": "modify",
+            "rationale": "Cover the drawer open, empty, restore, and focus-restoration flows."
+          },
+          {
+            "path": "tests/security/runtime-app.test.mjs",
+            "operation": "modify",
+            "rationale": "Add wiring coverage for snapshot capture and restore state transitions if needed."
+          }
+        ],
+        "instructions": [
+          "Add a test that confirms new chat archives the current thread before clearing it.",
+          "Cover opening the drawer, restoring a snapshot, and canceling a replace warning.",
+          "Verify keyboard-only focus restoration and the empty history state.",
+          "Assert that no test path requires network access to open archived conversations."
+        ],
+        "dependencies": [
+          "work-01",
+          "work-02",
+          "work-03"
+        ],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "The updated tests fail before the feature and pass after it.",
+          "The suite proves archive capture, restore, and cancellation are stable.",
+          "Accessibility regressions around focus and empty state are covered."
+        ]
+      }
+    ],
+    "data_changes": [
+      "Add a capped browser-local archive of conversation snapshots keyed by the current user session.",
+      "Keep the existing current-thread storage in place so the app still has a single live conversation view.",
+      "Store only the metadata needed to recreate the thread, not analytics payloads or unrelated browser state."
+    ],
+    "api_changes": [
+      "No public API change is required for the MVP.",
+      "All history behavior stays inside the client and browser storage layer."
+    ],
+    "analytics_events": [
+      {
+        "name": "conversation_history_drawer_opened",
+        "trigger": "The user opens the history drawer from the chat shell.",
+        "properties": [
+          "entry_point",
+          "archive_count",
+          "has_unsent_draft"
+        ],
+        "purpose": "Measure how often users look for prior chats and whether they have a restore conflict."
+      },
+      {
+        "name": "conversation_history_restore_requested",
+        "trigger": "The user selects an archived chat and reaches the restore confirmation step.",
+        "properties": [
+          "archive_age_bucket",
+          "has_unsent_draft"
+        ],
+        "purpose": "Track restore intent without recording message content."
+      },
+      {
+        "name": "conversation_history_restored",
+        "trigger": "An archived conversation becomes the active chat shell.",
+        "properties": [
+          "archive_age_bucket",
+          "message_count",
+          "entry_point"
+        ],
+        "purpose": "Measure successful restoration and thread reuse."
+      }
+    ],
+    "security_privacy": [
+      "Keep history local to the browser and never upload message content as part of this feature.",
+      "Cap the retained archive so the feature does not accumulate unnecessary sensitive text indefinitely.",
+      "Do not include raw message content in analytics or toast text.",
+      "Preserve the current unsent draft unless the user explicitly confirms replacement."
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "id": "ac-01",
+      "given": "A user has at least one archived conversation",
+      "when": "They open the history drawer",
+      "then": "The drawer shows the most recent archive first, exposes a clear way to restore it, and places focus inside the drawer",
+      "verification": "Automated drawer-open test plus manual keyboard smoke test"
+    },
+    {
+      "id": "ac-02",
+      "given": "A user selects an archived conversation with no unsent text in the composer",
+      "when": "The restore action completes",
+      "then": "The current chat shell shows the archived messages and the drawer closes after restoring focus",
+      "verification": "Automated restore test"
+    },
+    {
+      "id": "ac-03",
+      "given": "A user has unsent text in the composer",
+      "when": "They attempt to restore a different archived conversation",
+      "then": "The app warns that the current draft will be replaced, and cancelling the warning preserves the draft",
+      "verification": "Automated replace-warning regression test"
+    },
+    {
+      "id": "ac-04",
+      "given": "No archived conversations exist yet",
+      "when": "The user opens the history drawer",
+      "then": "The drawer shows an empty state instead of broken controls, and the user can close it without side effects",
+      "verification": "Automated empty-state test"
+    }
+  ],
+  "test_plan": {
+    "unit": [
+      "Test archive snapshot creation and pruning behavior.",
+      "Test archive item labeling from the first user message and metadata."
+    ],
+    "integration": [
+      "Test opening the history drawer and restoring a saved thread.",
+      "Test the replace warning when unsent composer text is present."
+    ],
+    "end_to_end": [
+      "Start a conversation, archive it through New Chat, and restore it from history.",
+      "Open history with no saved threads and confirm the empty state path."
+    ],
+    "accessibility": [
+      "Verify keyboard-only drawer open, restore, cancel, and close behavior.",
+      "Verify live announcements and reduced-motion behavior."
+    ],
+    "manual": [
+      "Check the drawer on a narrow mobile viewport.",
+      "Confirm that the archive preview does not expose more content than intended."
+    ]
+  },
+  "rollout": {
+    "feature_flag": "conversation_history_drawer_v1",
+    "phases": [
+      "Enable locally for test runs and verify snapshot capture.",
+      "Ship to internal usage after keyboard and restore tests pass.",
+      "Turn on by default once storage quota and restore behavior are stable."
+    ],
+    "rollback_triggers": [
+      "Restoring a thread overwrites the wrong chat",
+      "Archive writes exceed local storage quotas too often",
+      "Focus is lost when opening or closing the history drawer"
+    ],
+    "rollback_plan": [
+      "Disable conversation_history_drawer_v1.",
+      "Leave the current New Chat flow intact while removing the archive drawer wiring.",
+      "Keep the existing export action available as the fallback for preserving conversations."
+    ],
+    "observability": [
+      "Track drawer opens, successful restores, empty-state views, and storage failures.",
+      "Watch for QA notes about wrong-thread restoration or lost unsent text.",
+      "Review browser storage quota warnings if the archive grows too quickly."
+    ]
+  },
+  "risks": [
+    {
+      "id": "risk-01",
+      "risk": "Storing recent chats locally could push the browser toward storage limits sooner than the current single-thread model.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "mitigation": "Cap the archive, prune oldest entries first, and keep snapshots minimal.",
+      "owner": "Frontend feature owner"
+    },
+    {
+      "id": "risk-02",
+      "risk": "A restore action could overwrite unsent composer text if the warning is too subtle.",
+      "likelihood": "medium",
+      "impact": "high",
+      "mitigation": "Require an explicit replace confirmation whenever the current draft would be lost.",
+      "owner": "Frontend feature owner"
+    },
+    {
+      "id": "risk-03",
+      "risk": "Archived previews could expose more conversation content than users expect on a shared screen.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "mitigation": "Keep previews short, show only the first prompt and metadata, and avoid raw analytics capture.",
+      "owner": "Frontend feature owner"
+    }
+  ],
+  "open_questions": [],
+  "agent_handoff": {
+    "execution_order": [
+      "work-01",
+      "work-02",
+      "work-03",
+      "work-04"
+    ],
+    "parallel_groups": [],
+    "stop_conditions": [
+      "Stop if the archive cannot be persisted without exposing message content outside the browser-local storage model.",
+      "Stop if restoring a snapshot would break the existing model or agent context boundaries.",
+      "Stop if the drawer cannot reuse the current dialog and focus behavior without introducing accessibility regressions.",
+      "Stop if validation fails or the history snapshot tests become flaky."
+    ],
+    "completion_evidence": [
+      "Passing browser-level tests for archive capture, drawer browsing, restore, and cancel flows",
+      "Passing lint and test commands for the app and security suites",
+      "Manual keyboard smoke test showing the drawer opens, restores, and returns focus correctly",
+      "No raw conversation content exposed in analytics, toasts, or error copy"
+    ]
+  }
+}
