@@ -1170,6 +1170,43 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
   }
 });
 
+test('chat.js removes the placeholder when a stream aborts before the first token', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => `<p>${text}</p>` },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async (_url, { signal }) => new Promise((_, reject) => {
+      signal.addEventListener('abort', () => {
+        const err = new Error('Aborted');
+        err.name = 'AbortError';
+        reject(err);
+      });
+    }),
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage } = await importFresh('freeforge/src/features/chat.js');
+
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+    const pending = sendMessage('hello');
+    await Promise.resolve();
+    state.S.abort.abort();
+    await pending;
+
+    assert.deepEqual(state.S.messages.map(m => m.role), ['user', 'notice']);
+    assert.equal(state.S.messages.some(m => m.role === 'assistant'), false);
+    assert.equal(JSON.parse(globalThis.localStorage.getItem('ff_msgs')).some(m => m.role === 'assistant'), false);
+  } finally {
+    restore();
+  }
+});
+
 test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
   const doc = makeBaseDom();
   const restore = installGlobals({
