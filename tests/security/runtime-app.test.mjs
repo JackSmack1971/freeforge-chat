@@ -415,6 +415,7 @@ test('app.js wires the chat screen, settings, and command palette listeners', as
     assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Model: model'), true);
 
     doc.getElementById('settings-btn').click();
+    assert.equal(doc.activeElement.id, 'settings-new-key');
     doc.getElementById('settings-backdrop').click();
     doc.getElementById('settings-btn').click();
     doc.getElementById('settings-new-key').value = 'sk-or-v1-other';

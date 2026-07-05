@@ -909,6 +909,10 @@ test('onboarding.js validates keys, shows inline errors, and connects on success
 test('settings.js opens, traps focus, updates keys, and clears stored data', async () => {
   const doc = makeBaseDom();
   const focusOrder = [];
+  doc.getElementById('settings-new-key').focus = function focus() {
+    focusOrder.push(this.id);
+    doc.activeElement = this;
+  };
   doc.getElementById('settings-clear-btn').focus = function focus() {
     focusOrder.push(this.id);
     doc.activeElement = this;
@@ -938,7 +942,8 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), true);
     const modal = doc.getElementById('settings-modal');
     const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    assert.equal(doc.activeElement.id, focusables[0].id);
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(focusOrder.at(-1), 'settings-new-key');
     assert.ok(focusables.length >= 2);
     doc.activeElement = focusables[0];
     const tabEvent = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
@@ -957,9 +962,11 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     closeSettings();
     assert.equal(doc.activeElement.id, 'settings-btn');
     openSettings();
+    assert.equal(doc.activeElement.id, 'settings-new-key');
 
     clearKeyError();
     assert.equal(doc.getElementById('settings-key-error').textContent, '');
+    assert.equal(doc.getElementById('settings-key-error').getAttribute('aria-live'), 'assertive');
 
     doc.getElementById('settings-new-key').value = '';
     await updateKey();
@@ -969,16 +976,14 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     await updateKey();
     assert.equal(doc.getElementById('settings-key-error').textContent, "Keys must start with 'sk-or-v1-'");
 
-    globalThis.fetch = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ data: [] }),
+    let resolveFetch;
+    globalThis.fetch = () => new Promise(resolve => {
+      resolveFetch = resolve;
     });
-    doc.getElementById('settings-new-key').value = 'sk-or-v1-empty';
-    await updateKey();
-    assert.equal(doc.getElementById('settings-key-error').textContent, 'No free models found for this key');
-
-    globalThis.fetch = async () => ({
+    doc.getElementById('settings-new-key').value = 'sk-or-v1-loading';
+    const pendingUpdate = updateKey();
+    assert.equal(doc.getElementById('sr-status').textContent, 'Validating key…');
+    resolveFetch({
       ok: true,
       status: 200,
       json: async () => ({
@@ -987,11 +992,21 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
         ],
       }),
     });
-    doc.getElementById('settings-new-key').value = 'sk-or-v1-updated';
-    await updateKey();
-    assert.equal(state.S.apiKey, 'sk-or-v1-updated');
-    assert.equal(doc.getElementById('settings-key-display').textContent, 'sk-or-••••••••••••ated');
+    await pendingUpdate;
+    assert.equal(doc.getElementById('sr-status').textContent, 'Key updated.');
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);
+    assert.equal(doc.activeElement.id, 'settings-btn');
+    assert.equal(doc.getElementById('settings-key-display').textContent, 'sk-or-••••••••••••ding');
+    assert.equal(doc.getElementById('sr-status').textContent.includes('sk-or-v1-loading'), false);
+
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [] }),
+    });
+    doc.getElementById('settings-new-key').value = 'sk-or-v1-empty';
+    await updateKey();
+    assert.equal(doc.getElementById('settings-key-error').textContent, 'No free models found for this key');
 
     globalThis.fetch = async () => {
       throw new Error('validation failed');
@@ -1009,9 +1024,12 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
 
     clearKey();
     assert.equal(doc.getElementById('settings-clear-btn').dataset.confirm, 'pending');
+    assert.equal(doc.getElementById('sr-status').textContent, 'Press Clear Key again to confirm.');
     clearKey();
     assert.equal(state.S.apiKey, null);
     assert.equal(doc.getElementById('screen-onboarding').classList.contains('active'), true);
+    assert.equal(doc.getElementById('sr-status').textContent, 'Key cleared.');
+    assert.equal(doc.activeElement.id, 'settings-btn');
 
     closeSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);

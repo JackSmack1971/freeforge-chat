@@ -465,6 +465,8 @@ export function makeBaseDom() {
         : new MockElement(tag, { id });
     doc.register(el);
   }
+  doc.getElementById('settings-key-error').setAttribute('aria-live', 'assertive');
+  doc.getElementById('settings-key-error').setAttribute('aria-atomic', 'true');
   doc.getElementById('send-btn').appendChild(doc.createElement('span'));
   doc.getElementById('settings-modal').appendChild(doc.getElementById('settings-clear-btn'));
   doc.getElementById('settings-modal').appendChild(doc.getElementById('settings-update-btn'));
