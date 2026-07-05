@@ -1,6 +1,6 @@
 export function buildRequestMessages(messages, agent) {
   const payload = [];
-  const systemPrompt = agent?.instructions?.systemPrompt?.trim();
+  const systemPrompt = typeof agent?.instructions?.systemPrompt === 'string' ? agent.instructions.systemPrompt.trim() : '';
   if (systemPrompt) {
     payload.push({ role: 'system', content: systemPrompt });
   }

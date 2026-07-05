@@ -40,6 +40,20 @@ test('buildRequestMessages preserves standard chat behavior when no agent is sel
   ]);
 });
 
+test('buildRequestMessages ignores malformed system prompts instead of throwing', () => {
+  const payload = buildRequestMessages([
+    { role: 'user', content: 'Hello' },
+  ], {
+    instructions: {
+      systemPrompt: { trim: 'not a function' },
+    },
+  });
+
+  assert.deepEqual(payload, [
+    { role: 'user', content: 'Hello' },
+  ]);
+});
+
 test('streamCompletion accepts a request object', async () => {
   const source = await read('freeforge/src/api.js');
   assert.match(source, /export async function streamCompletion\(\{ messages, modelId, apiKey, parameters = \{\}, onToken, onDone, onError, signal \}\)/);

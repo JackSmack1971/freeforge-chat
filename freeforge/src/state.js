@@ -37,8 +37,8 @@ export function snapshotAgent(agent) {
     description: agent.description,
     icon: agent.icon ? { ...agent.icon } : null,
     instructions: {
-      systemPrompt: agent.instructions?.systemPrompt || '',
-      openingMessage: agent.instructions?.openingMessage || '',
+      systemPrompt: typeof agent.instructions?.systemPrompt === 'string' ? agent.instructions.systemPrompt : '',
+      openingMessage: typeof agent.instructions?.openingMessage === 'string' ? agent.instructions.openingMessage : '',
       starterPrompts: Array.isArray(agent.instructions?.starterPrompts) ? [...agent.instructions.starterPrompts] : [],
     },
     model: {

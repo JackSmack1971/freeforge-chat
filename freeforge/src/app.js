@@ -1,4 +1,5 @@
 import { loadAgents } from './agent-storage.js';
+import { normalizeAgent } from './agent-schema.js';
 import { refreshAgentUi } from './features/agents.js';
 import { newChat, regenerate, resendFromUserMessage, restoreInlineEditUndo, sendMessage, setActiveAgent } from './features/chat.js';
 import { loadModels } from './features/models.js';
@@ -43,11 +44,20 @@ async function init() {
 
   const savedMsgs = LS.get('ff_msgs');
   if (Array.isArray(savedMsgs)) {
-    S.messages = savedMsgs.filter(m => !m.streaming);
+    S.messages = savedMsgs.filter(m => m && typeof m === 'object' && !m.streaming);
   }
 
   const savedConversationAgent = S.messages.length ? LS.get('ff_conversation_agent') : null;
-  S.conversationAgent = savedConversationAgent ? snapshotAgent(savedConversationAgent) : snapshotAgent(S.activeAgent);
+  const conversationAgent = savedConversationAgent
+    ? (() => {
+        try {
+          return normalizeAgent(savedConversationAgent);
+        } catch {
+          return S.activeAgent;
+        }
+      })()
+    : S.activeAgent;
+  S.conversationAgent = snapshotAgent(conversationAgent);
   S.conversationAgentId = S.conversationAgent?.id ?? null;
 
   const modelLoad = await loadModels(savedKey);
