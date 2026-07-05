@@ -2,7 +2,7 @@ import { buildRequestContext } from '../agent-runtime.js';
 import { streamCompletion } from '../api.js';
 import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
-import { appendNewMessages, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
+import { appendNewMessages, copyToClipboard, renderAllMessages, renderStreamIcons, replaceMessage, scrollBottom } from '../ui/messages.js';
 import { showInvalidBanner } from '../ui/screen.js';
 import { clearPersistent, toast } from '../ui/toast.js';
 
@@ -278,9 +278,9 @@ export function copyLastResponse() {
     toast('No response to copy yet', 'info');
     return;
   }
-  navigator.clipboard.writeText(msg.content)
-    .then(() => toast('Copied', 'success'))
-    .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
+  copyToClipboard(msg.content).then(ok => {
+    if (ok) toast('Copied', 'success');
+  });
 }
 
 export function newChat() {
