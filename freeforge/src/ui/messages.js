@@ -15,6 +15,18 @@ function getStarterPrompts() {
   return Array.isArray(prompts) && prompts.length ? prompts : DEFAULT_STARTER_PROMPTS;
 }
 
+export function copyToClipboard(text) {
+  const writeText = navigator.clipboard?.writeText;
+  if (typeof writeText !== 'function') {
+    toast('Copy failed — clipboard unavailable', 'error');
+    return Promise.resolve(false);
+  }
+  return writeText.call(navigator.clipboard, text).then(() => true, () => {
+    toast('Copy failed — clipboard blocked on file://', 'error');
+    return false;
+  });
+}
+
 function renderStarterPrompts() {
   const host = $('starter-prompts');
   if (!host) return;
@@ -45,9 +57,9 @@ function injectCodeBlockUI(container) {
     btn.className = 'copy-code-btn';
     btn.textContent = 'Copy';
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(codeEl.textContent)
-        .then(() => toast('Copied', 'success'))
-        .catch(() => toast('Copy failed — clipboard blocked on file://', 'error'));
+      copyToClipboard(codeEl.textContent).then(ok => {
+        if (ok) toast('Copied', 'success');
+      });
     });
     pre.appendChild(btn);
   }
@@ -262,14 +274,15 @@ export function buildMsgEl(msg, showRegen = false) {
   const copyBtn = wrap.querySelector('.copy-btn');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(msg.content).then(() => {
+      copyToClipboard(msg.content).then(ok => {
+        if (!ok) return;
         setButtonContent(copyBtn, 'M5 13l4 4L19 7', 'Copied!');
         copyBtn.classList.add('text-emerald-400');
         setTimeout(() => {
           setButtonContent(copyBtn, 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z', 'Copy');
           copyBtn.classList.remove('text-emerald-400');
         }, 2000);
-      }).catch(() => toast('Copy failed', 'error'));
+      });
     });
   }
 
