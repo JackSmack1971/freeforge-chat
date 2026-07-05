@@ -16,6 +16,7 @@ function resetState(S) {
   S.apiKey = null;
   S.models = [];
   S.selectedModel = null;
+  S.activeRequestId = null;
   S.messages = [];
   S.streaming = false;
   S.abort = null;
@@ -24,6 +25,68 @@ function resetState(S) {
   S.usageIsExact = false;
   S.ctxToastFired = false;
   S.lastAssistantResponse = '';
+}
+
+function makeControlledStream(chunks = []) {
+  const encoder = new TextEncoder();
+  const queue = [...chunks];
+  let pending = null;
+  const waiters = [];
+
+  function abortError() {
+    const err = new Error('aborted');
+    err.name = 'AbortError';
+    return err;
+  }
+
+  function resolveWaiters() {
+    while (waiters.length) waiters.shift()();
+  }
+
+  return {
+    getReader(signal) {
+      signal?.addEventListener('abort', () => {
+        if (!pending) return;
+        const next = pending;
+        pending = null;
+        next.reject(abortError());
+      }, { once: true });
+
+      return {
+        async read() {
+          if (signal?.aborted) throw abortError();
+          if (queue.length) {
+            const value = encoder.encode(queue.shift());
+            if (!queue.length) resolveWaiters();
+            return { done: false, value };
+          }
+          return new Promise((resolve, reject) => {
+            pending = {
+              resolve: result => {
+                pending = null;
+                resolve(result);
+              },
+              reject,
+            };
+            resolveWaiters();
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+    finish() {
+      if (!pending) return;
+      const next = pending;
+      pending = null;
+      next.resolve({ done: true });
+    },
+    waitForPending() {
+      if (pending) return Promise.resolve();
+      return new Promise(resolve => waiters.push(resolve));
+    },
+  };
 }
 
 test('app.js boots to onboarding when no key is stored and records global errors', async () => {
@@ -112,6 +175,7 @@ test('app.js ignores malformed saved messages during startup hydration', async (
       ff_msgs: JSON.stringify([
         null,
         'oops',
+        [],
         { role: 'assistant', content: 'typing', streaming: true },
         { role: 'user', content: 'saved' },
       ]),
@@ -206,6 +270,70 @@ test('app.js falls back to the active agent when the stored conversation agent i
     assert.equal(state.S.conversationAgentId, active.id);
     assert.equal(state.S.conversationAgent.instructions.systemPrompt, 'Use this prompt.');
     assert.equal(doc.getElementById('screen-chat').classList.contains('active'), true);
+  } finally {
+    restore();
+  }
+});
+
+test('chat.js ignores stale callbacks from an aborted earlier stream', async () => {
+  const doc = makeBaseDom();
+  const win = makeWindow();
+  const firstStream = makeControlledStream(['data: {"choices":[{"delta":{"content":"Old"}}]}\n']);
+  const secondStream = makeControlledStream(['data: {"choices":[{"delta":{"content":"New"}}]}\n']);
+  let callCount = 0;
+  const restore = installGlobals({
+    document: doc,
+    window: win,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    HTMLInputElement: MockInputElement,
+    HTMLTextAreaElement: MockTextAreaElement,
+    fetch: async (_url, opts) => ({
+      ok: true,
+      status: 200,
+      body: {
+        getReader() {
+          callCount += 1;
+          return callCount === 1 ? firstStream.getReader(opts.signal) : secondStream.getReader(opts.signal);
+        },
+      },
+    }),
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    const { newChat, sendMessage } = await importFresh('freeforge/src/features/chat.js');
+    resetState(state.S);
+    state.S.apiKey = 'sk-or-v1-test';
+    state.S.selectedModel = 'test-model';
+    state.S.activeAgent = {
+      id: 'agent-1',
+      name: 'Agent One',
+      instructions: { systemPrompt: 'Stay precise.', openingMessage: '', starterPrompts: [] },
+      model: {},
+    };
+    state.S.activeAgentId = 'agent-1';
+    state.S.conversationAgent = state.snapshotAgent(state.S.activeAgent);
+    state.S.conversationAgentId = state.S.conversationAgent.id;
+
+    const firstSend = sendMessage('old request');
+    await Promise.resolve();
+    newChat();
+
+    const secondSend = sendMessage('new request');
+    await new Promise(r => setTimeout(r, 0));
+
+    assert.equal(state.S.streaming, true);
+    assert.equal(state.S.abort !== null, true);
+
+    secondStream.finish();
+    await secondSend;
+    await firstSend;
+
+    assert.equal(state.S.streaming, false);
+    assert.equal(state.S.abort, null);
   } finally {
     restore();
   }

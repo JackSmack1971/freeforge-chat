@@ -12,6 +12,38 @@ function makeSseBody(chunks) {
   });
 }
 
+function makeAbortableSseBody(signal, chunks) {
+  const encoder = new TextEncoder();
+  return {
+    getReader() {
+      let idx = 0;
+      return {
+        async read() {
+          if (idx < chunks.length) {
+            return { done: false, value: encoder.encode(chunks[idx++]) };
+          }
+          return new Promise((resolve, reject) => {
+            const err = new Error('aborted');
+            err.name = 'AbortError';
+            if (signal.aborted) {
+              reject(err);
+              return;
+            }
+            signal.addEventListener('abort', () => reject(err), { once: true });
+          });
+        },
+        cancel() {
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+}
+
+async function settle(turns = 3) {
+  for (let i = 0; i < turns; i += 1) await Promise.resolve();
+}
+
 function resetState(S) {
   S.apiKey = null;
   S.models = [];
@@ -19,11 +51,65 @@ function resetState(S) {
   S.messages = [];
   S.streaming = false;
   S.abort = null;
+  S.activeRequestId = null;
   S.streamTarget = null;
   S.contextTokens = 0;
   S.usageIsExact = false;
   S.ctxToastFired = false;
   S.lastAssistantResponse = '';
+}
+
+function addAgentDom(doc) {
+  const ids = [
+    ['agent-select', 'select'],
+    ['agent-library-modal', 'div'],
+    ['agent-library-backdrop', 'div'],
+    ['agent-library-close-btn', 'button'],
+    ['agent-library-list', 'div'],
+    ['agent-library-new-btn', 'button'],
+    ['agent-library-import-btn', 'button'],
+    ['agent-library-export-btn', 'button'],
+    ['agent-library-import-input', 'input'],
+    ['agent-builder-title', 'h2'],
+    ['agent-builder-mode', 'p'],
+    ['agent-builder-form', 'form'],
+    ['agent-builder-cancel-btn', 'button'],
+    ['agent-builder-save-btn', 'button'],
+    ['agent-name', 'input'],
+    ['agent-description', 'textarea'],
+    ['agent-icon', 'input'],
+    ['agent-system-prompt', 'textarea'],
+    ['agent-opening-message', 'textarea'],
+    ['agent-starter-prompts', 'textarea'],
+    ['agent-preferred-model-id', 'input'],
+    ['agent-temperature', 'input'],
+    ['agent-max-tokens', 'input'],
+  ];
+
+  for (const [id, tag] of ids) {
+    const el = tag === 'input'
+      ? new MockElement('input', { id })
+      : tag === 'textarea'
+        ? new MockElement('textarea', { id })
+        : new MockElement(tag, { id });
+    doc.register(el);
+  }
+
+  const modal = doc.getElementById('agent-library-modal');
+  modal.appendChild(doc.getElementById('agent-library-close-btn'));
+  modal.appendChild(doc.getElementById('agent-library-list'));
+  modal.appendChild(doc.getElementById('agent-library-backdrop'));
+
+  const form = doc.getElementById('agent-builder-form');
+  form.appendChild(doc.getElementById('agent-name'));
+  form.appendChild(doc.getElementById('agent-description'));
+  form.appendChild(doc.getElementById('agent-icon'));
+  form.appendChild(doc.getElementById('agent-system-prompt'));
+  form.appendChild(doc.getElementById('agent-opening-message'));
+  form.appendChild(doc.getElementById('agent-starter-prompts'));
+  form.appendChild(doc.getElementById('agent-preferred-model-id'));
+  form.appendChild(doc.getElementById('agent-temperature'));
+  form.appendChild(doc.getElementById('agent-max-tokens'));
 }
 
 test('markdown.js sanitizes links and falls back when DOMPurify is unavailable or parsing fails', async () => {
@@ -156,7 +242,8 @@ test('palette.js filters actions, triggers model switches, and closes on keyboar
       { id: 'alpha-model', context_length: 1000 },
       { id: 'beta-model', name: 'Beta', context_length: 1000 },
     ];
-    const { openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette, closePalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.activeElement = doc.getElementById('settings-btn');
     openPalette();
@@ -203,7 +290,8 @@ test('palette.js no-ops safely when required DOM nodes are missing', async () =>
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = null;
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     doc.getElementById = id => (id === 'cmd-list' ? null : originalGet(id));
     doc.activeElement = doc.getElementById('settings-btn');
@@ -242,7 +330,8 @@ test('palette.js action buttons execute their handlers', async () => {
     const { S } = await importShared('freeforge/src/state.js');
     resetState(S);
     S.models = [{ id: 'alpha', name: 'Alpha' }];
-    const { openPalette } = await importFresh('freeforge/src/features/palette.js');
+    const { initPalette, openPalette } = await importFresh('freeforge/src/features/palette.js');
+    initPalette();
 
     S.messages = [
       { id: 'u1', role: 'user', content: 'hello' },
@@ -257,6 +346,7 @@ test('palette.js action buttons execute their handlers', async () => {
     ];
     openPalette();
     doc.getElementById('cmd-list').children[1].click();
+    await Promise.resolve();
     await Promise.resolve();
     assert.ok(doc.getElementById('toasts').children.length > 0);
 
@@ -360,16 +450,16 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
   try {
     const state = await importShared('freeforge/src/state.js');
     resetState(state.S);
-    const { scrollBottom, setStreamMode, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+    const { scrollBottom, renderStreamIcons, appendNewMessages, renderAllMessages, replaceMessage, buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
     state.S.messages = [];
 
     appendNewMessages();
     scrollBottom(false);
     assert.equal(doc.getElementById('msgs-area').scrollToArgs.behavior, 'instant');
 
-    setStreamMode(true);
+    renderStreamIcons(true);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Stop generating');
-    setStreamMode(false);
+    renderStreamIcons(false);
     assert.equal(doc.getElementById('send-btn').getAttribute('aria-label'), 'Send message');
 
     renderAllMessages();
@@ -402,6 +492,7 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
     copyBtn.click();
     codeCopyBtn.click();
     await Promise.resolve();
+    await Promise.resolve();
     assert.deepEqual(clipboard.calls, ['```js\nx\n```', 'console.log(1)']);
     assert.ok(timeouts.length >= 1);
     timeouts[0].fn();
@@ -421,6 +512,42 @@ test('messages.js renders each message type, streams updates, and wires copy/reg
     assert.equal(noLang.querySelector('.lang-label'), null);
     assert.ok(noLang.querySelector('.copy-code-btn'));
     globalThis.marked.parse = originalParse;
+  } finally {
+    restore();
+  }
+});
+
+test('messages.js copy actions fall back cleanly when the clipboard API is missing', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    navigator: {},
+    marked: {
+      use() {},
+      parse(text) {
+        return `<pre><code class="language-js">${text}</code></pre>`;
+      },
+    },
+    DOMPurify: {
+      addHook() {},
+      sanitize(raw) {
+        return raw;
+      },
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { buildMsgEl } = await importFresh('freeforge/src/ui/messages.js');
+
+    const message = { id: 'a1', role: 'assistant', content: '```js\nx\n```', streaming: false };
+    const rich = buildMsgEl(message, true);
+    const copyBtn = rich.querySelector('.copy-btn');
+    const codeCopyBtn = rich.querySelector('.copy-code-btn');
+
+    assert.doesNotThrow(() => copyBtn.click());
+    assert.doesNotThrow(() => codeCopyBtn.click());
+    assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('clipboard unavailable'), true);
   } finally {
     restore();
   }
@@ -471,6 +598,109 @@ test('export.js exports only when there is conversation content', async () => {
     assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Conversation exported'), true);
     assert.equal(urls[0] instanceof Blob, true);
     assert.match(createdAnchor.download, /^freeforge-chat-\d{4}-\d{2}-\d{2}\.md$/);
+  } finally {
+    restore();
+  }
+});
+
+test('agent-library.js opens, traps focus, and restores focus on close', async () => {
+  const doc = makeBaseDom();
+  const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
+  const backdrop = doc.register(new MockElement('div', { id: 'agent-library-backdrop' }));
+  const closeBtn = doc.register(new MockElement('button', { id: 'agent-library-close-btn' }));
+  const extraBtn = doc.register(new MockElement('button', { id: 'agent-library-extra-btn' }));
+  const list = doc.register(new MockElement('div', { id: 'agent-library-list' }));
+  modal.appendChild(closeBtn);
+  modal.appendChild(extraBtn);
+  modal.appendChild(list);
+  modal.appendChild(backdrop);
+
+  const restore = installGlobals({
+    document: doc,
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const { S } = await importShared('freeforge/src/state.js');
+    resetState(S);
+    S.agents = [{
+      id: 'alpha',
+      name: 'Alpha',
+      description: 'Primary agent',
+      icon: null,
+      instructions: { systemPrompt: 'Prompt', openingMessage: '', starterPrompts: [] },
+      model: {},
+    }];
+    S.activeAgentId = 'alpha';
+
+    const { openAgentLibrary, closeAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+
+    doc.activeElement = doc.getElementById('settings-btn');
+    openAgentLibrary();
+    assert.equal(doc.activeElement.id, 'agent-library-close-btn');
+
+    const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    assert.ok(focusables.length >= 2);
+    doc.activeElement = focusables[0];
+    const backwards = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(backwards);
+    assert.equal(backwards.prevented, true);
+    doc.activeElement = focusables.at(-1);
+    const forwards = { type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
+    modal.dispatchEvent(forwards);
+    assert.equal(forwards.prevented, true);
+
+    closeAgentLibrary();
+    assert.equal(doc.activeElement.id, 'settings-btn');
+  } finally {
+    restore();
+  }
+});
+
+test('agents.js sanitizes export filenames for path characters', async () => {
+  const doc = makeBaseDom();
+  addAgentDom(doc);
+  doc.body = new MockElement('body');
+  let createdAnchor = null;
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    URL: {
+      createObjectURL() {
+        return 'blob:freeforge-agent';
+      },
+      revokeObjectURL() {},
+    },
+    Blob,
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    const { saveAgent, setActiveAgent } = await importShared('freeforge/src/agent-storage.js');
+    state.S.messages = [];
+    const saved = saveAgent({
+      name: 'Research/QA:1',
+      systemPrompt: 'Use this prompt.',
+    });
+    setActiveAgent(saved.id);
+
+    const originalCreate = doc.createElement.bind(doc);
+    doc.createElement = tag => {
+      const el = originalCreate(tag);
+      if (tag === 'a') createdAnchor = el;
+      return el;
+    };
+
+    const { initAgents } = await importFresh('freeforge/src/features/agents.js');
+    initAgents();
+    doc.getElementById('agent-library-export-btn').click();
+
+    assert.equal(createdAnchor.download, 'Research-QA-1.json');
+    assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Agent exported'), true);
   } finally {
     restore();
   }
@@ -974,6 +1204,7 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
     state.S.messages = [{ role: 'assistant', content: 'copy me' }];
     copyLastResponse();
     await Promise.resolve();
+    await Promise.resolve();
     assert.equal(doc.getElementById('toasts').children.at(-1).innerHTML.includes('Copied'), true);
 
     state.S.messages = [];
@@ -994,56 +1225,85 @@ test('chat.js sends, regenerates, copies, and resets conversation state', async 
   }
 });
 
-test('agent-library.js opens, traps focus, and restores focus on close', async () => {
+test('chat.js removes the placeholder when a stream aborts before the first token', async () => {
   const doc = makeBaseDom();
-  const modal = doc.register(new MockElement('div', { id: 'agent-library-modal' }));
-  const backdrop = doc.register(new MockElement('div', { id: 'agent-library-backdrop' }));
-  const closeBtn = doc.register(new MockElement('button', { id: 'agent-library-close-btn' }));
-  const extraBtn = doc.register(new MockElement('button', { id: 'agent-library-extra-btn' }));
-  const list = doc.register(new MockElement('div', { id: 'agent-library-list' }));
-  modal.appendChild(closeBtn);
-  modal.appendChild(extraBtn);
-  modal.appendChild(list);
-  modal.appendChild(backdrop);
-
   const restore = installGlobals({
     document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
     navigator: { clipboard: makeClipboard() },
-    marked: { use() {}, parse: text => text },
+    marked: { use() {}, parse: text => `<p>${text}</p>` },
     DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async (_url, { signal }) => new Promise((_, reject) => {
+      signal.addEventListener('abort', () => {
+        const err = new Error('Aborted');
+        err.name = 'AbortError';
+        reject(err);
+      });
+    }),
   });
   try {
-    const { S } = await importShared('freeforge/src/state.js');
-    resetState(S);
-    S.agents = [{
-      id: 'alpha',
-      name: 'Alpha',
-      description: 'Primary agent',
-      icon: null,
-      instructions: { systemPrompt: 'Prompt', openingMessage: '', starterPrompts: [] },
-      model: {},
-    }];
-    S.activeAgentId = 'alpha';
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage } = await importFresh('freeforge/src/features/chat.js');
 
-    const { openAgentLibrary, closeAgentLibrary } = await importFresh('freeforge/src/ui/agent-library.js');
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+    const pending = sendMessage('hello');
+    await Promise.resolve();
+    state.S.abort.abort();
+    await pending;
 
-    doc.activeElement = doc.getElementById('settings-btn');
-    openAgentLibrary();
-    assert.equal(doc.activeElement.id, 'agent-library-close-btn');
+    assert.deepEqual(state.S.messages.map(m => m.role), ['user', 'notice']);
+    assert.equal(state.S.messages.some(m => m.role === 'assistant'), false);
+    assert.equal(JSON.parse(globalThis.localStorage.getItem('ff_msgs')).some(m => m.role === 'assistant'), false);
+  } finally {
+    restore();
+  }
+});
 
-    const focusables = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    assert.ok(focusables.length >= 2);
-    doc.activeElement = focusables[0];
-    const backwards = { type: 'keydown', key: 'Tab', shiftKey: true, preventDefault() { this.prevented = true; } };
-    modal.dispatchEvent(backwards);
-    assert.equal(backwards.prevented, true);
-    doc.activeElement = focusables.at(-1);
-    const forwards = { type: 'keydown', key: 'Tab', shiftKey: false, preventDefault() { this.prevented = true; } };
-    modal.dispatchEvent(forwards);
-    assert.equal(forwards.prevented, true);
+test('chat.js shows the invalid-key banner when streamCompletion returns 401', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => `<p>${text}</p>` },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+    fetch: async url => {
+      if (url.endsWith('/chat/completions')) {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({ error: { message: 'nope' } }),
+        };
+      }
+      if (url.endsWith('/models')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [
+              { id: 'm1', name: 'Model 1', pricing: { prompt: '0', completion: '0' } },
+            ],
+          }),
+        };
+      }
+      throw new Error('unexpected fetch');
+    },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { sendMessage } = await importFresh('freeforge/src/features/chat.js');
 
-    closeAgentLibrary();
-    assert.equal(doc.activeElement.id, 'settings-btn');
+    state.S.selectedModel = 'm1';
+    state.S.apiKey = 'key';
+    await sendMessage('hello');
+
+    assert.equal(doc.getElementById('invalid-banner').classList.contains('hidden'), false);
+    assert.equal(doc.getElementById('sr-alert').textContent.includes('Invalid API key'), true);
   } finally {
     restore();
   }

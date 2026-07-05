@@ -10,6 +10,7 @@ export const S = {
   messages: [],
   streaming: false,
   abort: null,
+  activeRequestId: null,
   streamTarget: null,
   inlineEditId: null,
   inlineEditUndo: null,
