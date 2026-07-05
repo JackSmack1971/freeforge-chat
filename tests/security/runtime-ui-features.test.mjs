@@ -938,6 +938,9 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     const { openSettings, closeSettings, updateKey, clearKey, clearKeyError } = await importFresh('freeforge/src/features/settings.js');
 
     doc.activeElement = doc.getElementById('settings-btn');
+    doc.activeElement = doc.getElementById('settings-btn');
+    doc.activeElement = doc.getElementById('settings-btn');
+    doc.activeElement = doc.getElementById('settings-btn');
     openSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), true);
     const modal = doc.getElementById('settings-modal');
@@ -966,15 +969,19 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
 
     clearKeyError();
     assert.equal(doc.getElementById('settings-key-error').textContent, '');
-    assert.equal(doc.getElementById('settings-key-error').getAttribute('aria-live'), 'assertive');
+    assert.equal(doc.getElementById('sr-status').textContent, '');
 
     doc.getElementById('settings-new-key').value = '';
     await updateKey();
     assert.equal(doc.getElementById('settings-key-error').textContent, 'Enter a key');
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('sr-status').textContent, 'Enter a key');
 
     doc.getElementById('settings-new-key').value = 'bad';
     await updateKey();
     assert.equal(doc.getElementById('settings-key-error').textContent, "Keys must start with 'sk-or-v1-'");
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('sr-status').textContent, "Keys must start with 'sk-or-v1-'");
 
     let resolveFetch;
     globalThis.fetch = () => new Promise(resolve => {
@@ -993,7 +1000,7 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
       }),
     });
     await pendingUpdate;
-    assert.equal(doc.getElementById('sr-status').textContent, 'Key updated.');
+    assert.equal(doc.getElementById('sr-status').textContent, 'API key updated.');
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);
     assert.equal(doc.activeElement.id, 'settings-btn');
     assert.equal(doc.getElementById('settings-key-display').textContent, 'sk-or-••••••••••••ding');
@@ -1007,6 +1014,8 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     doc.getElementById('settings-new-key').value = 'sk-or-v1-empty';
     await updateKey();
     assert.equal(doc.getElementById('settings-key-error').textContent, 'No free models found for this key');
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('sr-status').textContent, 'No free models found for this key');
 
     globalThis.fetch = async () => {
       throw new Error('validation failed');
@@ -1014,22 +1023,30 @@ test('settings.js opens, traps focus, updates keys, and clears stored data', asy
     doc.getElementById('settings-new-key').value = 'sk-or-v1-broken';
     await updateKey();
     assert.equal(doc.getElementById('settings-key-error').textContent, 'validation failed');
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('sr-status').textContent, 'validation failed');
 
     globalThis.fetch = async () => {
-      throw {};
+      throw new Error('broken sk-or-v1-broken2 request');
     };
     doc.getElementById('settings-new-key').value = 'sk-or-v1-broken2';
     await updateKey();
-    assert.equal(doc.getElementById('settings-key-error').textContent, 'Invalid key');
+    assert.equal(doc.getElementById('settings-key-error').textContent, 'broken •••• request');
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('sr-status').textContent, 'broken •••• request');
 
+    doc.activeElement = doc.getElementById('settings-btn');
+    openSettings();
     clearKey();
     assert.equal(doc.getElementById('settings-clear-btn').dataset.confirm, 'pending');
-    assert.equal(doc.getElementById('sr-status').textContent, 'Press Clear Key again to confirm.');
+    assert.equal(doc.getElementById('sr-status').textContent, 'Press Clear Key again to remove the stored key.');
     clearKey();
     assert.equal(state.S.apiKey, null);
     assert.equal(doc.getElementById('screen-onboarding').classList.contains('active'), true);
-    assert.equal(doc.getElementById('sr-status').textContent, 'Key cleared.');
-    assert.equal(doc.activeElement.id, 'settings-btn');
+    assert.equal(doc.getElementById('settings-modal').classList.contains('open'), true);
+    assert.equal(doc.getElementById('sr-status').textContent, 'API key cleared. Enter a replacement key or close Settings.');
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('settings-new-key').value, '');
 
     closeSettings();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), false);

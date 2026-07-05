@@ -1,0 +1,797 @@
+{
+  "schema_version": "1.0",
+  "document_type": "ux_feature_contract",
+  "feature_id": "uxf-accessible-settings-key-management",
+  "slug": "accessible-settings-key-management",
+  "title": "Accessible Settings Key Management",
+  "status": "ready_for_implementation",
+  "generated_from": {
+    "project": "FreeForge Chat",
+    "requested_focus": "Identify a high-impact UX feature from the repository and turn the strongest candidate into an implementation-ready contract.",
+    "evidence": [
+      {
+        "id": "ev-01",
+        "type": "repository",
+        "source": "CHANGELOG.md",
+        "observation": "The Unreleased section explicitly lists 'Settings modal accessibility improvements including dialog semantics and focus management' as planned work.",
+        "relevance": "This is a direct maintainer signal that the settings workflow still has usability and accessibility gaps worth addressing."
+      },
+      {
+        "id": "ev-02",
+        "type": "repository",
+        "source": "freeforge/index.html",
+        "observation": "The settings modal is the in-app path for updating or clearing the OpenRouter API key, and it already exposes the current key mask, a clear button, and an update form.",
+        "relevance": "The feature sits on a security-sensitive workflow that must stay legible, reversible, and keyboard friendly."
+      },
+      {
+        "id": "ev-03",
+        "type": "repository",
+        "source": "freeforge/src/features/settings.js",
+        "observation": "Opening settings masks the current key, reset-confirming the clear button, validates the key format before network calls, and closes the modal after success.",
+        "relevance": "There is already a narrow code seam for better focus handling, feedback, and recovery without building a new preferences system."
+      },
+      {
+        "id": "ev-04",
+        "type": "repository",
+        "source": "freeforge/src/ui/focus-trap.js",
+        "observation": "A shared modal focus trap already records the previous focus target and restores it on close.",
+        "relevance": "The feature can improve modal accessibility by refining the existing focus path instead of adding another abstraction."
+      },
+      {
+        "id": "ev-05",
+        "type": "repository",
+        "source": "tests/security/runtime-ui-features.test.mjs",
+        "observation": "The test suite already exercises settings modal keyboard traversal, escape handling, and key update and clear flows.",
+        "relevance": "There is an existing test harness that can lock down a more complete accessible settings workflow with minimal scaffolding."
+      },
+      {
+        "id": "ev-06",
+        "type": "repository",
+        "source": "README.md",
+        "observation": "Settings is the documented place to update or clear the key, and clearing it returns the user to onboarding while deleting local state.",
+        "relevance": "This confirms that the settings flow is the gatekeeper for app continuity and needs clear recovery language."
+      }
+    ]
+  },
+  "decision": {
+    "selected_candidate_id": "cand-01",
+    "selection_rationale": "Accessible settings management has the clearest repository-backed friction signal, protects the app's key management gate, and can ship as a small vertical slice with measurable keyboard and recovery improvements.",
+    "candidates": [
+      {
+        "id": "cand-01",
+        "title": "Accessible Settings Key Management",
+        "problem": "Users who need to update or clear their OpenRouter key can lose orientation in the modal workflow, especially when they rely on keyboard navigation, because the dialog does not yet make the key-management task the first-class focus and recovery path.",
+        "target_user": "Chat users managing their API key, especially keyboard and screen-reader users",
+        "evidence_refs": [
+          "ev-01",
+          "ev-02",
+          "ev-03",
+          "ev-04",
+          "ev-05",
+          "ev-06"
+        ],
+        "measurable_outcome": "Increase successful key update and clear completions while reducing keyboard-only abandonment in Settings.",
+        "vertical_slice": "Open Settings with the key input as the initial focus, keep validation and clear-confirmation states announced, and return focus to the opener after close or success.",
+        "duplication_check": "The app already has a settings modal, key validation, and a shared focus trap, but it does not yet guarantee a task-focused accessible flow for updating or clearing the key.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 4.5,
+          "frequency_or_reach": 4,
+          "ux_leverage": 4.5,
+          "strategic_fit": 4.5,
+          "evidence_confidence": 4.5,
+          "implementation_feasibility": 4,
+          "differentiation": 3
+        },
+        "risk_penalty": 4,
+        "total_score": 82,
+        "disposition": "selected"
+      },
+      {
+        "id": "cand-02",
+        "title": "Context Limit Reset Assistant",
+        "problem": "Users can see that a conversation is nearing the model limit, but they still have to decide manually what to do next when the chat becomes too large.",
+        "target_user": "Users carrying on long conversations in a single chat",
+        "evidence_refs": [
+          "ev-02",
+          "ev-03"
+        ],
+        "measurable_outcome": "Reduce time from context-warning to the next productive action, such as starting a fresh chat.",
+        "vertical_slice": "Turn the existing context warning into a small recovery panel with a clear New Chat action and optional export reminder.",
+        "duplication_check": "The app already shows a context pill and a warning toast, but not a dedicated recovery surface at the warning threshold.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 4,
+          "frequency_or_reach": 4,
+          "ux_leverage": 4,
+          "strategic_fit": 4,
+          "evidence_confidence": 4,
+          "implementation_feasibility": 4,
+          "differentiation": 2.5
+        },
+        "risk_penalty": 5,
+        "total_score": 73.5,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-03",
+        "title": "Agent Library Search and Fast Switch",
+        "problem": "As the saved agent list grows, users may need to scan too many entries to reach the agent they want to use or edit.",
+        "target_user": "Users who manage multiple custom agents",
+        "evidence_refs": [
+          "ev-02",
+          "ev-05"
+        ],
+        "measurable_outcome": "Reduce time to find and activate a specific saved agent.",
+        "vertical_slice": "Add a text filter to the agent library and keep the active agent highlighted while filtering.",
+        "duplication_check": "The agent library already supports CRUD and active switching, but not search or filtering.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 3,
+          "frequency_or_reach": 3,
+          "ux_leverage": 3.5,
+          "strategic_fit": 3.5,
+          "evidence_confidence": 3.5,
+          "implementation_feasibility": 4,
+          "differentiation": 2.5
+        },
+        "risk_penalty": 4,
+        "total_score": 62,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-04",
+        "title": "Agent-Aware Starter Prompts",
+        "problem": "New chats begin with generic starter prompts that may not match the active agent's task or tone well enough for a fast first message.",
+        "target_user": "Users starting fresh chats with custom agents",
+        "evidence_refs": [
+          "ev-02",
+          "ev-03"
+        ],
+        "measurable_outcome": "Increase starter-prompt clicks and first-message sends from the empty state.",
+        "vertical_slice": "Surface the active agent's starter prompts prominently in the empty state and fall back to the built-in defaults when no agent prompts exist.",
+        "duplication_check": "The empty state already renders starter prompts, but the current list is generic and not optimized for a user-selected agent profile.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 2.5,
+          "frequency_or_reach": 3,
+          "ux_leverage": 3,
+          "strategic_fit": 3.5,
+          "evidence_confidence": 3,
+          "implementation_feasibility": 4.5,
+          "differentiation": 2
+        },
+        "risk_penalty": 5,
+        "total_score": 56,
+        "disposition": "deferred"
+      },
+      {
+        "id": "cand-05",
+        "title": "Export Review Before Download",
+        "problem": "Users who export a conversation currently get a file immediately, without a chance to verify the contents or choose a format that matches their next step.",
+        "target_user": "Users who want to save or share a conversation outside the app",
+        "evidence_refs": [
+          "ev-02",
+          "ev-06"
+        ],
+        "measurable_outcome": "Reduce post-export corrections and improve export confidence.",
+        "vertical_slice": "Show a compact preview of the export payload and confirm the file name and format before the download starts.",
+        "duplication_check": "Conversation export already exists as a one-click download, but there is no review step or export summary.",
+        "minimum_gates": {
+          "concrete_problem": true,
+          "distinct": true,
+          "measurable": true,
+          "end_to_end_mvp": true,
+          "constraint_compatible": true
+        },
+        "scores": {
+          "user_pain": 2.5,
+          "frequency_or_reach": 2.5,
+          "ux_leverage": 3,
+          "strategic_fit": 3,
+          "evidence_confidence": 3,
+          "implementation_feasibility": 4,
+          "differentiation": 2
+        },
+        "risk_penalty": 4,
+        "total_score": 53,
+        "disposition": "deferred"
+      }
+    ]
+  },
+  "problem": {
+    "statement": "When users need to update or clear their OpenRouter key, the settings workflow can be hard to complete confidently because the modal does not yet make keyboard focus, feedback, and recovery feel like a single guided task, which can lead to abandonment or accidental key changes.",
+    "affected_users": [
+      "Chat users managing their API key",
+      "Keyboard-only users",
+      "Screen-reader users"
+    ],
+    "jobs_to_be_done": [
+      "Update the saved API key without losing my place in the app",
+      "Clear the saved key only when I really intend to do so",
+      "Recover from validation or network errors without re-entering more than necessary"
+    ],
+    "current_friction": [
+      "The modal already exists, but the repo still calls out settings accessibility improvements as planned work",
+      "The key-management actions depend on focus handling and modal feedback to stay legible",
+      "Clear-key is intentionally destructive and needs clearer recovery language than a generic confirmation"
+    ],
+    "evidence_refs": [
+      "ev-01",
+      "ev-02",
+      "ev-03",
+      "ev-04",
+      "ev-06"
+    ]
+  },
+  "outcomes": {
+    "user_value": "Users can update or clear their key with less confusion, fewer focus errors, and better recovery when something goes wrong.",
+    "product_value": "A smaller number of abandoned settings interactions means fewer support-style errors, a cleaner onboarding-to-chat lifecycle, and a more polished portfolio-grade app.",
+    "metrics": [
+      {
+        "id": "metric-01",
+        "name": "Settings task success rate",
+        "kind": "primary",
+        "definition": "Successful key-management actions divided by attempted key-management actions, where success means either a completed key update or a confirmed clear that returns the user to the intended next state.",
+        "baseline": "unknown",
+        "target": "Increase after rollout without raising accidental-clear incidents",
+        "instrumentation": "Emit settings_modal_opened, settings_key_update_submitted, settings_key_update_succeeded, settings_key_update_failed, and settings_clear_confirmed from freeforge/src/features/settings.js; aggregate the ratio over the review window.",
+        "review_window": "4 weeks after rollout",
+        "guardrail": "Do not raise accidental key clears or suppress validation feedback in order to improve the rate."
+      },
+      {
+        "id": "metric-02",
+        "name": "Keyboard-only completion time",
+        "kind": "diagnostic",
+        "definition": "Median seconds from opening Settings to a successful key update or confirmed clear when the flow is exercised with keyboard-only interaction.",
+        "baseline": "unknown",
+        "target": "Decrease or stay flat while success rate rises",
+        "instrumentation": "Manual keyboard-only verification in tests/security/runtime-ui-features.test.mjs and the existing modal focus tests.",
+        "review_window": "First 2 sprints after rollout",
+        "guardrail": "Do not optimize by removing confirmation steps or hiding important feedback."
+      },
+      {
+        "id": "metric-03",
+        "name": "Confirmed key-loss incidents",
+        "kind": "guardrail",
+        "definition": "Count of verified cases where a key was lost unexpectedly, could not be recovered, or was cleared without the user's intent.",
+        "baseline": "unknown",
+        "target": "Stay at zero",
+        "instrumentation": "QA notes, support reports, and runtime error logs tagged to settings flows.",
+        "review_window": "Continuous during rollout",
+        "guardrail": "Any increase is a rollback candidate."
+      }
+    ]
+  },
+  "scope": {
+    "mvp": "Refine the existing Settings modal so it opens on the key-management task, announces validation and clear-state changes clearly, and returns focus to the caller after close or success.",
+    "in_scope": [
+      "Open Settings with the update-key field as the first focus target",
+      "Keep the existing clear-key confirmation but make the state change legible to keyboard and screen-reader users",
+      "Announce validation and success states without forcing the user to hunt for them",
+      "Preserve the current update and clear flows and their storage behavior"
+    ],
+    "non_goals": [
+      "Building a new preferences system",
+      "Changing how the API key is stored or migrated",
+      "Adding cross-tab sync or background settings management",
+      "Redesigning onboarding or the rest of the chat shell"
+    ],
+    "assumptions": [
+      "The current settings modal remains the single place where users update or clear their API key",
+      "Keyboard and screen-reader improvements can be delivered without introducing a new dependency",
+      "The existing local storage and session storage behavior remains unchanged"
+    ],
+    "constraints": [
+      "Never expose the raw API key in a toast, log, or analytics payload",
+      "Keep clear-key reversible only until the second explicit confirmation",
+      "Preserve the app's current security posture and session-scoped key storage"
+    ]
+  },
+  "ux_design": {
+    "entry_points": [
+      "Chat screen Settings button",
+      "Invalid-key banner Update Key button"
+    ],
+    "primary_flow": [
+      {
+        "id": "flow-01",
+        "actor": "User",
+        "action": "Opens Settings from the chat shell.",
+        "system_response": "The modal appears with the key field as the first focus target and a clear title and description for the current task.",
+        "success_condition": "The user can immediately start updating the key without tabbing through unrelated controls."
+      },
+      {
+        "id": "flow-02",
+        "actor": "User",
+        "action": "Types a new key and submits the update.",
+        "system_response": "The modal shows a loading state, validates the key, and then closes on success after restoring focus to the opener.",
+        "success_condition": "The key is stored and the user lands back in chat with the modal closed."
+      },
+      {
+        "id": "flow-03",
+        "actor": "User",
+        "action": "Clicks Clear Key and confirms the destructive action.",
+        "system_response": "The app confirms the change, clears the key and local history, and returns the user to onboarding.",
+        "success_condition": "The clear action is explicit, confirmed, and leaves no ambiguity about what changed."
+      }
+    ],
+    "alternate_flows": [
+      {
+        "name": "Validation error recovery",
+        "trigger": "The key fails format or network validation.",
+        "steps": [
+          "Keep the modal open",
+          "Announce the error inline",
+          "Leave the field ready for correction"
+        ],
+        "resolution": "The user can edit the same input and retry without re-opening Settings."
+      },
+      {
+        "name": "Dismiss without saving",
+        "trigger": "The user closes the modal with Escape, the close button, or the backdrop.",
+        "steps": [
+          "Do not change stored state",
+          "Return focus to the element that opened Settings",
+          "Leave the modal content untouched for the next open"
+        ],
+        "resolution": "Closing is safe and non-destructive."
+      }
+    ],
+    "states": [
+      {
+        "id": "state-00",
+        "type": "idle",
+        "applicable": true,
+        "trigger": "Settings is open and no network request is active.",
+        "experience": "Show the current key mask, the update field, and the clear-key control without any loading affordance.",
+        "recovery": "No recovery is needed until the user submits an action or dismisses the modal.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-01",
+        "type": "loading",
+        "applicable": true,
+        "trigger": "The user submits a key update or clear-confirmation request.",
+        "experience": "Disable the active controls, show progress text, and keep the modal open while the request is in flight.",
+        "recovery": "Re-enable the controls if the request fails or times out so the user can retry.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-02",
+        "type": "success",
+        "applicable": true,
+        "trigger": "The key update succeeds or the clear action is confirmed.",
+        "experience": "Close the modal, preserve the success announcement, and restore focus to the opener or onboarding transition.",
+        "recovery": "No recovery is needed unless the user wants to reopen Settings and make another change.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-03",
+        "type": "empty",
+        "applicable": true,
+        "trigger": "The update field is blank before the user types a new key.",
+        "experience": "Show the current masked key and a blank input with helper text so the user understands that nothing has been submitted yet.",
+        "recovery": "The user can type a key or dismiss the modal without changing state.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-04",
+        "type": "error",
+        "applicable": true,
+        "trigger": "The submitted key fails validation, the network fails, or the server returns a non-401 error that prevents completion.",
+        "experience": "Keep the modal open, show the error inline, and keep focus on the field that needs correction.",
+        "recovery": "The user can edit the same field and retry immediately.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-05",
+        "type": "permission",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "Settings does not introduce a new permission model; key acceptance is handled by OpenRouter authentication and browser storage, not by a separate app permission gate."
+      },
+      {
+        "id": "state-06",
+        "type": "authentication",
+        "applicable": true,
+        "trigger": "OpenRouter rejects the entered key as invalid or revoked.",
+        "experience": "Explain that the key did not validate and keep the entered text available for correction.",
+        "recovery": "The user can replace the key and try again without leaving Settings.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-07",
+        "type": "offline",
+        "applicable": true,
+        "trigger": "The validation request cannot reach OpenRouter because the browser is offline or the fetch fails at the network layer.",
+        "experience": "Show a network error that explains the failure without clearing the user's input.",
+        "recovery": "The user can retry once connectivity returns.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-08",
+        "type": "partial",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "The key update and clear actions are atomic for this feature slice, so there is no supported partial-save state to recover from."
+      },
+      {
+        "id": "state-09",
+        "type": "interrupted",
+        "applicable": true,
+        "trigger": "The user closes the tab, refreshes the page, or loses the session while a validation request is in flight.",
+        "experience": "The request stops and the modal state is lost with the page, but the app does not imply that the key changed.",
+        "recovery": "When the user returns, they can reopen Settings and retry from scratch.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-10",
+        "type": "cancelled",
+        "applicable": true,
+        "trigger": "The user dismisses the modal or aborts the clear confirmation before submitting.",
+        "experience": "Close the modal without mutating the stored key or local history.",
+        "recovery": "The user can reopen Settings later and continue from the same stored state.",
+        "not_applicable_reason": ""
+      },
+      {
+        "id": "state-11",
+        "type": "stale",
+        "applicable": false,
+        "trigger": "",
+        "experience": "",
+        "recovery": "",
+        "not_applicable_reason": "The modal does not keep a long-lived editable draft across sessions, and openSettings always reads the current stored session key before showing the dialog."
+      }
+    ],
+    "accessibility": [
+      {
+        "area": "Keyboard and focus",
+        "requirement": "Opening Settings moves focus to the key input, Tab order stays inside the modal, Escape closes the dialog, and focus returns to the element that opened it.",
+        "verification": "Use keyboard only to open, update, clear, and close the modal, then confirm focus restoration in the browser and in tests."
+      },
+      {
+        "area": "Announcements",
+        "requirement": "Validation errors, loading progress, clear confirmation, and success are announced through accessible text or live regions rather than color alone.",
+        "verification": "Run the flow with a screen reader and confirm that the state change is spoken without unexpected focus jumps."
+      },
+      {
+        "area": "Visual communication",
+        "requirement": "The modal uses labels, helper text, and non-color cues so users can distinguish idle, error, loading, and success states in high-contrast and grayscale conditions.",
+        "verification": "Inspect the dialog in normal, high-contrast, and grayscale renderings."
+      },
+      {
+        "area": "Motion and touch",
+        "requirement": "Any modal or button animation remains understandable with reduced motion enabled, and the clear/update controls keep comfortable touch targets on mobile widths.",
+        "verification": "Enable reduced motion and test the modal on a narrow viewport with touch-sized targets."
+      }
+    ],
+    "content_guidance": [
+      "Lead with the outcome of the action, such as 'Key updated' or 'Clear key confirmed', before the technical detail.",
+      "Use button text that names the action directly: 'Update Key', 'Clear Key', and 'Cancel'.",
+      "Do not show raw server messages or the full key in copy, toasts, or status text."
+    ],
+    "user_controls": [
+      "Update the saved key from the modal",
+      "Cancel the clear-key confirmation before the second click",
+      "Dismiss the dialog without saving",
+      "Retry validation after correcting the input"
+    ]
+  },
+  "implementation": {
+    "architecture_fit": "Tighten the existing settings modal and key-validation path instead of adding a new preferences system, reusing the shared focus trap and current storage helpers so the change stays inside the chat shell.",
+    "work_items": [
+      {
+        "id": "work-01",
+        "title": "Refine settings modal focus and semantics",
+        "objective": "Make the settings dialog open on the key-management task and preserve a clear focus path on close.",
+        "paths": [
+          {
+            "path": "freeforge/index.html",
+            "operation": "modify",
+            "rationale": "Adjust the modal markup and helper text so the task is legible to keyboard and screen-reader users."
+          },
+          {
+            "path": "freeforge/src/features/settings.js",
+            "operation": "modify",
+            "rationale": "Set initial focus, preserve restore-focus behavior, and keep the modal state aligned with the current action."
+          }
+        ],
+        "instructions": [
+          "Open Settings with the update-key field focused instead of the close button.",
+          "Keep the existing clear confirmation and close behavior, but make the task state explicit in accessible text.",
+          "Do not change the key storage model or the validation rules while adjusting the modal UX."
+        ],
+        "dependencies": [],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "Keyboard users land on the update field when Settings opens.",
+          "Closing the modal returns focus to the opener.",
+          "The modal still validates and clears keys with the existing storage behavior."
+        ]
+      },
+      {
+        "id": "work-02",
+        "title": "Clarify settings loading and error feedback",
+        "objective": "Expose clear loading, success, and error states for key update and clear actions without leaking the raw key.",
+        "paths": [
+          {
+            "path": "freeforge/src/features/settings.js",
+            "operation": "modify",
+            "rationale": "Centralizes the validation, progress, success, and failure text for the settings workflow."
+          },
+          {
+            "path": "freeforge/src/ui/toast.js",
+            "operation": "modify",
+            "rationale": "Only if a small accessible status helper is needed for success or failure announcements."
+          }
+        ],
+        "instructions": [
+          "Keep validation errors inline and make them usable without relying on color.",
+          "Keep the clear-key confirmation reversible until the second explicit click.",
+          "If a status message is added, ensure it never contains the raw API key."
+        ],
+        "dependencies": [
+          "work-01"
+        ],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "A failed key update leaves the user in the modal with a readable error.",
+          "A successful update or clear produces a clear success state and closes or redirects correctly.",
+          "No toasts, status text, or logs expose the raw key."
+        ]
+      },
+      {
+        "id": "work-03",
+        "title": "Lock down modal behavior with tests",
+        "objective": "Prove the new focus and recovery behavior with browser-level coverage.",
+        "paths": [
+          {
+            "path": "tests/security/runtime-ui-features.test.mjs",
+            "operation": "modify",
+            "rationale": "Extend the existing settings modal tests to cover initial focus, validation, and close/restore behavior."
+          },
+          {
+            "path": "tests/security/runtime-app.test.mjs",
+            "operation": "modify",
+            "rationale": "Add startup or wiring coverage if any modal entry-point or banner interaction changes."
+          }
+        ],
+        "instructions": [
+          "Add keyboard-only assertions for opening the dialog, tabbing through it, and closing it.",
+          "Cover a successful key update, a validation failure, and the clear-key confirmation path.",
+          "Verify the opener regains focus after the modal closes."
+        ],
+        "dependencies": [
+          "work-01",
+          "work-02"
+        ],
+        "verification": [
+          "npm --prefix freeforge test",
+          "npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security"
+        ],
+        "done_when": [
+          "The updated tests fail before the feature and pass after it.",
+          "The suite covers the accessible settings path without adding flaky timing assumptions."
+        ]
+      }
+    ],
+    "data_changes": [
+      "No new persistent data model is required.",
+      "Keep using the existing session-scoped key storage and local conversation state."
+    ],
+    "api_changes": [
+      "No public API contract changes are required.",
+      "The feature only refines how the client handles the existing OpenRouter key validation and clear-key flows."
+    ],
+    "analytics_events": [
+      {
+        "name": "settings_modal_opened",
+        "trigger": "The user opens the settings modal from chat or the invalid-key banner.",
+        "properties": [
+          "entry_point",
+          "has_saved_key"
+        ],
+        "purpose": "Measure how often users enter the settings workflow and from where."
+      },
+      {
+        "name": "settings_key_update_submitted",
+        "trigger": "The user submits a non-empty API key from the settings form.",
+        "properties": [
+          "entry_point",
+          "keyboard_only"
+        ],
+        "purpose": "Measure attempted key updates before validation or network results."
+      },
+      {
+        "name": "settings_key_update_succeeded",
+        "trigger": "The new key validates and is stored successfully.",
+        "properties": [
+          "entry_point",
+          "keyboard_only"
+        ],
+        "purpose": "Measure successful key updates and pair them with submitted attempts."
+      },
+      {
+        "name": "settings_key_update_failed",
+        "trigger": "The key fails format validation, network validation, or OpenRouter authentication.",
+        "properties": [
+          "failure_type",
+          "entry_point"
+        ],
+        "purpose": "Track where users need recovery help and whether feedback is preventing completion."
+      },
+      {
+        "name": "settings_clear_confirmed",
+        "trigger": "The user confirms Clear Key on the second explicit click.",
+        "properties": [
+          "keyboard_only",
+          "entry_point"
+        ],
+        "purpose": "Measure destructive settings actions separately from ordinary updates."
+      }
+    ],
+    "security_privacy": [
+      "Never log or export the raw API key.",
+      "Keep the key in sessionStorage and preserve the existing one-time localStorage migration behavior.",
+      "Do not widen the storage lifetime or move key material into analytics.",
+      "Keep clear-key confirmation explicit so the user cannot lose the key by accident."
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "id": "ac-01",
+      "given": "A keyboard-only user opens Settings from the chat screen",
+      "when": "The modal appears",
+      "then": "Focus lands on the key input, tab order stays trapped inside the dialog, and closing the modal returns focus to the opener",
+      "verification": "Automated modal-focus test plus manual keyboard smoke test"
+    },
+    {
+      "id": "ac-02",
+      "given": "A user submits a valid new API key",
+      "when": "OpenRouter validates the key successfully",
+      "then": "The dialog closes, the key remains stored in the current session, and the user returns to the chat shell with no raw key exposed in any status message",
+      "verification": "Automated settings update test"
+    },
+    {
+      "id": "ac-03",
+      "given": "A user clicks Clear Key but does not confirm the second click",
+      "when": "The confirmation state times out or the dialog is dismissed",
+      "then": "The stored key is preserved and the user can return to the modal without loss of state",
+      "verification": "Automated clear-confirmation regression test"
+    },
+    {
+      "id": "ac-04",
+      "given": "A key update fails because the key is invalid, the network is offline, or OpenRouter rejects the request",
+      "when": "The failure is shown in the modal",
+      "then": "The error is readable without relying on color, the input retains the user's text, and the user can retry from the same field",
+      "verification": "Automated failure-path test plus screen-reader smoke test"
+    }
+  ],
+  "test_plan": {
+    "unit": [
+      "Check that the modal opens on the key field and restores focus correctly.",
+      "Check that validation errors and success states never expose the raw key."
+    ],
+    "integration": [
+      "Exercise update-key success, format failure, authentication failure, and offline failure.",
+      "Exercise the two-step clear-key confirmation flow and the cancellation path."
+    ],
+    "end_to_end": [
+      "Open Settings from chat, update a key successfully, and return to chat.",
+      "Open Settings, start a clear-key action, cancel it, and confirm the key is preserved."
+    ],
+    "accessibility": [
+      "Verify keyboard-only modal traversal, focus restoration, and reduced-motion behavior.",
+      "Verify announcement text and non-color cues with at least one screen-reader smoke test."
+    ],
+    "manual": [
+      "Check the dialog in a narrow mobile viewport.",
+      "Confirm that no success or error message includes the full API key."
+    ]
+  },
+  "rollout": {
+    "feature_flag": "settings_key_management_accessibility_v1",
+    "phases": [
+      "Enable for local verification and repo tests first.",
+      "Ship enabled by default once keyboard and error-path tests pass.",
+      "Monitor for support or QA regressions around accidental clears or focus loss."
+    ],
+    "rollback_triggers": [
+      "Keyboard focus no longer restores to the opener",
+      "Clear-key becomes easier to trigger accidentally",
+      "Any status or analytics payload leaks the raw API key"
+    ],
+    "rollback_plan": [
+      "Disable settings_key_management_accessibility_v1.",
+      "Revert the modal focus and helper-copy changes.",
+      "Keep the existing key validation and storage behavior intact while restoring the prior UI."
+    ],
+    "observability": [
+      "Track settings modal opens, successful updates, failed updates, and confirmed clears.",
+      "Watch for support or QA notes about focus loss, unreadable errors, or accidental key deletion.",
+      "Review the existing runtime error log if the modal fails to close or restore focus."
+    ]
+  },
+  "risks": [
+    {
+      "id": "risk-01",
+      "risk": "Changing modal focus could make the close button less discoverable for some users.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "mitigation": "Keep Escape, the close button, and backdrop close behavior intact and verify focus restoration in tests.",
+      "owner": "Frontend feature owner"
+    },
+    {
+      "id": "risk-02",
+      "risk": "Clear-key confirmation could still feel destructive if the wording is too terse.",
+      "likelihood": "medium",
+      "impact": "high",
+      "mitigation": "Use explicit language, announce the state change, and retain the existing second-click safeguard.",
+      "owner": "Frontend feature owner"
+    },
+    {
+      "id": "risk-03",
+      "risk": "Validation or status text could accidentally reveal the raw API key if copy is not reviewed carefully.",
+      "likelihood": "low",
+      "impact": "high",
+      "mitigation": "Keep the masked display only, never interpolate the entered key into toast or error text, and review tests for leakage.",
+      "owner": "Frontend feature owner"
+    }
+  ],
+  "open_questions": [],
+  "agent_handoff": {
+    "execution_order": [
+      "work-01",
+      "work-02",
+      "work-03"
+    ],
+    "parallel_groups": [],
+    "stop_conditions": [
+      "Stop if the settings modal cannot focus the key field without breaking the current close and restore behavior.",
+      "Stop if any proposed copy or telemetry would expose the raw API key or weaken the current storage boundary.",
+      "Stop if the existing validation path cannot preserve the user's input after an error.",
+      "Stop if the updated tests cannot reliably prove focus restoration and clear-key cancellation."
+    ],
+    "completion_evidence": [
+      "Passing settings modal focus and validation tests",
+      "Passing repository lint and test commands",
+      "Manual keyboard smoke test showing the modal opens on the key field and returns focus on close",
+      "No observed leakage of raw key material in UI text, logs, or telemetry"
+    ]
+  }
+}

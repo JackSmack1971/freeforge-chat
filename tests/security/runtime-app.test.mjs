@@ -421,8 +421,13 @@ test('app.js wires the chat screen, settings, and command palette listeners', as
     doc.getElementById('settings-new-key').value = 'sk-or-v1-other';
     doc.getElementById('settings-new-key').closest('form').dispatchEvent({ type: 'submit', preventDefault() {} });
     await new Promise(r => setTimeout(r, 0));
+    doc.getElementById('settings-btn').click();
     doc.getElementById('settings-clear-btn').click();
     doc.getElementById('settings-clear-btn').click();
+    assert.equal(doc.getElementById('settings-modal').classList.contains('open'), true);
+    assert.equal(doc.activeElement.id, 'settings-new-key');
+    assert.equal(doc.getElementById('settings-new-key').value, '');
+    assert.equal(doc.getElementById('sr-status').textContent, 'API key cleared. Enter a replacement key or close Settings.');
     doc.getElementById('banner-update-btn').click();
 
     doc.getElementById('new-chat-btn').click();

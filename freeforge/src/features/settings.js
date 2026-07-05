@@ -42,23 +42,29 @@ function executeClearKey() {
   S.messages = [];
   S.models = [];
   S.selectedModel = null;
-  closeSettings();
+  $('settings-key-display').textContent = maskKey(S.apiKey);
+  $('settings-new-key').value = '';
+  clearKeyError(false);
+  announceStatus('API key cleared. Enter a replacement key or close Settings.');
   showScreen('onboarding');
+  $('settings-new-key').focus();
 }
 
-export function clearKeyError() {
+export function clearKeyError(clearStatus = true) {
   const err = $('settings-key-error');
   err.textContent = '';
   err.classList.add('hidden');
   $('settings-new-key').setAttribute('aria-invalid', 'false');
+  if (clearStatus) announceStatus('');
 }
 
 function showKeyError(msg) {
   const err = $('settings-key-error');
-  announceStatus('');
   err.textContent = msg;
   err.classList.remove('hidden');
   $('settings-new-key').setAttribute('aria-invalid', 'true');
+  announceStatus(msg);
+  $('settings-new-key').focus();
 }
 
 export function openSettings() {
@@ -77,12 +83,12 @@ export function openSettings() {
 
 export function closeSettings() {
   resetClearButton($('settings-clear-btn'));
-  clearKeyError();
+  clearKeyError(false);
   const modal = $('settings-modal');
   modal.classList.add('hidden');
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
-  getFocusTrap().close();
+  getFocusTrap().close($('settings-btn'));
 }
 
 export async function updateKey() {
@@ -113,11 +119,12 @@ export async function updateKey() {
     clearKeyError();
     hideInvalidBanner();
     populateModelsFromState();
-    announceStatus('Key updated.');
+    announceStatus('API key updated.');
     closeSettings();
     toast('API key updated!', 'success');
   } catch (e) {
-    showKeyError(e.message || 'Invalid key');
+    const rawMsg = e?.message || 'Invalid key';
+    showKeyError(String(rawMsg).includes(key) ? String(rawMsg).replaceAll(key, '••••') : rawMsg);
   } finally {
     btn.textContent = 'Update Key';
     btn.disabled = false;
@@ -128,7 +135,6 @@ export function clearKey() {
   const btn = $('settings-clear-btn');
   if (btn.dataset.confirm === 'pending') {
     resetClearButton(btn);
-    announceStatus('Key cleared.');
     executeClearKey();
     return;
   }
@@ -136,6 +142,6 @@ export function clearKey() {
   btn.dataset.confirm = 'pending';
   btn.textContent = 'Click again to confirm';
   btn.classList.add('bg-red-600', 'text-white');
-  announceStatus('Press Clear Key again to confirm.');
+  announceStatus('Press Clear Key again to remove the stored key.');
   btn._confirmTimer = setTimeout(() => resetClearButton(btn), CLEAR_CONFIRM_MS);
 }

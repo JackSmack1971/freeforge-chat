@@ -31,10 +31,11 @@ export function createFocusTrap(containerEl) {
     return getFocusable()[0] || null;
   }
 
-  function close() {
+  function close(fallback = null) {
     if (!containerEl) return;
     containerEl.removeEventListener('keydown', trapFocus);
-    if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
+    const target = previousFocus && document.contains(previousFocus) ? previousFocus : fallback;
+    if (target) target.focus();
     previousFocus = null;
   }
 
