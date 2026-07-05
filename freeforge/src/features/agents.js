@@ -13,6 +13,14 @@ const EXPORT_BTN_ID = 'agent-library-export-btn';
 const CANCEL_BTN_ID = 'agent-builder-cancel-btn';
 const SELECT_ID = 'agent-select';
 
+function sanitizeFilename(name) {
+  return String(name || 'agent')
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/-+/g, '-');
+}
+
 function getFormAgentId() {
   return $(FORM_ID)?.dataset.agentId || '';
 }
@@ -73,18 +81,16 @@ function downloadJson(name, json) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
+  a.download = `${sanitizeFilename(name)}.json`;
   a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function exportActiveAgent() {
   if (!S.activeAgentId) { toast('No active agent to export', 'warning'); return; }
   const blob = exportAgent(S.activeAgentId);
   if (!blob) { toast('Agent not found', 'error'); return; }
-  downloadJson(`${S.activeAgent?.name || S.activeAgentId}.json`, blob);
+  downloadJson(S.activeAgent?.name || S.activeAgentId, blob);
   toast('Agent exported', 'success');
 }
 
@@ -212,7 +218,7 @@ function exportById(id) {
     return;
   }
   const agent = getAgent(id);
-  downloadJson(`${agent?.name || id}.json`, blob);
+  downloadJson(agent?.name || id, blob);
   toast('Agent exported', 'success');
 }
 
@@ -246,4 +252,8 @@ document.getElementById(FORM_ID)?.addEventListener('submit', e => {
   saveFromBuilder();
 });
 
-refreshAgentUi();
+export function initAgents() {
+  refreshAgentUi();
+}
+
+initAgents();
