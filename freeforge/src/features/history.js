@@ -2,6 +2,7 @@ import { $, LS, S, snapshotAgent, uid } from '../state.js';
 import { renderCtxPill } from '../ui/ctx-pill.js';
 import { createFocusTrap } from '../ui/focus-trap.js';
 import { renderAllMessages, renderStreamIcons, scrollBottom } from '../ui/messages.js';
+import { toast } from '../ui/toast.js';
 
 const HISTORY_KEY = 'ff_history';
 const HISTORY_LIMIT = 10;
@@ -16,6 +17,8 @@ const REPLACE_ID = 'history-replace-btn';
 const CANCEL_ID = 'history-replace-cancel-btn';
 const COMPOSER_ID = 'msg-input';
 const TRIGGER_ID = 'history-btn';
+const IMPORT_BTN_ID = 'history-import-btn';
+const IMPORT_INPUT_ID = 'history-import-input';
 
 let focusTrap = null;
 let pendingRestoreId = null;
@@ -29,8 +32,7 @@ function getFocusTrap() {
   return focusTrap;
 }
 
-function readHistory() {
-  const raw = LS.get(HISTORY_KEY);
+function normalizeHistory(raw) {
   if (!Array.isArray(raw)) return [];
   const entries = [];
   for (const item of raw) {
@@ -61,8 +63,27 @@ function readHistory() {
   return entries.slice(0, HISTORY_LIMIT);
 }
 
+function readHistory() {
+  return normalizeHistory(LS.get(HISTORY_KEY));
+}
+
 function writeHistory(entries) {
   LS.set(HISTORY_KEY, entries.slice(0, HISTORY_LIMIT));
+}
+
+export function importConversation(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { toast('Import failed: invalid JSON', 'error'); return false; }
+  const imported = normalizeHistory(Array.isArray(parsed) ? parsed : [parsed]);
+  if (!imported.length) { toast('Import failed: no valid conversations found', 'error'); return false; }
+  writeHistory([...imported, ...readHistory()]);
+  renderHistoryDrawer();
+  toast('Conversation imported', 'success');
+  return true;
+}
+
+export function openImportPicker() {
+  $(IMPORT_INPUT_ID)?.click();
 }
 
 function cloneMessages(messages) {
@@ -211,7 +232,19 @@ export function renderHistoryDrawer() {
     restoreBtn.dataset.historyId = entry.id;
     restoreBtn.textContent = 'Restore';
 
-    head.append(meta, restoreBtn);
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'shrink-0 rounded-lg border border-red-900/60 px-2.5 py-1 text-xs font-medium text-red-300 hover:border-red-700 hover:text-red-200 transition-colors';
+    deleteBtn.dataset.historyAction = 'delete';
+    deleteBtn.dataset.historyId = entry.id;
+    deleteBtn.setAttribute('aria-label', `Delete ${formatTitle(entry)}`);
+    deleteBtn.textContent = 'Delete';
+
+    const actions = document.createElement('div');
+    actions.className = 'flex shrink-0 items-center gap-2';
+    actions.append(restoreBtn, deleteBtn);
+
+    head.append(meta, actions);
 
     const preview = document.createElement('p');
     preview.className = 'mt-3 text-sm text-zinc-400';
@@ -272,6 +305,13 @@ function handleRestoreClick(id) {
   restoreEntry(entry);
 }
 
+function deleteEntry(id) {
+  const entries = readHistory();
+  if (!entries.some(entry => entry.id === id)) return;
+  writeHistory(entries.filter(entry => entry.id !== id));
+  renderHistoryDrawer();
+}
+
 function confirmPendingRestore() {
   if (!pendingRestoreId) return;
   const entry = getHistoryEntry(pendingRestoreId);
@@ -292,11 +332,20 @@ export function initHistoryDrawer() {
   $(CLOSE_ID)?.addEventListener('click', closeHistoryDrawer);
   $(LIST_ID)?.addEventListener('click', e => {
     const action = e.target.closest('[data-history-action]');
-    if (!action || action.dataset.historyAction !== 'restore') return;
+    if (!action) return;
     const id = action.dataset.historyId;
-    if (id) handleRestoreClick(id);
+    if (!id) return;
+    if (action.dataset.historyAction === 'restore') handleRestoreClick(id);
+    if (action.dataset.historyAction === 'delete') deleteEntry(id);
   });
   $(REPLACE_ID)?.addEventListener('click', confirmPendingRestore);
   $(CANCEL_ID)?.addEventListener('click', hideConfirm);
+  $(IMPORT_BTN_ID)?.addEventListener('click', openImportPicker);
+  $(IMPORT_INPUT_ID)?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    file.text().then(importConversation).catch(() => toast('Import failed: could not read file', 'error'));
+    e.target.value = '';
+  });
   renderHistoryDrawer();
 }

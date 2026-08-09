@@ -13,7 +13,7 @@ FreeForge Chat is a zero-build browser chat app for people who want to use OpenR
 - [Directory Structure](#directory-structure)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Commands](#commands)
+- [Developer Command Center](#developer-command-center)
 - [Testing & Verification](#testing--verification)
 - [Troubleshooting](#troubleshooting)
 - [Stack Inventory](#stack-inventory)
@@ -47,7 +47,7 @@ If you want to run the Node-based checks, no dependency install is needed first 
 
 ```bash
 npm --prefix freeforge test
-npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
+npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers
 ```
 
 ## Features
@@ -55,6 +55,8 @@ npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
 - Browser-only chat UI for OpenRouter free models, with onboarding that validates keys against the OpenRouter models endpoint.
 - Free-model selection that filters `:free` models and zero-priced models, then persists the chosen model in browser storage.
 - Streaming chat completions with incremental rendering, stop generation support, and a context-usage pill.
+- Browser-local conversation history drawer that archives up to 10 conversations and restores them into the active chat.
+- Import conversation history from validated JSON snapshots; imports remain capped at 10 conversations.
 - Markdown rendering for assistant responses with `marked` and DOMPurify sanitization before DOM insertion.
 - Message actions for copy, regenerate, inline edit, undo of inline edits, and conversation export.
 - Settings modal for updating or clearing the API key without leaving the app.
@@ -101,12 +103,15 @@ flowchart TB
 | Edit a user message | Click a user bubble, edit inline, then save. |
 | Undo an inline edit | Use the toast action that appears after saving the edit. |
 | Export a conversation | Use the command palette action. |
+| Import a conversation | Open History or use the command palette, then choose a JSON snapshot. |
+| Browse conversation history | Open the history button in the navigation, then restore a saved conversation. |
 | Clear local app state | Open Settings and use `Clear Key`, which also clears saved messages and model choice. |
 
 ### App Notes
 
 - The key is validated with OpenRouter before the app switches into chat mode.
 - Chat history is local to the browser.
+- The History drawer stores up to 10 archived conversations in browser `localStorage`; restoring with unsent composer text requires confirmation.
 - The context pill turns warning or danger as the conversation approaches the model limit.
 - Clipboard actions depend on browser permissions and can be stricter on `file://` URLs.
 
@@ -119,18 +124,19 @@ No required environment variables. Runtime configuration lives in browser storag
 | `ff_key` | Yes to chat | None until saved | `freeforge/src/state.js`, `freeforge/src/features/onboarding.js`, `freeforge/src/features/settings.js` | OpenRouter API key stored in `sessionStorage` for the current tab. |
 | `ff_msgs` | No | `[]` | `freeforge/src/features/chat.js` | Conversation history stored in `localStorage`. |
 | `ff_model` | No | First free model returned by OpenRouter | `freeforge/src/features/models.js` | Selected model stored in `localStorage`. |
+| `ff_history` | No | `[]` | `freeforge/src/features/history.js` | Up to 10 archived conversations used by the History drawer, stored in `localStorage`. |
 
-## Commands
+## Developer Command Center
 
 | Command | Category | When to use | Source | Purpose |
 |---|---|---|---|---|
 | `npm --prefix freeforge test` | Test | Run the security-focused Node test suite. | `freeforge/package.json`, `.github/workflows/node-tests.yml` | Executes `node --test tests/security/*.test.mjs`. |
-| `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security` | Lint | Run the same Biome check used in CI. | `.github/workflows/biome-check.yml`, `biome.json` | Lints the browser runtime and security tests. |
+| `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers` | Lint | Run the same Biome check used in CI. | `.github/workflows/biome-check.yml`, `biome.json` | Lints the browser runtime, security tests, and test helpers. |
 
 ## Testing & Verification
 
 - `npm --prefix freeforge test` runs the repository's built-in Node test suite.
-- `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security` runs the same lint pass used in CI.
+- `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers` runs the same lint pass used in CI.
 - CI also runs both checks on Node.js 22 via `.github/workflows/node-tests.yml` and `.github/workflows/biome-check.yml`.
 - There is no build step in this repo.
 
@@ -142,6 +148,7 @@ No required environment variables. Runtime configuration lives in browser storag
 | Model dropdown shows `No free models found` | The key is valid but has no free models available. | Use a different OpenRouter key or confirm the account can access free models. |
 | Copy or clipboard actions fail on `file://` | The browser blocks clipboard access in that context. | Use a browser profile that allows clipboard access or serve the files over HTTP. |
 | The context pill turns warning or danger | The conversation is approaching the model's context limit. | Start a new chat or export the current conversation first. |
+| A previous conversation is missing | Only non-empty conversations are archived when starting a new chat, and the archive is capped at 10 entries. | Open History before starting another new chat, or export important conversations. |
 | Requests return `Rate limited` | OpenRouter is throttling the account or IP. | Wait briefly and retry. |
 
 ## Stack Inventory
@@ -156,14 +163,14 @@ No required environment variables. Runtime configuration lives in browser storag
 | HTML sanitizer | DOMPurify | 3.4.8 | `freeforge/package.json`, `freeforge/index.html` | Loaded from jsDelivr with SRI. |
 | Static hosting | Netlify | — | `netlify.toml` | Publishes `freeforge/` and sets security headers. |
 | Test runner | Node.js `node:test` | 22 in CI | `.github/workflows/node-tests.yml`, `freeforge/package.json` | No test framework install required. |
-| Linter | Biome | 1.9.4 | `.github/workflows/biome-check.yml`, `biome.json` | Lints `freeforge/src` and `tests/security`. |
+| Linter | Biome | 1.9.4 | `.github/workflows/biome-check.yml`, `biome.json` | Lints `freeforge/src`, `tests/security`, and `tests/helpers`. |
 | OpenRouter API | OpenRouter REST API | — | `freeforge/src/api.js` | Uses `/api/v1/models` and `/api/v1/chat/completions`. |
 
 ## Reproducibility & Maintenance
 
-- Fresh clone verification: open `freeforge/index.html`, then run `npm --prefix freeforge test` and `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security`.
+- Fresh clone verification: open `freeforge/index.html`, then run `npm --prefix freeforge test` and `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers`.
 - Updating CDN dependencies: change the script URLs and SRI hashes in `freeforge/index.html` and keep the metadata in `freeforge/package.json` aligned.
-- Resetting local app state: clear `ff_key`, `ff_msgs`, and `ff_model`, or use Settings to clear the key and history.
+- Resetting local app state: clear `ff_key`, `ff_msgs`, `ff_model`, and `ff_history`; Settings clears the key, active messages, and selected model but does not remove archived history.
 - Local host note: the app can be opened directly from disk or served from any static host, but clipboard behavior may be stricter on `file://`.
 
 ## Contributing
