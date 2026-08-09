@@ -123,7 +123,7 @@ function createParsedPre(html) {
   if (codeMatch) {
     const code = new MockElement('code');
     parseAttributes(code, codeMatch[1] ?? '');
-    code.textContent = codeMatch[2].replace(/<[^>]+>/g, '');
+    code.textContent = codeMatch[2].replace(/[<>]/g, '');
     pre.appendChild(code);
   }
   return pre;
