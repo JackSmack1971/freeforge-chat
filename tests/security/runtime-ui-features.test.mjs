@@ -359,7 +359,7 @@ test('palette.js action buttons execute their handlers', async () => {
     await Promise.resolve();
 
     openPalette();
-    doc.getElementById('cmd-list').children[3].click();
+    doc.getElementById('cmd-list').children[4].click();
     assert.equal(doc.getElementById('settings-modal').classList.contains('open'), true);
   } finally {
     restore();
@@ -1414,7 +1414,7 @@ test('history.js restores archived threads and only gates replace when drafts ex
     doc.activeElement = doc.getElementById('history-btn');
     openHistoryDrawer();
 
-    const restoreButtons = doc.getElementById('history-list').querySelectorAll('button');
+    const restoreButtons = doc.getElementById('history-list').querySelectorAll('[data-history-action="restore"]');
     assert.equal(restoreButtons.length, 2);
     assert.equal(restoreButtons[0].dataset.historyId, 'hist-2');
 
@@ -1431,7 +1431,7 @@ test('history.js restores archived threads and only gates replace when drafts ex
 
     doc.getElementById('msg-input').value = 'draft text';
     openHistoryDrawer();
-    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: doc.getElementById('history-list').querySelectorAll('button')[1] });
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: restoreButtons[1] });
     assert.equal(doc.getElementById('history-replace-confirm').classList.contains('hidden'), false);
     assert.equal(state.S.messages[0].content, 'Newest archived thread');
 
@@ -1439,7 +1439,7 @@ test('history.js restores archived threads and only gates replace when drafts ex
     assert.equal(doc.getElementById('history-replace-confirm').classList.contains('hidden'), true);
     assert.equal(doc.getElementById('msg-input').value, 'draft text');
 
-    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: doc.getElementById('history-list').querySelectorAll('button')[1] });
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: restoreButtons[1] });
     doc.getElementById('history-replace-btn').click();
     assert.equal(doc.getElementById('history-drawer').classList.contains('open'), false);
     assert.equal(doc.activeElement.id, 'history-btn');
@@ -1449,6 +1449,130 @@ test('history.js restores archived threads and only gates replace when drafts ex
     assert.equal(state.S.contextTokens, 21);
     assert.equal(state.S.usageIsExact, false);
     assert.equal(doc.getElementById('msg-input').value, '');
+  } finally {
+    restore();
+  }
+});
+
+test('history.js deletes one archived thread and updates the empty state', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage({
+      ff_history: JSON.stringify([
+        { id: 'keep', messages: [{ role: 'user', content: 'Keep this thread' }] },
+        { id: 'remove', messages: [{ role: 'user', content: 'Delete this thread' }] },
+      ]),
+    }),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { initHistoryDrawer, openHistoryDrawer } = await importFresh('freeforge/src/features/history.js');
+
+    initHistoryDrawer();
+    openHistoryDrawer();
+    const deleteButton = doc.getElementById('history-list').querySelectorAll('[data-history-action]')
+      .find(button => button.dataset.historyAction === 'delete' && button.dataset.historyId === 'remove');
+    assert.equal(deleteButton.textContent, 'Delete');
+    assert.equal(deleteButton.getAttribute('aria-label'), 'Delete Delete this thread');
+
+    doc.getElementById('history-list').dispatchEvent({ type: 'click', target: deleteButton });
+
+    const history = JSON.parse(globalThis.localStorage.getItem('ff_history'));
+    assert.deepEqual(history.map(entry => entry.id), ['keep']);
+    assert.equal(doc.getElementById('history-list').querySelectorAll('[data-history-action]')
+      .filter(button => button.dataset.historyAction === 'delete').length, 1);
+    assert.equal(doc.getElementById('history-empty-state').classList.contains('hidden'), true);
+  } finally {
+    restore();
+  }
+});
+
+test('history.js imports valid conversation JSON and normalizes it before storing', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage({
+      ff_history: JSON.stringify([{ id: 'existing', messages: [{ role: 'user', content: 'Existing' }] }]),
+    }),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { importConversation } = await importFresh('freeforge/src/features/history.js');
+
+    assert.equal(importConversation(JSON.stringify({ id: 'imported', savedAt: '2026-01-01T00:00:00.000Z', messages: [{ role: 'user', content: 42 }] })), true);
+    const history = JSON.parse(globalThis.localStorage.getItem('ff_history'));
+    assert.deepEqual(history.map(entry => entry.id), ['imported', 'existing']);
+    assert.deepEqual(history[0], {
+      id: 'imported',
+      savedAt: '2026-01-01T00:00:00.000Z',
+      messages: [{ role: 'user', content: '42', streaming: false }],
+      selectedModel: '',
+      conversationAgent: null,
+      contextTokens: 0,
+      usageIsExact: false,
+      lastAssistantResponse: '',
+    });
+    assert.equal(typeof history[1].savedAt, 'string');
+  } finally {
+    restore();
+  }
+});
+
+test('history.js rejects malformed conversation imports without changing history', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage({ ff_history: JSON.stringify([{ id: 'existing', messages: [{ role: 'user', content: 'Existing' }] }]) }),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { importConversation } = await importFresh('freeforge/src/features/history.js');
+    const before = globalThis.localStorage.getItem('ff_history');
+
+    assert.equal(importConversation('{not json'), false);
+    assert.equal(globalThis.localStorage.getItem('ff_history'), before);
+  } finally {
+    restore();
+  }
+});
+
+test('history.js caps oversized conversation imports at ten entries', async () => {
+  const doc = makeBaseDom();
+  const restore = installGlobals({
+    document: doc,
+    localStorage: new MemoryStorage(),
+    sessionStorage: new MemoryStorage(),
+    navigator: { clipboard: makeClipboard() },
+    marked: { use() {}, parse: text => text },
+    DOMPurify: { addHook() {}, sanitize: raw => raw },
+  });
+  try {
+    const state = await importShared('freeforge/src/state.js');
+    resetState(state.S);
+    const { importConversation } = await importFresh('freeforge/src/features/history.js');
+    const imported = Array.from({ length: 12 }, (_, i) => ({ id: `imported-${i}`, messages: [{ role: 'user', content: `Thread ${i}` }] }));
+
+    assert.equal(importConversation(JSON.stringify(imported)), true);
+    assert.deepEqual(JSON.parse(globalThis.localStorage.getItem('ff_history')).map(entry => entry.id), [
+      'imported-0', 'imported-1', 'imported-2', 'imported-3', 'imported-4',
+      'imported-5', 'imported-6', 'imported-7', 'imported-8', 'imported-9',
+    ]);
   } finally {
     restore();
   }

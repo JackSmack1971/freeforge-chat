@@ -5,6 +5,7 @@ import { createFocusTrap } from '../ui/focus-trap.js';
 import { refreshAgentUi } from './agents.js';
 import { copyLastResponse, newChat, setActiveAgent } from './chat.js';
 import { exportConversation } from './export.js';
+import { openImportPicker } from './history.js';
 import { changeModel } from './models.js';
 import { openSettings } from './settings.js';
 
@@ -12,6 +13,7 @@ const BASE_ACTIONS = [
   { label: 'New Chat', shortcut: 'N', action: () => { newChat(); closePalette(); } },
   { label: 'Copy Last Response', shortcut: 'C', action: () => { copyLastResponse(); closePalette(); } },
   { label: 'Export Conversation', shortcut: 'E', action: () => { exportConversation(); closePalette(); } },
+  { label: 'Import Conversation', shortcut: 'I', action: () => { openImportPicker(); closePalette(); } },
   { label: 'Settings', shortcut: ',', action: () => { openSettings(); closePalette(); } },
 ];
 
