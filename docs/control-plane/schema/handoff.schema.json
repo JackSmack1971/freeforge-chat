@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://freeforge-chat.local/docs/control-plane/schema/handoff.schema.json",
+  "title": "freeforge-handoff",
+  "description": "Runtime-neutral task-handoff/evidence record for freeforge-chat. Produced and consumed only by tools/control-plane/handoff.mjs. See docs/control-plane/handoff-contract.md for the semantics this schema alone cannot express (evidence-state rules, promotion, staleness).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "objective",
+    "baselineSha",
+    "worktree",
+    "intendedScope",
+    "changedFiles",
+    "verification",
+    "unresolvedFailures",
+    "openRisks",
+    "nonGoals",
+    "nextActions",
+    "productionImpact",
+    "updatedAt"
+  ],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "schemaVersion"],
+      "properties": {
+        "name": { "const": "freeforge-handoff" },
+        "schemaVersion": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What this task is trying to accomplish, in the handoff author's own words."
+    },
+    "baselineSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The Git commit this handoff's claims (changedFiles, verification) were evaluated against. A consumer must compare this to the current HEAD before trusting anything below it — see docs/control-plane/handoff-contract.md#staleness."
+    },
+    "worktree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch"],
+      "properties": {
+        "branch": { "type": "string", "minLength": 1 },
+        "path": {
+          "type": "string",
+          "description": "Optional worktree path. Machine-specific; omit rather than hardcode a path that will not resolve on another machine or CI."
+        }
+      }
+    },
+    "intendedScope": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "The boundary of what this task is authorized to touch, stated explicitly so scope creep is detectable."
+    },
+    "changedFiles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Repository-relative paths actually changed as of baselineSha. Not a promise about files that will be changed next."
+    },
+    "verification": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/verificationEntry" }
+    },
+    "unresolvedFailures": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "openRisks": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "nonGoals": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Explicit non-goals: what this task deliberately does not attempt, so a reader does not mistake absence of coverage for an oversight."
+    },
+    "nextActions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "productionImpact": {
+      "type": "boolean",
+      "description": "Whether any change recorded here touches or is reachable from production (see MIGRATION_CONTRACT.md 3.8 — a merge to main is production publication for this repository)."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of the last write to this record, set only by tools/control-plane/handoff.mjs."
+    }
+  },
+  "definitions": {
+    "verificationEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identifier for this check, e.g. \"npm-test\" or \"biome-check\"."
+        },
+        "command": {
+          "type": ["string", "null"],
+          "description": "The exact command that was (or would be) executed. Required and non-empty when state is PASSED or FAILED, since both of those states claim the command actually ran."
+        },
+        "result": {
+          "type": ["string", "null"],
+          "description": "Captured outcome (exit code, summary, or short excerpt) of an executed command. Required and non-empty when state is PASSED."
+        },
+        "rationale": {
+          "type": ["string", "null"],
+          "description": "Required and non-empty when state is NOT_APPLICABLE: why this check does not apply to this task."
+        },
+        "state": {
+          "type": "string",
+          "enum": ["PASSED", "FAILED", "UNAVAILABLE", "NOT_APPLICABLE"],
+          "description": "See docs/control-plane/handoff-contract.md#evidence-semantics. There is no default; every entry must state its own evidence state explicitly."
+        },
+        "ranAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

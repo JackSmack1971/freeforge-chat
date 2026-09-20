@@ -1,0 +1,299 @@
+# Codex CLI execution policy for freeforge-chat.
+#
+# Real Codex-native execpolicy rules (Starlark `prefix_rule()` calls), loaded
+# automatically by Codex CLI's core exec-policy manager from any trusted
+# project's `.codex/rules/*.rules` files (see `codex-rs/core/src/exec_policy.rs`:
+# `RULES_DIR_NAME = "rules"`, `RULE_EXTENSION = "rules"`). This is a real,
+# enforced execution-policy layer, not a Markdown pseudo-rule.
+#
+# Verified against:
+# - `codex-execpolicy` crate README (`codex-rs/execpolicy/README.md`,
+#   openai/codex, fetched 2026-09-20): `prefix_rule(pattern, decision,
+#   justification, match, not_match)`; `decision` in {allow, prompt,
+#   forbidden}, defaults to allow; `match`/`not_match` are validated at parse
+#   time (load-time unit tests) — this file fails to load if any example is
+#   wrong, so every example below has been confirmed against the real parser.
+# - `codex execpolicy check` (installed locally, codex-cli 0.155.1): every
+#   rule in this file, plus the specific edge cases the task called out
+#   (`git push --force`, `git push --force-with-lease`, plain `git diff`,
+#   and commands containing similar strings in non-prefix position), was
+#   run through `codex execpolicy check -r .codex/rules/default.rules --
+#   <command>` and produced the decision documented in its comment.
+# - `codex-rs/core/src/exec_policy.rs`: when multiple rules match the same
+#   command, the effective decision is the *strictest* (`forbidden` >
+#   `prompt` > `allow`), confirmed against `Evaluation::from_matches`
+#   (`matched_rules.iter().map(RuleMatch::decision).max()`). Every "broad
+#   allow + narrower forbidden/prompt override" pair below relies on this:
+#   a more specific, more restrictive rule always wins over a broader,
+#   looser one that also happens to match.
+# - `codex-rs/core/src/exec_policy.rs::BANNED_PREFIX_SUGGESTIONS` confirms,
+#   independently of the task instruction, that Codex itself treats bare
+#   top-level prefixes (`["git"]`, `["rm"]`, `["node"]`, `["bash"]`, ...) as
+#   too broad to use as allow-prefixes. No rule below uses a single-token
+#   top-level prefix; every pattern is scoped to a specific subcommand or
+#   flag combination.
+#
+# Scope note: `prefix_rule` matches ordered command *tokens*, not parsed
+# flags — it cannot see flags supplied in a different order or split across
+# separate arguments than the pattern lists. Rules below therefore cover the
+# common invocation shapes for each governed command, not every possible
+# token ordering. This file is a defense-in-depth policy layer, not a
+# substitute for the sandbox: it decides whether Codex may attempt a
+# command at all, not what that command is capable of once it runs.
+
+# ---------------------------------------------------------------------------
+# 1. Safe inspection commands (allow) — read-only regardless of extra args.
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["git", "status"],
+    decision = "allow",
+    justification = "Read-only working-tree inspection; no state is mutated by any git status flag.",
+    match = ["git status", "git status --short", ["git", "status", "-sb"]],
+    not_match = ["git stash", ["git", "commit", "--status"]],
+)
+
+prefix_rule(
+    pattern = ["git", "diff"],
+    decision = "allow",
+    justification = "Read-only diff inspection; no git diff flag or pathspec mutates repository state.",
+    match = ["git diff", "git diff --check", "git diff HEAD~1 -- freeforge/src"],
+    not_match = ["git difftool", ["git", "log", "--diff"]],
+)
+
+prefix_rule(
+    pattern = ["git", "log"],
+    decision = "allow",
+    justification = "Read-only history inspection.",
+    match = ["git log", "git log --oneline -20", ["git", "log", "-p", "--", "AGENTS.md"]],
+    not_match = ["git reflog", ["git", "show", "--log-size"]],
+)
+
+prefix_rule(
+    pattern = ["git", "show"],
+    decision = "allow",
+    justification = "Read-only inspection of a single commit/object; does not change refs or the working tree.",
+    match = ["git show", "git show HEAD~1"],
+    not_match = ["git show-ref", ["git", "stash", "show"]],
+)
+
+# ---------------------------------------------------------------------------
+# 2. Destructive filesystem commands (forbidden) — irreversible local deletes.
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["rm", ["-rf", "-fr", "-Rf", "-rF", "-fR", "-Fr"]],
+    decision = "forbidden",
+    justification = "Recursive forced delete is irreversible outside version control. Use `git clean -n`/`git rm` under review, or ask a human to run this directly.",
+    match = [
+        ["rm", "-rf", "coverage"],
+        ["rm", "-fr", "/tmp/build"],
+    ],
+    not_match = ["rm freeforge/index.html", ["rm", "-f", "one-file.txt"], "echo rm -rf not-a-real-command"],
+)
+
+prefix_rule(
+    pattern = ["rm", "-r", "-f"],
+    decision = "forbidden",
+    justification = "Recursive forced delete via separate flags is equivalent to `rm -rf` and equally irreversible.",
+    match = [["rm", "-r", "-f", "build"]],
+    not_match = [["rm", "-r", "build"], ["rm", "-f", "one-file.txt"]],
+)
+
+prefix_rule(
+    pattern = ["rm", "-f", "-r"],
+    decision = "forbidden",
+    justification = "Recursive forced delete via separate flags in the other order is equally irreversible.",
+    match = [["rm", "-f", "-r", "build"]],
+    not_match = [["rm", "-f", "one-file.txt"]],
+)
+
+prefix_rule(
+    pattern = ["rm", "--force", "--recursive"],
+    decision = "forbidden",
+    justification = "Recursive forced delete via long flags is equivalent to `rm -rf` and equally irreversible.",
+    match = ["rm --force --recursive dist"],
+    not_match = ["rm --force one-file.txt"],
+)
+
+prefix_rule(
+    pattern = ["rm", "--recursive", "--force"],
+    decision = "forbidden",
+    justification = "Recursive forced delete via long flags in the other order is equally irreversible.",
+    match = ["rm --recursive --force dist"],
+    not_match = ["rm --recursive dist"],
+)
+
+prefix_rule(
+    pattern = ["Remove-Item", ["-Recurse", "-recurse"], ["-Force", "-force"]],
+    decision = "forbidden",
+    justification = "PowerShell recursive forced delete is the Windows equivalent of `rm -rf` and equally irreversible.",
+    match = ["Remove-Item -Recurse -Force coverage"],
+    not_match = ["Remove-Item one-file.txt", ["Remove-Item", "-Recurse", "coverage"]],
+)
+
+prefix_rule(
+    pattern = ["Remove-Item", ["-Force", "-force"], ["-Recurse", "-recurse"]],
+    decision = "forbidden",
+    justification = "PowerShell recursive forced delete with flags in the other order is equally irreversible.",
+    match = [["Remove-Item", "-Force", "-Recurse", "build"]],
+    not_match = ["Remove-Item -Force one-file.txt"],
+)
+
+# ---------------------------------------------------------------------------
+# 3. Force pushes (forbidden) — rewrite/overwrite remote history.
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["git", "push", ["-f", "--force", "--force-with-lease", "--force-if-includes"]],
+    decision = "forbidden",
+    justification = "Force pushes (including --force-with-lease) overwrite remote history and can destroy others' work. Ask a human to run this directly if it is genuinely required.",
+    match = [
+        "git push --force",
+        "git push -f origin main",
+        "git push --force-with-lease origin feature/x",
+        ["git", "push", "--force-if-includes", "origin", "main"],
+    ],
+    not_match = [
+        "git push",
+        "git push origin main",
+        ["git", "push", "--set-upstream", "origin", "main"],
+        # Similar strings in non-prefix position must not trigger a match.
+        ["echo", "git", "push", "--force"],
+        ["node", "build.js", "--force"],
+    ],
+)
+
+# ---------------------------------------------------------------------------
+# 4. `git reset --hard` and destructive `git clean` variants (forbidden).
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "forbidden",
+    justification = "Discards uncommitted working-tree and index changes irreversibly. Use `git status`/`git diff` to inspect first, or ask a human to run this directly.",
+    match = ["git reset --hard", "git reset --hard HEAD~1", ["git", "reset", "--hard", "origin/main"]],
+    not_match = ["git reset", ["git", "reset", "--soft", "HEAD~1"], ["git", "reset", "--mixed"]],
+)
+
+prefix_rule(
+    pattern = ["git", "clean", [
+        "-f", "-fd", "-df", "-fx", "-xf", "-fdx", "-fxd", "-dfx", "-dxf", "-xdf", "-xfd",
+        "--force",
+    ]],
+    decision = "forbidden",
+    justification = "Deletes untracked (and, with -d/-x, ignored) files with no undo. Use `git clean -n` to preview, or ask a human to run this directly.",
+    match = [
+        "git clean -f",
+        "git clean -fd",
+        "git clean -fdx",
+        ["git", "clean", "--force"],
+    ],
+    not_match = ["git clean -n", ["git", "clean", "--dry-run"], ["git", "clean", "-nd"]],
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "-f", "-d"],
+    decision = "forbidden",
+    justification = "Force-clean with untracked directories via separate flags is equally irreversible.",
+    match = [["git", "clean", "-f", "-d"]],
+    not_match = [["git", "clean", "-n", "-d"]],
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "-d", "-f"],
+    decision = "forbidden",
+    justification = "Force-clean with untracked directories via separate flags in the other order is equally irreversible.",
+    match = [["git", "clean", "-d", "-f"]],
+    not_match = [["git", "clean", "-d", "-n"]],
+)
+
+# ---------------------------------------------------------------------------
+# 5. Package publication (forbidden).
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["npm", "publish"],
+    decision = "forbidden",
+    justification = "Publishes an externally visible package release; no repository workflow in freeforge-chat requires this. Ask a human to run this directly.",
+    match = ["npm publish", ["npm", "publish", "--access", "public"]],
+    not_match = ["npm run publish-check", ["npm", "--prefix", "freeforge", "test"], ["npm", "publish-preview"]],
+)
+
+prefix_rule(
+    pattern = ["yarn", "publish"],
+    decision = "forbidden",
+    justification = "Publishes an externally visible package release. Ask a human to run this directly.",
+    match = ["yarn publish"],
+    not_match = [["yarn", "run", "publish-check"]],
+)
+
+prefix_rule(
+    pattern = ["pnpm", "publish"],
+    decision = "forbidden",
+    justification = "Publishes an externally visible package release. Ask a human to run this directly.",
+    match = ["pnpm publish"],
+    not_match = [["pnpm", "run", "publish-check"]],
+)
+
+# ---------------------------------------------------------------------------
+# 6. Direct deployment commands — prompt for a draft/preview deploy, forbidden
+#    for anything that targets Netlify production directly.
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["netlify", "deploy", ["--prod", "--prod-if-unlocked"]],
+    decision = "forbidden",
+    justification = "Publishes directly to the live Netlify production site with no separate review step. Ask a human to run this directly; see docs/control-plane/MIGRATION_CONTRACT.md section 3.8 on why a merge to main is already treated with this same weight.",
+    match = ["netlify deploy --prod", ["netlify", "deploy", "--prod-if-unlocked"]],
+    not_match = ["netlify deploy", ["netlify", "status"]],
+)
+
+prefix_rule(
+    pattern = ["netlify", "deploy"],
+    decision = "prompt",
+    justification = "Creates a Netlify deploy (draft/preview unless --prod is also present, which the more specific forbidden rule above already overrides). Requires explicit human review before using deploy credentials.",
+    match = ["netlify deploy", ["netlify", "deploy", "--alias", "preview"]],
+    not_match = [["netlify", "status"], ["netlify", "open"]],
+)
+
+# ---------------------------------------------------------------------------
+# 7. git commit, git push, PR merge, tag/release publication, and other
+#    external-write/source-control boundaries — require review, not silent
+#    escalation. A bare `git push` also doubles as the guard on Netlify's
+#    git-integration auto-deploy on `main` (see netlify.toml / AGENTS.md
+#    "Source control, worktree, and deployment boundaries" — a merge to
+#    `main` is production publication).
+# ---------------------------------------------------------------------------
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "prompt",
+    justification = "Creates a new commit; requires explicit human review before history is extended, per AGENTS.md's Implementer role.",
+    match = ["git commit -m fix", ["git", "commit", "--amend"]],
+    not_match = [["git", "commit-tree"], ["git", "status", "--commit"]],
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Publishes local commits (and, to main, triggers Netlify's automatic production deploy). Requires explicit human review; the force-push rule above overrides this with `forbidden` when a force flag is present.",
+    match = ["git push", "git push origin main", ["git", "push", "--tags"]],
+    not_match = [["git", "push-something-else"], ["echo", "git", "push"]],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "merge"],
+    decision = "prompt",
+    justification = "Merges a pull request into its base branch; a merge to main is production publication per AGENTS.md. Requires explicit human review.",
+    match = ["gh pr merge 42", ["gh", "pr", "merge", "--squash"]],
+    not_match = [["gh", "pr", "view"], ["gh", "pr", "list"], ["gh", "pr", "diff"]],
+)
+
+prefix_rule(
+    pattern = ["gh", "release", "create"],
+    decision = "prompt",
+    justification = "Publishes a GitHub release; an externally visible, source-control-boundary action. Requires explicit human review.",
+    match = [["gh", "release", "create", "v1.0.0"]],
+    not_match = [["gh", "release", "list"], ["gh", "release", "view"]],
+)

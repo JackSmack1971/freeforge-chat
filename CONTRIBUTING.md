@@ -18,14 +18,16 @@ No install step is required for the browser app.
 npm --prefix freeforge test
 
 # Run linter
-npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security
+npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers
 ```
+
+The app keeps the active conversation and up to 10 archived conversations in browser storage. Changes to the History drawer should preserve local-only storage, restore behavior, and the unsent-composer confirmation flow.
 
 ## Pull Requests
 
 - Target `main`.
-- Keep ownership rules in the root `CODEOWNERS` file; `.github/CODEOWNERS` is not used.
-- Ensure `npm --prefix freeforge test` and `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security` pass before opening a PR.
+- Keep ownership rules in [`.github/CODEOWNERS`](.github/CODEOWNERS).
+- Ensure `npm --prefix freeforge test` and `npx --yes @biomejs/biome@1.9.4 check freeforge/src tests/security tests/helpers` pass before opening a PR.
 - Keep the diff small and traceable to the issue it addresses.
 
 ## Security

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-29T16:47:23+00:00",
+  "generated_at": "2026-08-09T22:14:13+00:00",
   "repository": {
     "root": "C:/workspaces/DEPLOYED/NETLIFY/freeforge-chat",
     "origin": "https://github.com/JackSmack1971/freeforge-chat",
-    "head": "ddf4491b98e2affb50bc0680883aec2022e2c9c6",
-    "branch": "chore/issue-83-csp-blocks-inline-form-handlers-in-freef"
+    "head": "17910d54e38a14bf3195b6d3d2de97cccb73bb84",
+    "branch": "main"
   },
   "remote": {
     "defaultBranchRef": {
@@ -51,7 +51,7 @@
   },
   "stack_profile": {
     "schema_version": 1,
-    "generated_at": "2026-06-29T16:47:18+00:00",
+    "generated_at": "2026-08-09T22:14:08+00:00",
     "ecosystems": [
       {
         "name": "github-actions",
@@ -111,9 +111,169 @@
       "detail": "Parsed workflows with PyYAML."
     },
     {
+      "check": "docs:.claude/agents/aris-thorne.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/agents/elara-voss.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/agents/jax-holden.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/agents/kaelen-vance.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/agents/lead-engineer.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/agents/silas-mercer.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/audit-runs/repo-audit-25da978e9d2d/contracts/index.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/commands/control-plane-check.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/commands/gsd-profile-user.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/commands/handoff.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/commands/resume-handoff.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/handoff/README.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/output-styles/default.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/rules/control-plane.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/rules/failure-escalation.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.claude/skills/healing-test-failures/SKILL.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.codex/rules/control-plane.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/PROJECT.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/ROADMAP.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/STATE.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/01-accessible-settings-key-management/01-01-CONTEXT.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/01-accessible-settings-key-management/01-01-DISCUSSION-LOG.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/01-accessible-settings-key-management/01-01-PLAN.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/01-accessible-settings-key-management/01-01-SUMMARY.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-01-PLAN.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-01-SUMMARY.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-CONTEXT.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-DISCUSSION-LOG.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-PATTERNS.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-RESEARCH.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:.planning/phases/02-conversation-history-drawer/02-VERIFICATION.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
+      "check": "docs:CLAUDE.md",
+      "status": "degraded",
+      "detail": "Document exceeded scan limit or was unreadable."
+    },
+    {
       "check": "documentation-local-links",
       "status": "complete",
-      "detail": "Scanned 93 tracked Markdown documents for local references."
+      "detail": "Scanned 45 tracked Markdown documents for local references."
     },
     {
       "check": "documentation-external-links",
@@ -133,282 +293,48 @@
     {
       "check": "github-label-history",
       "status": "complete",
-      "detail": "Scanned 213 issues/pull requests; deletion candidates are suppressed when incomplete."
+      "detail": "Scanned 364 issues/pull requests; deletion candidates are suppressed when incomplete."
     }
   ],
   "summary": {
-    "tracked_files": 137,
-    "findings": 13,
-    "actionable": 13,
+    "tracked_files": 132,
+    "findings": 6,
+    "actionable": 6,
     "by_severity": {
       "critical": 0,
-      "high": 2,
-      "medium": 8,
-      "low": 3,
+      "high": 0,
+      "medium": 4,
+      "low": 2,
       "info": 0
     }
   },
   "findings": [
     {
-      "id": "RH-C8C6BE687737E47C",
-      "rule_id": "GHA-WORKFLOW-HARDENING",
-      "category": "github-actions",
-      "severity": "high",
-      "confidence": "high",
-      "title": "Harden GitHub Actions workflow .github/workflows/biome-check.yml",
-      "summary": "The workflow has one or more security, reliability, or governance gaps that share a single file-level change and verification boundary.",
-      "evidence": [
-        {
-          "source": ".github/workflows/biome-check.yml",
-          "observation": "Workflow does not declare top-level permissions."
-        },
-        {
-          "source": ".github/workflows/biome-check.yml",
-          "observation": "No job timeout-minutes declaration was found."
-        }
-      ],
-      "remediation_key": "github-actions/harden/.github/workflows/biome-check.yml",
-      "recommended_actions": [
-        "Add explicit least-privilege top-level permissions and job overrides only where required.",
-        "Set bounded timeout-minutes values appropriate to each job."
-      ],
-      "acceptance_criteria": [
-        "All external action references satisfy the repository pinning policy.",
-        "Workflow token permissions are explicit and least-privilege.",
-        "Every job has a bounded timeout.",
-        "Untrusted event values are treated as data, not executable shell syntax.",
-        "Deployment/release concurrency is explicit when applicable."
-      ],
-      "verification": [
-        "actionlint .github/workflows/biome-check.yml",
-        "Review permissions, uses, timeout-minutes, event triggers, and run expressions in .github/workflows/biome-check.yml.",
-        "Run the workflow from a non-production test branch where safe."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": [
-        "https://docs.github.com/en/actions/reference/security/secure-use"
-      ]
-    },
-    {
-      "id": "RH-45CA769D9684DB19",
-      "rule_id": "GHA-WORKFLOW-HARDENING",
-      "category": "github-actions",
-      "severity": "high",
-      "confidence": "high",
-      "title": "Harden GitHub Actions workflow .github/workflows/node-tests.yml",
-      "summary": "The workflow has one or more security, reliability, or governance gaps that share a single file-level change and verification boundary.",
-      "evidence": [
-        {
-          "source": ".github/workflows/node-tests.yml",
-          "observation": "Workflow does not declare top-level permissions."
-        },
-        {
-          "source": ".github/workflows/node-tests.yml",
-          "observation": "No job timeout-minutes declaration was found."
-        }
-      ],
-      "remediation_key": "github-actions/harden/.github/workflows/node-tests.yml",
-      "recommended_actions": [
-        "Add explicit least-privilege top-level permissions and job overrides only where required.",
-        "Set bounded timeout-minutes values appropriate to each job."
-      ],
-      "acceptance_criteria": [
-        "All external action references satisfy the repository pinning policy.",
-        "Workflow token permissions are explicit and least-privilege.",
-        "Every job has a bounded timeout.",
-        "Untrusted event values are treated as data, not executable shell syntax.",
-        "Deployment/release concurrency is explicit when applicable."
-      ],
-      "verification": [
-        "actionlint .github/workflows/node-tests.yml",
-        "Review permissions, uses, timeout-minutes, event triggers, and run expressions in .github/workflows/node-tests.yml.",
-        "Run the workflow from a non-production test branch where safe."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": [
-        "https://docs.github.com/en/actions/reference/security/secure-use"
-      ]
-    },
-    {
-      "id": "RH-F74CEFB2B6123A3A",
-      "rule_id": "DEPENDABOT-CONFIG-MISSING",
-      "category": "dependencies",
-      "severity": "medium",
-      "confidence": "high",
-      "title": "Configure dependency update coverage for detected ecosystems",
-      "summary": "No Dependabot configuration exists for detected update ecosystems: github-actions, npm.",
-      "evidence": [
-        {
-          "source": ".github/workflows/",
-          "observation": "Detected ecosystem github-actions"
-        },
-        {
-          "source": "freeforge/package.json",
-          "observation": "Detected ecosystem javascript-typescript"
-        }
-      ],
-      "remediation_key": "dependencies/dependabot",
-      "recommended_actions": [
-        "Add one valid update entry per active package ecosystem and manifest directory.",
-        "Choose a sustainable schedule, grouping policy, labels, and pull-request limit.",
-        "Include github-actions when workflows exist."
-      ],
-      "acceptance_criteria": [
-        "Every active manifest directory has appropriate dependency-update coverage.",
-        "Dependabot configuration validates and creates no duplicate update streams."
-      ],
-      "verification": [
-        "Validate .github/dependabot.yml against GitHub's option reference.",
-        "Confirm dependency graph/Dependabot recognizes the configuration."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": [
-        "https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference"
-      ]
-    },
-    {
-      "id": "RH-402658E858798B19",
+      "id": "RH-71F5C4956F6AA903",
       "rule_id": "DOCS-COMMAND-NOT-IN-MANIFEST",
       "category": "documentation",
       "severity": "medium",
       "confidence": "medium",
-      "title": "Align documented commands with package scripts in .planning/codebase/TESTING.md",
+      "title": "Align documented commands with package scripts in AGENTS.md",
       "summary": "The file invokes package scripts that are not defined in the nearest detected package manifest.",
       "evidence": [
         {
-          "source": ".planning/codebase/TESTING.md",
-          "observation": "Documented command references missing package script 'test' for .",
-          "line": 11
-        },
-        {
-          "source": ".planning/codebase/TESTING.md",
-          "observation": "Documented command references missing package script 'test' for .",
-          "line": 50
-        }
-      ],
-      "remediation_key": "docs/commands/.planning/codebase/TESTING.md",
-      "recommended_actions": [
-        "Determine the canonical current command from manifests and CI.",
-        "Update documentation/automation or restore the missing script when it remains part of the supported workflow."
-      ],
-      "acceptance_criteria": [
-        "Every documented package script exists in the correct project boundary and executes the intended task."
-      ],
-      "verification": [
-        "Parse package.json scripts and compare with commands in the changed file.",
-        "Run each corrected command in the intended project directory."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": []
-    },
-    {
-      "id": "RH-F936BEAA8F3104DF",
-      "rule_id": "DOCS-COMMAND-NOT-IN-MANIFEST",
-      "category": "documentation",
-      "severity": "medium",
-      "confidence": "medium",
-      "title": "Align documented commands with package scripts in .planning/phases/01-security-hardening/01-RESEARCH.md",
-      "summary": "The file invokes package scripts that are not defined in the nearest detected package manifest.",
-      "evidence": [
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 51
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
-          "line": 80
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
+          "source": "AGENTS.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
           "line": 81
         },
         {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 86
+          "source": "AGENTS.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 84
         },
         {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 87
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'installs' for .",
-          "line": 101
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'confirmed' for .",
-          "line": 105
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'confirmed' for .",
-          "line": 106
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'packages' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 125
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 557
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 558
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 558
-        },
-        {
-          "source": ".planning/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 574
+          "source": "AGENTS.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 100
         }
       ],
-      "remediation_key": "docs/commands/.planning/phases/01-security-hardening/01-RESEARCH.md",
+      "remediation_key": "docs/commands/AGENTS.md",
       "recommended_actions": [
         "Determine the canonical current command from manifests and CI.",
         "Update documentation/automation or restore the missing script when it remains part of the supported workflow."
@@ -427,101 +353,26 @@
       "references": []
     },
     {
-      "id": "RH-E8CD98054FB5A172",
+      "id": "RH-52860E285FFE74D7",
       "rule_id": "DOCS-COMMAND-NOT-IN-MANIFEST",
       "category": "documentation",
       "severity": "medium",
       "confidence": "medium",
-      "title": "Align documented commands with package scripts in .planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
+      "title": "Align documented commands with package scripts in CONTRIBUTING.md",
       "summary": "The file invokes package scripts that are not defined in the nearest detected package manifest.",
       "evidence": [
         {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 51
+          "source": "CONTRIBUTING.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 18
         },
         {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
-          "line": 80
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
-          "line": 81
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 86
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 87
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'installs' for .",
-          "line": 101
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'confirmed' for .",
-          "line": 105
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'confirmed' for .",
-          "line": 106
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'packages' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'registry' for .",
-          "line": 108
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 125
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 557
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 558
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'view' for .",
-          "line": 558
-        },
-        {
-          "source": ".planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
-          "observation": "Documented command references missing package script 'pack' for .",
-          "line": 574
+          "source": "CONTRIBUTING.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 28
         }
       ],
-      "remediation_key": "docs/commands/.planning/workstreams/milestone/phases/01-security-hardening/01-RESEARCH.md",
+      "remediation_key": "docs/commands/CONTRIBUTING.md",
       "recommended_actions": [
         "Determine the canonical current command from manifests and CI.",
         "Update documentation/automation or restore the missing script when it remains part of the supported workflow."
@@ -540,51 +391,36 @@
       "references": []
     },
     {
-      "id": "RH-BE2A907B70417B78",
+      "id": "RH-3670129D0C1701D9",
       "rule_id": "DOCS-COMMAND-NOT-IN-MANIFEST",
       "category": "documentation",
       "severity": "medium",
       "confidence": "medium",
-      "title": "Align documented commands with package scripts in CLAUDE.md",
+      "title": "Align documented commands with package scripts in README.md",
       "summary": "The file invokes package scripts that are not defined in the nearest detected package manifest.",
       "evidence": [
         {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'ci' for .",
-          "line": 23
+          "source": "README.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 49
         },
         {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'lint' for .",
-          "line": 24
+          "source": "README.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 127
         },
         {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'lint' for .",
-          "line": 24
+          "source": "README.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 132
         },
         {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'typecheck' for .",
-          "line": 25
-        },
-        {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'typecheck' for .",
-          "line": 25
-        },
-        {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'build' for .",
-          "line": 27
-        },
-        {
-          "source": "CLAUDE.md",
-          "observation": "Documented command references missing package script 'build' for .",
-          "line": 27
+          "source": "README.md",
+          "observation": "Documented command references missing package script '--prefix' for .",
+          "line": 164
         }
       ],
-      "remediation_key": "docs/commands/CLAUDE.md",
+      "remediation_key": "docs/commands/README.md",
       "recommended_actions": [
         "Determine the canonical current command from manifests and CI.",
         "Update documentation/automation or restore the missing script when it remains part of the supported workflow."
@@ -603,370 +439,122 @@
       "references": []
     },
     {
-      "rule_id": "GITIGNORE-GENERATED-ARTIFACTS",
-      "category": "git",
+      "id": "RH-6F1EB4CFC06F3B12",
+      "rule_id": "DOCS-BROKEN-LOCAL-REFERENCES",
+      "category": "documentation",
       "severity": "medium",
       "confidence": "high",
-      "title": "Extend .gitignore to cover generated and session artifact directories",
-      "summary": "Several generated output directories are not excluded by .gitignore and could be accidentally committed: coverage/, .session-feedback/, and .repository-hygiene/. These are agent session data, test coverage output, and hygiene audit output respectively.",
+      "title": "Repair broken local documentation references in README.md",
+      "summary": "The document contains relative links, images, or heading anchors that do not resolve in the current repository snapshot.",
       "evidence": [
         {
-          "source": ".gitignore",
-          "observation": "coverage/, .session-feedback/, .repository-hygiene/ are absent from .gitignore"
+          "source": "README.md",
+          "observation": "Missing local heading anchor: #testing--verification",
+          "line": 17
         },
         {
-          "source": "git status --short",
-          "observation": "coverage/ and .session-feedback/ appear as untracked directories alongside deliberate untracked work"
+          "source": "README.md",
+          "observation": "Missing local heading anchor: #reproducibility--maintenance",
+          "line": 20
         }
       ],
-      "remediation_key": "git/gitignore-generated-artifacts",
+      "remediation_key": "docs/broken-links/README.md",
       "recommended_actions": [
-        "Add coverage/, .session-feedback/, and .repository-hygiene/ to .gitignore.",
-        "Verify no tracked file under those paths would be silently excluded by the new rules."
+        "Update each reference to the current path or anchor, or remove it when the target no longer exists.",
+        "Preserve intentional links to generated documentation only with explicit build evidence."
       ],
       "acceptance_criteria": [
-        "git status no longer shows coverage/, .session-feedback/, or .repository-hygiene/ as untracked after the rule is added.",
-        "No previously tracked files are hidden by the new patterns."
+        "Every local Markdown link, image, and anchor in the document resolves case-sensitively from the repository checkout."
       ],
       "verification": [
-        "Run git status --short and confirm the directories no longer appear as untracked.",
-        "Run git check-ignore -v coverage/ .session-feedback/ .repository-hygiene/ and confirm each path is matched."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [
-        "Do not delete the directories; only exclude them from tracking."
-      ],
-      "references": [],
-      "id": "RH-SUP-434A64B0E3CA3D7D"
-    },
-    {
-      "id": "RH-4877A2CBB620C19E",
-      "rule_id": "COMMUNITY-CONTRIBUTING-MISSING",
-      "category": "governance",
-      "severity": "medium",
-      "confidence": "high",
-      "title": "Add repository-specific contribution guidelines",
-      "summary": "No recognized CONTRIBUTING.md exists in GitHub-supported repository locations.",
-      "evidence": [
-        {
-          "source": "git ls-files",
-          "observation": "Missing CONTRIBUTING.md in .github/, repository root, and docs/"
-        }
-      ],
-      "remediation_key": "governance/contributing",
-      "recommended_actions": [
-        "Create CONTRIBUTING.md using repository-specific contacts, workflows, and commands.",
-        "Cross-link it from the README where appropriate."
-      ],
-      "acceptance_criteria": [
-        "CONTRIBUTING.md exists in a GitHub-recognized location and contains no placeholders."
-      ],
-      "verification": [
-        "test -f CONTRIBUTING.md || test -f .github/CONTRIBUTING.md || test -f docs/CONTRIBUTING.md",
-        "Review all commands and contacts against current repository evidence."
+        "Run repository_hygiene.py audit and confirm DOCS-BROKEN-LOCAL-REFERENCES is absent.",
+        "Render the document and manually inspect navigation."
       ],
       "destructive": false,
       "actionable": true,
       "dependencies": [],
       "non_goals": [],
-      "references": [
-        "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions"
-      ]
+      "references": []
     },
     {
-      "id": "RH-9B965B57FB2DE21C",
-      "rule_id": "COMMUNITY-CODEOWNERS-MISSING",
-      "category": "governance",
-      "severity": "medium",
-      "confidence": "medium",
-      "title": "Define maintainership boundaries with CODEOWNERS",
-      "summary": "The repository has multiple contributors but no CODEOWNERS file in a supported location.",
-      "evidence": [
-        {
-          "source": "remote contributors",
-          "observation": "Contributor count: 4"
-        },
-        {
-          "source": "git ls-files",
-          "observation": "No CODEOWNERS found"
-        }
-      ],
-      "remediation_key": "governance/codeowners",
-      "recommended_actions": [
-        "Map high-risk and domain-specific paths to active maintainers or teams.",
-        "Add fallback ownership and validate patterns against the current tree."
-      ],
-      "acceptance_criteria": [
-        "Every critical path has an active, permission-valid owner and patterns match intended files."
-      ],
-      "verification": [
-        "Review CODEOWNERS rendering on GitHub.",
-        "Open a test pull request touching representative paths."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": [
-        "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
-      ]
-    },
-    {
-      "id": "RH-F22EC5735535B489",
-      "rule_id": "GIT-GONE-UPSTREAM-BRANCHES",
-      "category": "git",
+      "id": "RH-A1E99F2570D86B40",
+      "rule_id": "LABELS-TAXONOMY-QUALITY",
+      "category": "github-labels",
       "severity": "low",
       "confidence": "high",
-      "title": "Review local branches whose upstream is gone",
-      "summary": "Local branches reference remote-tracking branches that no longer exist.",
+      "title": "Normalize and document the GitHub label taxonomy",
+      "summary": "The label inventory contains normalized duplicates or labels without descriptions.",
       "evidence": [
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-001-test-script-path"
+          "source": "GitHub labels",
+          "observation": "Missing description: 7axes"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-002-copy-codeblock-continue"
+          "source": "GitHub labels",
+          "observation": "Missing description: agent-ready"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-002-remove-dangling-csp-report-uri"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:maintainability"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-003-explicit-uri-regexp"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:operability_observability"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-003-guard-marked-use-cdn-failure"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:performance_scalability"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-004-fix-context-token-estimate"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:readability"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-004-pin-actions-sha"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:reliability"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-005-remove-cdn-deps"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:security_compliance"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-006-csp-hash-src"
+          "source": "GitHub labels",
+          "observation": "Missing description: axis:testability_coverage"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-006-nav-aria-label"
+          "source": "GitHub labels",
+          "observation": "Missing description: escalated"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-007-settings-hidden-class"
+          "source": "GitHub labels",
+          "observation": "Missing description: priority:critical"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-008-clear-persistent-toasts"
+          "source": "GitHub labels",
+          "observation": "Missing description: priority:high"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-009-claude-md-versions"
+          "source": "GitHub labels",
+          "observation": "Missing description: priority:low"
         },
         {
-          "source": "git for-each-ref",
-          "observation": "audit/F-009-label-model-select"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-010-label-msg-input"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-011-palette-aria-expanded"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-013-palette-focus-trap"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-103-context-tokens"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-104-stream-usage"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-105-palette-focus"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-106-cancel-reader"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-107-remove-newchat-global"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-108-ci-branch-globs"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-109-pin-biome-version"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "audit/F-110-license-file"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore-issue-53-state-ownership"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore-issue-54-zero-build-quality-check"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore-issue-75-state-md-metrics-drift"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-157-hygiene-harden-github-actions-workflow-g"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-158-hygiene-harden-github-actions-workflow-g"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-159-hygiene-protect-the-default-branch-main"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-160-hygiene-configure-dependency-update-cove"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-161-align-doc-commands-testing"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-162-align-doc-commands-phase"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-163-align-doc-commands-milestone"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-164-align-doc-commands-claude"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-165-hygiene-define-maintainership-boundaries"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-166-hygiene-add-repository-specific-contribu"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-167-hygiene-normalize-and-document-the-githu"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-168-hygiene-add-structured-issue-intake-temp"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-169-hygiene-add-a-repository-specific-pull-r"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-170-hygiene-add-an-accurate-repository-descr"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-171-hygiene-document-and-enforce-a-coherent"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "chore/issue-83-csp-blocks-inline-form-handlers-in-freef"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-188-agent-schema-validation-and-migration"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-189-agent-storage-repository-and-active-agen"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-190-agent-request-composition-and-openrouter"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-191-agent-runtime-state-and-conversation-switch-semantics"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-192-agent-library-modal-and-builder-shell"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-193-agent-crud-actions-and-safe-json-import-export"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-194-agent-selector-and-command-palette-entry-points"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-195-agent-defaults-polish-starters-model-prefs-and-avatar-badge"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "feat/issue-196-agent-tests-and-accessibility-verification"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "fix-issue-35-append-rendering"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "fix-issue-36-storage-cap"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "fix-issue-37-dom-message-rendering"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "fix-issue-44-self-only-style-csp"
-        },
-        {
-          "source": "git for-each-ref",
-          "observation": "test-issue-29-node-test-harness"
+          "source": "GitHub labels",
+          "observation": "Missing description: priority:medium"
         }
       ],
-      "remediation_key": "git/gone-upstream-branches",
+      "remediation_key": "github-labels/taxonomy",
       "recommended_actions": [
-        "Check each branch for unique commits and active worktrees.",
-        "Back up or push any work that must be retained.",
-        "Delete only branches proven obsolete."
+        "Choose canonical names for normalized duplicate groups and migrate issue/PR associations before deleting aliases.",
+        "Add concise descriptions that define intended use and boundaries.",
+        "Align issue forms and automation with the canonical taxonomy."
       ],
       "acceptance_criteria": [
-        "Every gone-upstream branch is retained with rationale, republished, or safely deleted."
+        "No case/punctuation-normalized duplicate labels remain without an explicit compatibility reason.",
+        "Every operational label has a useful description and consistent naming convention."
       ],
       "verification": [
-        "git branch -vv",
-        "git log --cherry --oneline <upstream>...<branch>"
+        "gh label list --limit 1000",
+        "Search .github and documentation for retired label names."
       ],
       "destructive": true,
       "actionable": true,
@@ -975,71 +563,44 @@
       "references": []
     },
     {
-      "id": "RH-4D65F119F7CF7AB1",
-      "rule_id": "COMMUNITY-PR-TEMPLATE-MISSING",
-      "category": "governance",
+      "id": "RH-6CF6BD00DC5D6976",
+      "rule_id": "LABELS-UNUSED-CANDIDATES",
+      "category": "github-labels",
       "severity": "low",
       "confidence": "high",
-      "title": "Add a repository-specific pull request template",
-      "summary": "No GitHub-recognized pull request template was found.",
+      "title": "Prune confirmed unused GitHub labels",
+      "summary": "A complete history scan found labels with zero issue or pull-request use, no repository references, and no policy protection.",
       "evidence": [
         {
-          "source": "git ls-files",
-          "observation": "No pull request template found"
-        }
-      ],
-      "remediation_key": "governance/pr-template",
-      "recommended_actions": [
-        "Add a concise template covering intent, risk, tests, documentation, and linked issue."
-      ],
-      "acceptance_criteria": [
-        "New pull requests receive a useful, repository-specific template."
-      ],
-      "verification": [
-        "Open a draft pull request and confirm the template is prefilled."
-      ],
-      "destructive": false,
-      "actionable": true,
-      "dependencies": [],
-      "non_goals": [],
-      "references": []
-    },
-    {
-      "id": "RH-0E154459E2AB453B",
-      "rule_id": "COMMUNITY-ISSUE-TEMPLATES-MISSING",
-      "category": "governance",
-      "severity": "low",
-      "confidence": "high",
-      "title": "Add structured issue intake templates",
-      "summary": "Issues are available or remote status is unknown, but no issue template or form was found.",
-      "evidence": [
+          "source": "GitHub labels",
+          "observation": "Unused candidate: escalated"
+        },
         {
-          "source": ".github/ISSUE_TEMPLATE/",
-          "observation": "No issue templates found"
+          "source": "GitHub labels",
+          "observation": "Unused candidate: priority:critical"
         }
       ],
-      "remediation_key": "governance/issue-templates",
+      "remediation_key": "github-labels/prune-unused",
       "recommended_actions": [
-        "Create separate bug, feature, and support/security routing templates only where applicable.",
-        "Use required fields sparingly and ensure referenced labels exist."
+        "Review the digest-bound label deletion plan.",
+        "Retain any label with an undocumented external automation dependency and add that dependency to policy.",
+        "Apply the plan only after the fresh zero-use and reference recheck succeeds."
       ],
       "acceptance_criteria": [
-        "Issue intake captures reproducible evidence and routes non-issue requests appropriately."
+        "Every deletion-plan label is either deleted or retained with an explicit policy reason.",
+        "No label used by an issue, pull request, issue form, workflow, automation, or documented process is deleted."
       ],
       "verification": [
-        "Validate issue-form YAML.",
-        "Open each template in GitHub's new-issue chooser."
+        "Re-run labels-plan and confirm there are no unintended zero-use candidates.",
+        "Inspect issue forms, workflows, and label taxonomy after deletion."
       ],
-      "destructive": false,
+      "destructive": true,
       "actionable": true,
       "dependencies": [],
       "non_goals": [],
       "references": [
-        "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository"
+        "https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels"
       ]
     }
-  ],
-  "supplemental_sources": [
-    "C:\\workspaces\\DEPLOYED\\NETLIFY\\freeforge-chat\\.repository-hygiene\\supplemental-findings.json"
   ]
 }

@@ -1,0 +1,9 @@
+# Minimal fixture Codex CLI project config.
+allow_login_shell = false
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+
+[sandbox_workspace_write]
+network_access = false

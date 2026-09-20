@@ -1,6 +1,6 @@
 # Tests — Agent Context
 
-> **READ FIRST** before editing or adding tests. Parent context: `../README.md` and `../CLAUDE.md`.
+> **READ FIRST** before editing or adding tests. Parent context: `../README.md` and `../AGENTS.md`.
 
 ## Ownership
 
@@ -24,9 +24,28 @@ tests/
     runtime-app.test.mjs        full app.js boot and event-wiring integration
     runtime-state-api.test.mjs  streaming, abort, model fetch integration
     runtime-ui-features.test.mjs  settings modal, onboarding, copy/regen UI
+    codex-config.test.mjs       .codex/config.toml parseability + disallowed-setting checks
+    codex-execpolicy-rules.test.mjs  .codex/rules/default.rules execpolicy behavior
+    codex-hooks.test.mjs        .codex/hooks/*.js fixture-driven behavior tests
+    production-boundary.test.mjs  merge-to-main production-publication policy contract
+  control-plane/
+    fixtures/                  deterministic good/malformed/snapshot-* fixture roots
+    verify.test.mjs             tools/control-plane/verify.mjs conformance + identity fixtures
+    snapshot.test.mjs           tools/control-plane/snapshot.mjs determinism/dirty-state fixtures
+    handoff.test.mjs            tools/control-plane/handoff.mjs schema/evidence-state fixtures
+    policy-invariants.test.mjs  cross-cutting monotonicity + unrelated-dirty-state invariants
+    coverage-matrix.test.mjs    maps each conformance-goal scenario to a real, currently-passing test
 ```
 
-Do not add top-level `tests/*.test.mjs` files outside `tests/security/` unless this file is updated to document a new canonical location.
+`tests/control-plane/` is a distinct suite from `tests/security/`: it is a conformance/evaluation
+suite for the control-plane tooling itself (`tools/control-plane/*.mjs`, `.codex/rules/*.rules`,
+`.codex/hooks/*.js`, `.agents/skills/**`), not application behavior. Keep it separate — do not
+merge its fixtures or assertions into `tests/security/`, and do not have it re-implement the
+tools it tests; every test spawns the real entry point in `tools/control-plane/` (or the real
+`.codex/hooks/*.js` script) as a subprocess.
+
+Do not add top-level `tests/*.test.mjs` files outside `tests/security/` or `tests/control-plane/`
+unless this file is updated to document a new canonical location.
 
 ## How to Run
 
@@ -34,6 +53,9 @@ Do not add top-level `tests/*.test.mjs` files outside `tests/security/` unless t
 node --test tests/security/*.test.mjs
 # or single file:
 node --test tests/security/markdown-pipeline.test.mjs
+
+# control-plane conformance suite (separate from the above):
+node --test tests/control-plane/*.test.mjs
 ```
 
 No install step. Tests import source files directly via `node:path` + `pathToFileURL`.

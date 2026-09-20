@@ -1,0 +1,18 @@
+{
+  "description": "Fixture Codex hooks config for tests/control-plane/verify.test.mjs.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/does-not-exist.js",
+            "commandWindows": "node .codex/hooks/does-not-exist.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

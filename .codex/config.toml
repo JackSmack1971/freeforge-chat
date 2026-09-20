@@ -1,0 +1,52 @@
+# Codex CLI project-level configuration for freeforge-chat.
+#
+# Scope and status
+# - This file is read ONLY when Codex CLI has marked this workspace/project
+#   as trusted (see "projects.<path>.trust_level" in the user's own
+#   ~/.codex/config.toml). Untrusted workspaces skip all project-scoped
+#   .codex/ layers, including this file, project hooks, and project rules.
+# - This file is NOT an enterprise/admin enforcement mechanism. It cannot
+#   grant authority an operator's CLI flags, profile, user config, or an
+#   org's managed requirements.toml did not already allow, and it must never
+#   be used to try to override or bypass those layers.
+# - Full rationale for every key below (purpose, owning plane, whether it
+#   authorizes an effect) is documented in docs/control-plane/policy-map.md.
+#   Read that file before changing this one.
+#
+# Deliberately unset in this file (left to inherit from user/profile/admin
+# config, per Codex's own precedence order where project config would
+# otherwise WIN over user config): approval_policy, sandbox_mode,
+# model, model_providers, mcp_servers, projects.*.trust_level,
+# shell_environment_policy. Setting any of those here could silently
+# override a stricter setting from an operator's own config, which this
+# file must not do. See policy-map.md for the full explanation.
+#
+# No external MCP servers are configured. FreeForge is a zero-build,
+# zero-install, static browser app (see AGENTS.md "Repository routing");
+# it has no documented requirement for any external tool/service capability
+# that an MCP server would provide, so none is declared here.
+
+# Reject login-shell semantics for shell-based tools in this project. Codex
+# defaults this to true; pinning it to false here only narrows behavior
+# (never widens it), so it cannot weaken a stricter external setting.
+allow_login_shell = false
+
+# Bound how many spawned-agent threads (excluding the primary thread) this
+# session may hold open at once. Kept small: freeforge-chat is a small,
+# single-app static repository with no workload that benefits from wide
+# fan-out, and unbounded concurrency has no benefit here.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+
+# Conservative shell-network posture for the workspace-write sandbox. These
+# settings only take effect if sandbox_mode = "workspace-write" is already
+# in force via CLI flags, profile, or user/admin config (this file does not
+# set sandbox_mode itself, so normal sandbox/policy resolution decides
+# whether workspace-write even applies). No writable_roots are added beyond
+# the project directory Codex already grants in that mode, so there is no
+# implicit production authority.
+[sandbox_workspace_write]
+network_access = false
+exclude_slash_tmp = true
+exclude_tmpdir_env_var = true

@@ -1,0 +1,116 @@
+name: Control Plane
+
+# Codex/control-plane conformance gate. See docs/control-plane/ci.md for what
+# each step checks and why, and for the required-check name to add to branch
+# protection (not done by this workflow — see that doc).
+#
+# This workflow makes no deployment/publication action of any kind. Netlify's
+# own git-integration handles production publication on merges to `main`,
+# entirely outside GitHub Actions (see docs/control-plane/MIGRATION_CONTRACT.md
+# section 3.8).
+
+on:
+  push:
+    branches:
+      - main
+      - 'test/issue-*'
+      - 'fix/issue-*'
+      - 'chore/issue-*'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '22'
+
+      # Authoritative structural gate. Covers AGENTS.md topology, .codex/
+      # config.toml + agents/*.toml parsing and required fields (custom-agent
+      # schema checks), .codex/hooks.json parsing and target existence,
+      # .agents/skills/*/SKILL.md metadata checks, .codex/rules/*.rules
+      # structural well-formedness plus live `codex execpolicy` verification
+      # when the Codex CLI is installed (SKIPPED, never silently PASSed,
+      # otherwise — see docs/control-plane/ci.md), and the
+      # informational-only Claude Code compatibility check. A FAIL in any
+      # authoritative check here fails this step.
+      - name: Run control-plane verifier (authoritative)
+        run: node tools/control-plane/verify.mjs | tee verify-output.txt
+
+      - name: Publish control-plane verifier summary
+        if: always()
+        run: awk '/^===JSON===$/{exit} {print}' verify-output.txt >> "$GITHUB_STEP_SUMMARY"
+
+      # Fixture-driven unit tests for the verifier itself (good/malformed
+      # fixtures), plus handoff/snapshot tool tests.
+      - name: Run control-plane unit/fixture tests
+        run: node --test tests/control-plane/*.test.mjs
+
+      # Codex-native hook fixture tests, .codex/config.toml settings tests,
+      # and .codex/rules/default.rules execpolicy behavior tests.
+      - name: Run Codex control-plane security tests
+        run: node --test tests/security/codex-config.test.mjs tests/security/codex-execpolicy-rules.test.mjs tests/security/codex-hooks.test.mjs
+
+      # Additional defense-in-depth syntax checks over the real (non-fixture)
+      # control-plane trees. TOML syntax for .codex/config.toml and
+      # .codex/agents/*.toml is already validated authoritatively above by
+      # tools/control-plane/verify.mjs and by tests/security/codex-config.test.mjs;
+      # this step does not duplicate that parser.
+      - name: Check JSON and script syntax under the control plane
+        run: |
+          set -euo pipefail
+          dirs=()
+          for d in .codex .agents tools/control-plane docs/control-plane; do
+            [ -d "$d" ] && dirs+=("$d")
+          done
+
+          json_count=0
+          if [ "${#dirs[@]}" -gt 0 ]; then
+            while IFS= read -r -d '' f; do
+              json_count=$((json_count + 1))
+              node -e "JSON.parse(require('node:fs').readFileSync(process.argv[1], 'utf8'))" "$f"
+            done < <(find "${dirs[@]}" -type f -name '*.json' -print0)
+          fi
+          echo "Checked $json_count JSON file(s) under: ${dirs[*]:-<none present>}"
+
+          js_count=0
+          script_dirs=()
+          for d in .codex/hooks tools/control-plane; do
+            [ -d "$d" ] && script_dirs+=("$d")
+          done
+          if [ "${#script_dirs[@]}" -gt 0 ]; then
+            while IFS= read -r -d '' f; do
+              js_count=$((js_count + 1))
+              node --check "$f"
+            done < <(find "${script_dirs[@]}" -type f \( -name '*.js' -o -name '*.mjs' \) -print0)
+          fi
+          echo "Checked $js_count script file(s) under: ${script_dirs[*]:-<none present>}"
+
+      # Meaningful only against the actual change set; a clean checkout has
+      # no diff to check on its own. Falls back to a no-op (not a failure)
+      # when no usable base revision exists (e.g. a brand-new branch's first
+      # push, where github.event.before is all-zero).
+      - name: Check diff for conflict markers and whitespace errors
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          if [ -z "$base" ] || ! git cat-file -e "$base" 2>/dev/null; then
+            echo "No usable base revision for this event; skipping git diff --check."
+            exit 0
+          fi
+          git diff --check "$base"...HEAD

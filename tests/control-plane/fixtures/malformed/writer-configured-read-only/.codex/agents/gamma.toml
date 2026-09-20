@@ -1,0 +1,4 @@
+name = "gamma"
+description = "Bounded-scope implementation writer that makes the single write for its assigned files."
+sandbox_mode = "read-only"
+developer_instructions = "Implement the assigned change and save the file."

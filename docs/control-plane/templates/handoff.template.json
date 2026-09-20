@@ -1,0 +1,15 @@
+{
+  "schema": { "name": "freeforge-handoff", "schemaVersion": 1 },
+  "objective": "",
+  "baselineSha": "0000000000000000000000000000000000000000",
+  "worktree": { "branch": "" },
+  "intendedScope": [],
+  "changedFiles": [],
+  "verification": [],
+  "unresolvedFailures": [],
+  "openRisks": [],
+  "nonGoals": [],
+  "nextActions": [],
+  "productionImpact": false,
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

@@ -1,0 +1,4 @@
+name = "delta"
+description = "Read-only reviewer that reviews a diff for regressions and scope leakage."
+sandbox_mode = "workspace-write"
+developer_instructions = "Review the diff and report findings without editing files."

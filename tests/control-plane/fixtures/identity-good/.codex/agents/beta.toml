@@ -1,0 +1,4 @@
+name = "beta"
+description = "Repository Reviewer"
+sandbox_mode = "read-only"
+developer_instructions = "Single-line instructions for the fixture agent beta."

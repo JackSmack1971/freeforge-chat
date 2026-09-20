@@ -1,0 +1,68 @@
+{
+  "description": "freeforge-chat project-level Codex CLI hooks. Defense-in-depth only — .codex/rules/default.rules is the authoritative execpolicy layer for command allow/forbid/prompt decisions. See docs/control-plane/hooks-policy-map.md for the schema this was verified against and the rationale for each hook.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/session-start.js",
+            "commandWindows": "node .codex/hooks/session-start.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/guard-protected-writes.js",
+            "commandWindows": "node .codex/hooks/guard-protected-writes.js",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/guard-production-signal.js",
+            "commandWindows": "node .codex/hooks/guard-production-signal.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/record-touched-files.js",
+            "commandWindows": "node .codex/hooks/record-touched-files.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/stop-reminder.js",
+            "commandWindows": "node .codex/hooks/stop-reminder.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

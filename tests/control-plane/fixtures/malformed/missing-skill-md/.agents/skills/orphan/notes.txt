@@ -1,0 +1,1 @@
+notes.txt placeholder — this skill directory intentionally has no SKILL.md

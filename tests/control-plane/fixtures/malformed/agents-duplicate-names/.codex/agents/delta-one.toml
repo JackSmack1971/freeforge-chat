@@ -1,0 +1,4 @@
+name = "delta"
+description = "First fixture agent using the duplicated name."
+sandbox_mode = "read-only"
+developer_instructions = "First agent."

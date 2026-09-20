@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "action": "update_unreleased",
+  "target_file": "CHANGELOG.md",
+  "title": "Changelog",
+  "preamble": "All notable changes to this project will be documented in this file.",
+  "source": {
+    "mode": "since-tag",
+    "range": "v0.3.0..HEAD",
+    "generated_date": "2026-07-04",
+    "target_version": null,
+    "assumptions": []
+  },
+  "releases": [
+    {
+      "version": "Unreleased",
+      "date": null,
+      "sections": {
+        "Added": [
+          {
+            "text": "Added date-bounded changelog generation for scheduled summaries",
+            "commits": ["a1b2c3d"],
+            "breaking": false
+          }
+        ],
+        "Changed": [
+          {
+            "text": "Improved classification of terse commit messages using changed-file context",
+            "commits": ["b2c3d4e", "c3d4e5f"],
+            "breaking": false
+          }
+        ],
+        "Fixed": [
+          {
+            "text": "Fixed duplicate entries when updating an existing Unreleased section",
+            "commits": ["d4e5f6a"],
+            "breaking": false
+          }
+        ]
+      }
+    }
+  ],
+  "omitted": [
+    {
+      "commit": "e5f6a7b",
+      "reason": "Test-only coverage expansion with no shipped behavior change"
+    }
+  ],
+  "links": {}
+}

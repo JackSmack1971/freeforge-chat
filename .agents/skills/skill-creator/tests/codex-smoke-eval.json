@@ -1,0 +1,6 @@
+[
+  {
+    "query": "Read the skill instructions and summarize the package validation rule in one sentence.",
+    "should_trigger": true
+  }
+]

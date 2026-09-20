@@ -1,0 +1,4 @@
+name = "epsilon"
+description = "Fixture agent with an invalid sandbox_mode value."
+sandbox_mode = "read-write"
+developer_instructions = "Instructions for the fixture agent epsilon."

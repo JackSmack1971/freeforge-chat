@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/noop.js",
+            "commandWindows": "node .codex/hooks/noop.js"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -9,7 +9,7 @@
       "Bash(git status*)",
       "Bash(git branch*)",
       "Bash(git diff*)",
-      "Bash(node .claude/hooks/validators/control-plane-check.js*)"
+      "Bash(node tools/control-plane/verify.mjs*)"
     ],
     "ask": [
       "Bash(git commit*)",

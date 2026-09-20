@@ -1,0 +1,7 @@
+name = "alpha"
+description = "Fixture read-only agent alpha."
+sandbox_mode = "read-only"
+developer_instructions = """
+Explore only. Do not edit files.
+Cite files and symbols for every claim.
+"""

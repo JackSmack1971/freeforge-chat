@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Cross-platform launcher for the CommonJS model-info resolver."""
+
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+
+def find_node() -> str | None:
+    candidates = []
+    configured = os.environ.get("NODE")
+    if configured:
+        candidates.append(configured)
+    on_path = shutil.which("node")
+    if on_path:
+        candidates.append(on_path)
+
+    runtime_home = os.environ.get("CODEX_HOME")
+    if runtime_home:
+        candidates.extend(
+            [
+                str(Path(runtime_home) / "runtimes" / "codex-primary-runtime" / "dependencies" / "node" / "bin" / "node"),
+                str(Path(runtime_home) / "runtimes" / "codex-primary-runtime" / "dependencies" / "bin" / "node"),
+            ]
+        )
+
+    for candidate in candidates:
+        try:
+            result = subprocess.run(
+                [candidate, "-e", "process.exit(Number(process.versions.node.split('.')[0]) >= 18 ? 0 : 1)"],
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            continue
+        if result.returncode == 0:
+            return candidate
+    return None
+
+
+def main() -> int:
+    node = find_node()
+    if node is None:
+        print("No usable Node.js 18+ runtime found for resolve-latest-model-info.cjs", file=sys.stderr)
+        return 127
+    script = Path(__file__).with_name("resolve-latest-model-info.cjs")
+    return subprocess.run([node, str(script), *sys.argv[1:]], check=False).returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

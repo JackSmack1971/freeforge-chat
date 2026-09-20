@@ -25,8 +25,5 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Run control-plane structural check
-        run: node .claude/hooks/validators/control-plane-check.js
-
       - name: Run security-focused Node test suite
         run: node --test tests/security/*.test.mjs

@@ -1,0 +1,6 @@
+{
+  "eval_id": 0,
+  "eval_name": "static-viewer-smoke",
+  "prompt": "Check the package metadata.",
+  "assertions": []
+}

@@ -1,0 +1,24 @@
+# Minimal fixture execpolicy file.
+prefix_rule(
+    pattern = ["git", "status"],
+    decision = "allow",
+    justification = "Read-only fixture rule.",
+    match = ["git status"],
+    not_match = ["git stash"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", ["-f", "--force"]],
+    decision = "forbidden",
+    justification = "Fixture force-push rule.",
+    match = ["git push --force"],
+    not_match = ["git push"],
+)
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "prompt",
+    justification = "Fixture commit rule.",
+    match = ["git commit -m x"],
+    not_match = ["git commit-tree"],
+)

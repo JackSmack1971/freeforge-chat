@@ -1,0 +1,4 @@
+name = "delta"
+description = "Second fixture agent reusing the same name."
+sandbox_mode = "read-only"
+developer_instructions = "Second agent."
