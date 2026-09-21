@@ -282,11 +282,12 @@
 </div>
 
 <!-- ========== SETTINGS MODAL ========== -->
-<div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-hidden="true" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
+<div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description" aria-hidden="true" class="fixed inset-0 z-40 hidden items-center justify-center p-4">
   <div id="settings-backdrop" class="absolute inset-0 modal-bg"></div>
   <div class="surface-card relative w-full max-w-md rounded-2xl border border-zinc-800 p-6 z-10 modal-card">
     <div class="flex items-center justify-between mb-5">
       <h2 id="settings-title" class="text-lg font-semibold text-zinc-100">Settings</h2>
+      <p id="settings-description" class="sr-only">Update your OpenRouter API key or clear it from this browser tab.</p>
       <button id="close-settings-btn" aria-label="Close settings" class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

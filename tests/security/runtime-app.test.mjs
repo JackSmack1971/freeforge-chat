@@ -487,7 +487,10 @@ test('app.js wires the chat screen, settings, and command palette listeners', as
     assert.equal(doc.activeElement.id, 'settings-new-key');
     assert.equal(doc.getElementById('settings-new-key').value, '');
     assert.equal(doc.getElementById('sr-status').textContent, 'API key cleared. Enter a replacement key or close Settings.');
+    doc.activeElement = doc.getElementById('banner-update-btn');
     doc.getElementById('banner-update-btn').click();
+    doc.getElementById('close-settings-btn').click();
+    assert.equal(doc.activeElement.id, 'settings-btn');
 
     doc.getElementById('new-chat-btn').click();
     doc.dispatchEvent({ type: 'click', target: Object.assign(new MockElement('button'), { dataset: { action: 'new-chat' } }) });
