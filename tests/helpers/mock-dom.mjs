@@ -68,6 +68,16 @@ function normalizeAttrName(name) {
   return name.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
 }
 
+function stripHtmlTags(input) {
+  let current = input;
+  let previous;
+  do {
+    previous = current;
+    current = current.replace(/<[^>]+>/g, '');
+  } while (current !== previous);
+  return current;
+}
+
 function matchesSimpleSelector(node, selector) {
   if (!selector) return false;
   if (!node) return false;
@@ -110,7 +120,7 @@ function createParsedAnchor(html) {
   if (!m) return null;
   const node = new MockElement('a');
   parseAttributes(node, m[1] ?? '');
-  node.textContent = m[2].replace(/<[^>]+>/g, '');
+  node.textContent = stripHtmlTags(m[2]);
   return node;
 }
 
@@ -123,7 +133,7 @@ function createParsedPre(html) {
   if (codeMatch) {
     const code = new MockElement('code');
     parseAttributes(code, codeMatch[1] ?? '');
-    code.textContent = codeMatch[2].replace(/<[^>]+>/g, '');
+    code.textContent = stripHtmlTags(codeMatch[2]);
     pre.appendChild(code);
   }
   return pre;
@@ -132,7 +142,7 @@ function createParsedPre(html) {
 function createParsedSpan(html) {
   if (!/<span\b/i.test(html)) return null;
   const span = new MockElement('span');
-  span.textContent = html.replace(/<[^>]+>/g, '');
+  span.textContent = stripHtmlTags(html);
   return span;
 }
 
