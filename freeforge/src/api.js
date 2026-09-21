@@ -1,3 +1,17 @@
+function normalizeModel(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || typeof raw.id !== 'string' || !raw.id.trim()) return null;
+  const model = { id: raw.id.trim() };
+  if (typeof raw.name === 'string' && raw.name.trim()) model.name = raw.name;
+  if (Number.isFinite(raw.context_length) && raw.context_length >= 0) model.context_length = raw.context_length;
+  if (raw.pricing && typeof raw.pricing === 'object' && !Array.isArray(raw.pricing)) {
+    model.pricing = {
+      prompt: typeof raw.pricing.prompt === 'string' || typeof raw.pricing.prompt === 'number' ? raw.pricing.prompt : undefined,
+      completion: typeof raw.pricing.completion === 'string' || typeof raw.pricing.completion === 'number' ? raw.pricing.completion : undefined,
+    };
+  }
+  return model;
+}
+
 export async function fetchFreeModels(key) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -12,7 +26,8 @@ export async function fetchFreeModels(key) {
       throw new Error(`Failed to fetch models (${res.status})`);
     }
     const data = await res.json();
-    return (data.data || []).filter(m => {
+    const models = Array.isArray(data?.data) ? data.data.map(normalizeModel).filter(Boolean) : [];
+    return models.filter(m => {
       if (m.id?.endsWith(':free')) return true;
       const p = m.pricing;
       return p && Number.parseFloat(p.prompt || '1') === 0 && Number.parseFloat(p.completion || '1') === 0;

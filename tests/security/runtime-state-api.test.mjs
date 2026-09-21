@@ -150,7 +150,14 @@ test('api.js fetches, filters, and sorts free models', async () => {
         ],
       }),
     });
-    assert.deepEqual((await fetchFreeModels('edge')).map(m => m.name || m.id), ['A No Id', 'z:free']);
+    assert.deepEqual((await fetchFreeModels('edge')).map(m => m.name || m.id), ['z:free']);
+
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ id: ' valid:free ', name: 42, context_length: 'large' }, null, 'not-an-object', { id: '   ' }] }),
+    });
+    assert.deepEqual(await fetchFreeModels('malformed'), [{ id: 'valid:free' }]);
 
     globalThis.fetch = async () => ({
       ok: true,
