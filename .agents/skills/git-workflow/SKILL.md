@@ -90,6 +90,31 @@ Never use raw `--force`; an approved rewrite requires
 `--force-with-lease=<ref>:<expected>` after verifying the expected remote
 commit. Never bypass protections, required checks, signing, or rulesets.
 
+### GitHub CLI authentication fallback
+
+If `gh auth status` reports a stale or invalid CLI token but Git operations
+against GitHub still authenticate successfully, use the configured Git
+credential helper as an in-memory token source for the current `gh` process.
+Do not print, paste, commit, or persist the credential, and do not repair the
+keyring by copying the token into a file or command history.
+
+On PowerShell:
+
+```powershell
+$credentialInput = "protocol=https`nhost=github.com`n`n"
+$credentialOutput = $credentialInput | git credential fill
+$tokenLine = $credentialOutput | Where-Object { $_ -like 'password=*' } | Select-Object -First 1
+if (-not $tokenLine) { throw 'Git credential manager returned no GitHub token.' }
+$env:GH_TOKEN = $tokenLine.Substring(9)
+gh pr view 123
+```
+
+Run the credential lookup and the `gh` command in the same process. Treat the
+credential helper as an authentication source only; normal approval gates,
+branch protections, required checks, and explicit authorization still apply.
+Clear the process environment after the operation when the shell remains
+interactive.
+
 ## Failure handling
 
 After a failed or unexpected Git command, stop further mutations and
