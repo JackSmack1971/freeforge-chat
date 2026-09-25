@@ -148,7 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
   $('settings-clear-btn').addEventListener('click', clearKey);
   $('settings-update-btn').addEventListener('click', updateKey);
   $('settings-new-key').addEventListener('input', clearSettingsKeyError);
-  $('banner-update-btn').addEventListener('click', () => { hideInvalidBanner(); openSettings(); });
+  $('banner-update-btn').addEventListener('click', () => {
+    hideInvalidBanner();
+    $('settings-btn').focus();
+    openSettings();
+  });
   $('agent-library-btn')?.addEventListener('click', () => {
     openAgentLibrary();
     refreshAgentUi();
