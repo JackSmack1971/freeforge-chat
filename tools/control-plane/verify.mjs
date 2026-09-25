@@ -92,7 +92,9 @@ function isGitRepo(root) {
 
 function gitCheckIgnored(root, relativePath) {
   // -q, no -v: documented unambiguous exit code (0 = ignored, 1 = not ignored).
-  const result = spawnSync('git', ['check-ignore', '-q', relativePath], { cwd: root });
+  // --no-index: match .gitignore patterns even for tracked files, so a
+  // required file that is tracked but pattern-matched still fails.
+  const result = spawnSync('git', ['check-ignore', '-q', '--no-index', relativePath], { cwd: root });
   if (result.error) return null; // git unavailable
   return result.status === 0;
 }

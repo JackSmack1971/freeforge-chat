@@ -18,6 +18,9 @@
 !.codex/hooks/
 .codex/hooks/*
 !.codex/hooks/*.js
+!.codex/agents/
+.codex/agents/*
+!.codex/agents/*.toml
 .planning/codebase/
 tools/control-plane/generated/
 .repository-hygiene/
@@ -34,6 +37,10 @@ CODEBASE_AUDIT_REPORT.md
 # OS
 .DS_Store
 Thumbs.db
+
+# Python bytecode (skill helper scripts)
+__pycache__/
+*.pyc
 
 # Node (in case a build step is added later)
 node_modules/
