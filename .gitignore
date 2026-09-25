@@ -18,6 +18,9 @@
 !.codex/hooks/
 .codex/hooks/*
 !.codex/hooks/*.js
+!.codex/agents/
+.codex/agents/*
+!.codex/agents/*.toml
 .planning/codebase/
 tools/control-plane/generated/
 .repository-hygiene/
